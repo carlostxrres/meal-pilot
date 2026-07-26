@@ -128,9 +128,15 @@ body {
 
 .app-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   margin-bottom: var(--space-16);
+}
+
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
 }
 
 .app-title {
