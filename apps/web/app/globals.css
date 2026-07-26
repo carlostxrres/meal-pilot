@@ -484,6 +484,36 @@ body {
   background: var(--paper);
 }
 
+.dropdown-content {
+  min-width: 200px;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.dropdown-item-destructive {
+  color: var(--off);
+}
+
+.dialog-description {
+  font-size: var(--text-85);
+  color: var(--mute);
+  margin: 0 0 var(--space-16);
+}
+
+.btn-destructive {
+  flex: 1;
+  padding: var(--space-12);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--off);
+  color: var(--canvas);
+  font-weight: 600;
+}
+
 .inventory-row {
   display: flex;
   align-items: center;
