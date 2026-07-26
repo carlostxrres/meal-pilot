@@ -493,7 +493,6 @@ body {
   height: 40px;
   flex-shrink: 0;
   object-fit: cover;
-  background: var(--paper);
 }
 
 .shopping-image-placeholder {
@@ -501,6 +500,7 @@ body {
   align-items: center;
   justify-content: center;
   color: var(--mute);
+  background: var(--paper);
 }
 
 .shopping-info {
