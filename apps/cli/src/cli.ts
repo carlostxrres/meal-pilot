@@ -52,16 +52,16 @@ function formatProposal(proposal: DayProposal): string {
 
   lines.push("## Requisitos dietéticos del día", "");
   for (const status of proposal.requirementStatuses) {
+    const { requirement } = status;
     const mark = status.withinRange ? "✓" : "✗";
-    const bounds = [
-      status.effectiveMinimum != null ? `min ${status.effectiveMinimum.toFixed(1)}` : null,
-      status.effectiveMaximum != null ? `max ${status.effectiveMaximum.toFixed(1)}` : null,
-    ]
-      .filter(Boolean)
-      .join(", ");
+    const target =
+      requirement.minimum != null && requirement.maximum != null
+        ? `${requirement.minimum}–${requirement.maximum}`
+        : (requirement.minimum ?? requirement.maximum ?? null);
     lines.push(
-      `  ${mark} ${status.requirement.description ?? status.requirement.id}: ${status.accumulated.toFixed(1)} ${status.requirement.unit} (${bounds})`,
+      `  ${mark} ${requirement.name}: ${status.accumulated.toFixed(1)} ${requirement.unit}${target != null ? ` / ${target} ${requirement.unit}` : ""}`,
     );
+    if (requirement.description) lines.push(`      ${requirement.description}`);
   }
 
   return lines.join("\n");

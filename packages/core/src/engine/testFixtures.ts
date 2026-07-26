@@ -82,6 +82,7 @@ export function makeRequirement(overrides: Partial<DietaryRequirement> = {}): Di
   return {
     id: nextId("req"),
     owner_id: "owner-1",
+    name: "Requisito de prueba",
     scope_type: "ingredient",
     scope_ingredient_id: null,
     scope_category_id: null,

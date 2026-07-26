@@ -367,14 +367,21 @@ body {
   margin-bottom: var(--space-4);
 }
 
-.capsule-meter-desc {
+.capsule-meter-name {
   color: var(--charcoal);
+  font-weight: 600;
 }
 
 .capsule-meter-value {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   color: var(--mute);
+}
+
+.capsule-meter-detail {
+  font-size: var(--text-70);
+  color: var(--mute);
+  margin: 0 0 var(--space-4);
 }
 
 .capsule-meter-track {

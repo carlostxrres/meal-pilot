@@ -46,6 +46,7 @@ export type Database = {
           maximum: number | null
           meal_id: string | null
           minimum: number | null
+          name: string
           owner_id: string
           period: Database["public"]["Enums"]["requirement_period"]
           scope_category_id: string | null
@@ -63,6 +64,7 @@ export type Database = {
           maximum?: number | null
           meal_id?: string | null
           minimum?: number | null
+          name: string
           owner_id: string
           period: Database["public"]["Enums"]["requirement_period"]
           scope_category_id?: string | null
@@ -80,6 +82,7 @@ export type Database = {
           maximum?: number | null
           meal_id?: string | null
           minimum?: number | null
+          name?: string
           owner_id?: string
           period?: Database["public"]["Enums"]["requirement_period"]
           scope_category_id?: string | null

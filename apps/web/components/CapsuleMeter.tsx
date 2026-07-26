@@ -1,5 +1,5 @@
 import * as Progress from "@radix-ui/react-progress";
-import type { RequirementStatus } from "@meal-pilot/core";
+import type { DietaryRequirement, RequirementStatus } from "@meal-pilot/core";
 
 /*
 Intent: vistazo rápido y de baja atención al estado de un requisito
@@ -11,6 +11,16 @@ ve como zona, no como un simple % — es el dato real de tolerance_margin.
 Base: Radix Progress (accesibilidad/semántica), banda + relleno son overlays
 propios encima del Indicator.
 */
+
+/** "35" o "70–115" (el objetivo tal cual se definió, no el margen de tolerancia). */
+function formatTarget(requirement: DietaryRequirement): string | null {
+  const { minimum, maximum } = requirement;
+  if (minimum != null && maximum != null) return `${minimum}–${maximum}`;
+  if (minimum != null) return `${minimum}`;
+  if (maximum != null) return `${maximum}`;
+  return null;
+}
+
 export function CapsuleMeter({ status }: { status: RequirementStatus }) {
   const { requirement, accumulated, effectiveMinimum, effectiveMaximum, withinRange } = status;
 
@@ -20,15 +30,18 @@ export function CapsuleMeter({ status }: { status: RequirementStatus }) {
   const bandStart = effectiveMinimum != null ? pct(effectiveMinimum) : 0;
   const bandEnd = effectiveMaximum != null ? pct(effectiveMaximum) : 100;
   const fillPct = pct(accumulated);
+  const target = formatTarget(requirement);
 
   return (
     <div className="capsule-meter">
       <div className="capsule-meter-label">
-        <span className="capsule-meter-desc">{requirement.description ?? requirement.id}</span>
+        <span className="capsule-meter-name">{requirement.name}</span>
         <span className="capsule-meter-value">
           {accumulated.toFixed(1)} {requirement.unit}
+          {target && ` / ${target} ${requirement.unit}`}
         </span>
       </div>
+      {requirement.description && <p className="capsule-meter-detail">{requirement.description}</p>}
       <Progress.Root className="capsule-meter-track" value={accumulated} max={scaleMax}>
         <div
           className="capsule-meter-band"
