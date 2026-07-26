@@ -1,21 +1,27 @@
 {
-  "name": "@comida-diaria/web",
+  "name": "@meal-pilot/web",
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "predev": "npm run build -w @comida-diaria/core",
+    "predev": "npm run build -w @meal-pilot/core",
     "dev": "next dev",
-    "prebuild": "npm run build -w @comida-diaria/core",
+    "prebuild": "npm run build -w @meal-pilot/core",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "@comida-diaria/core": "*",
+    "@meal-pilot/core": "*",
     "@radix-ui/react-checkbox": "^1.3.11",
     "@radix-ui/react-dialog": "^1.1.23",
+    "@radix-ui/react-popover": "^1.1.23",
+    "@radix-ui/react-progress": "^1.1.16",
+    "@radix-ui/react-select": "^2.3.7",
+    "@radix-ui/react-tabs": "^1.1.21",
+    "@radix-ui/react-tooltip": "^1.2.16",
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.45.4",
+    "@tabler/icons-react": "^3.45.0",
     "next": "^16.2.12",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"

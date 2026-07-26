@@ -1,5 +1,5 @@
 /*
-  Sistema de interfaz de comida-diaria — ver .interface-design/system.md
+  Sistema de interfaz de Meal Pilot — ver .interface-design/system.md
   y docs/plans/2026-07-26-ui-design-system-and-ia.md para el razonamiento
   completo. Resumen: ticket de cocina / parte de laboratorio, no dashboard
   SaaS. Superficies planas (radius: none), sin sombras, dos acentos con
@@ -111,12 +111,14 @@ body {
 }
 
 .icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--hairline);
   background: var(--canvas);
   color: var(--ink);
-  padding: 6px 12px;
+  padding: 8px;
   border-radius: 9999px;
-  font-size: 0.85rem;
 }
 
 /* --- Bottom tab bar --- */
@@ -155,7 +157,7 @@ body {
 }
 
 .tabbar-icon {
-  font-size: 1.05rem;
+  display: block;
 }
 
 /* --- Ticket (Hoy) --- */
@@ -180,11 +182,48 @@ body {
   gap: 8px;
 }
 
+.meal-row-head-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .meal-time {
   font-size: 0.75rem;
   color: var(--mute);
   white-space: nowrap;
-  margin-top: 2px;
+}
+
+.nutrition-trigger {
+  all: unset;
+  display: flex;
+  color: var(--mute);
+  cursor: pointer;
+}
+
+.nutrition-popover {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  padding: 10px 14px;
+  min-width: 160px;
+}
+
+.nutrition-arrow {
+  fill: var(--canvas);
+}
+
+.nutrition-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.85rem;
+}
+
+.nutrition-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 0;
 }
 
 .dish-name {
@@ -212,12 +251,18 @@ body {
 }
 
 .supplement-note {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   margin-top: 8px;
   font-size: 0.85rem;
   color: var(--turmeric);
 }
 
 .warning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   color: var(--off);
   font-size: 0.9rem;
 }
@@ -234,6 +279,32 @@ body {
 .meal-confirm-label {
   font-size: 0.85rem;
   color: var(--mute);
+  cursor: pointer;
+}
+
+/* --- Day tabs (Hoy / Mañana) --- */
+
+.day-tabs-list {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.day-tabs-trigger {
+  all: unset;
+  padding: 6px 16px;
+  border: 1px solid var(--hairline);
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--mute);
+  cursor: pointer;
+}
+
+.day-tabs-trigger[data-state="active"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--canvas);
 }
 
 /* --- Capsule meter (signature) --- */
@@ -279,8 +350,10 @@ body {
   top: 0;
   bottom: 0;
   left: 0;
+  width: 100%;
   border-radius: 9999px;
   background: var(--success);
+  transition: transform 300ms ease;
 }
 
 .capsule-meter-fill[data-off="true"] {
@@ -290,6 +363,9 @@ body {
 /* --- Sections --- */
 
 .section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -304,6 +380,65 @@ body {
 
 /* --- Inventory --- */
 
+.inventory-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.search-field {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--hairline);
+  background: var(--paper);
+  padding: 0 10px;
+}
+
+.search-field input {
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  padding: 8px 0;
+  width: 100%;
+}
+
+.search-field input:focus {
+  outline: none;
+}
+
+.select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--hairline);
+  background: var(--canvas);
+  color: var(--ink);
+  padding: 0 10px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.select-content {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+  z-index: 20;
+}
+
+.select-item {
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  color: var(--ink);
+  cursor: pointer;
+  outline: none;
+}
+
+.select-item[data-highlighted] {
+  background: var(--paper);
+}
+
 .inventory-row {
   display: flex;
   align-items: center;
@@ -311,12 +446,8 @@ body {
   gap: 12px;
   background: var(--canvas);
   border: 1px solid var(--hairline);
-  border-top-width: 0;
+  margin-bottom: -1px;
   padding: 12px 16px;
-}
-
-.inventory-row:first-of-type {
-  border-top-width: 1px;
 }
 
 .inventory-name {
@@ -353,16 +484,28 @@ body {
   gap: 12px;
   background: var(--canvas);
   border: 1px solid var(--hairline);
-  border-top-width: 0;
-  padding: 12px 16px;
+  margin-bottom: -1px;
+  padding: 10px 16px;
 }
 
-.shopping-row:first-of-type {
-  border-top-width: 1px;
+.shopping-image {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  object-fit: cover;
+  background: var(--paper);
+}
+
+.shopping-image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mute);
 }
 
 .shopping-info {
   flex: 1;
+  cursor: pointer;
 }
 
 .shopping-name {

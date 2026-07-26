@@ -200,6 +200,7 @@ export type Database = {
           fiber_g_per_100: number | null
           home_inventory: number
           id: string
+          image_url: string | null
           iron_mg_per_100: number | null
           kcal_per_100: number | null
           name: string
@@ -223,6 +224,7 @@ export type Database = {
           fiber_g_per_100?: number | null
           home_inventory?: number
           id?: string
+          image_url?: string | null
           iron_mg_per_100?: number | null
           kcal_per_100?: number | null
           name: string
@@ -246,6 +248,7 @@ export type Database = {
           fiber_g_per_100?: number | null
           home_inventory?: number
           id?: string
+          image_url?: string | null
           iron_mg_per_100?: number | null
           kcal_per_100?: number | null
           name?: string

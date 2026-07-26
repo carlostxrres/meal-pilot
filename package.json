@@ -6,9 +6,9 @@
     "packages/*"
   ],
   "scripts": {
-    "generate": "npm run generate -w @comida-diaria/cli",
-    "test": "npm test -w @comida-diaria/core",
-    "gen:types": "npm run gen:types -w @comida-diaria/core",
-    "dev:web": "npm run dev -w @comida-diaria/web"
+    "generate": "npm run generate -w @meal-pilot/cli",
+    "test": "npm test -w @meal-pilot/core",
+    "gen:types": "npm run gen:types -w @meal-pilot/core",
+    "dev:web": "npm run dev -w @meal-pilot/web"
   }
 }

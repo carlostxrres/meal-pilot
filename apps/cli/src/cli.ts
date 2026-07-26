@@ -5,7 +5,7 @@ import {
   generateDayProposal,
   type DayProposal,
   type Database,
-} from "@comida-diaria/core";
+} from "@meal-pilot/core";
 
 function parseDateArg(argv: string[]): string {
   const flagIndex = argv.indexOf("--date");

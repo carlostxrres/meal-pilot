@@ -1,12 +1,12 @@
 {
-  "name": "@comida-diaria/cli",
+  "name": "@meal-pilot/cli",
   "private": true,
   "type": "module",
   "scripts": {
     "generate": "tsx src/cli.ts"
   },
   "dependencies": {
-    "@comida-diaria/core": "*",
+    "@meal-pilot/core": "*",
     "@supabase/supabase-js": "^2.45.4"
   },
   "devDependencies": {

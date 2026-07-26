@@ -9,7 +9,7 @@ export default async function LoginPage({
 
   return (
     <main className="login-page">
-      <h1>comida-diaria</h1>
+      <h1>Meal Pilot</h1>
       <form action={signIn} className="login-form">
         <label>
           Email

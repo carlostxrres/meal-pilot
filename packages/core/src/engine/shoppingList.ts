@@ -1,16 +1,16 @@
-import type { DietaryRequirement, Ingredient } from "./types.js";
+import type { DayProposal, DietaryRequirement, Ingredient } from "./types.js";
 
-export type ShoppingReason = "out_of_stock" | "requirement";
+export type ShoppingReason = "upcoming_need" | "requirement";
 
 export interface ShoppingListItem {
   ingredient: Ingredient;
   reasons: ShoppingReason[];
   /**
-   * Cantidad de reposición estimada, para sumar a home_inventory al tachar
-   * el ítem. v1: un valor fijo por tipo de unidad, no calculado a partir de
-   * las dishes que usan el ingrediente — ver docs/plans/2026-07-26-ui-
-   * design-system-and-ia.md ("afinar durante la implementación"). Editable
-   * después a mano en Inventario si no cuadra.
+   * Cantidad de reposición: si el motivo es "upcoming_need", es el déficit
+   * real (necesidad de las próximas propuestas menos stock actual). Si solo
+   * aplica "requirement" (sin necesidad detectada en el horizonte de días
+   * dado), se usa un valor fijo por tipo de unidad como estimación —
+   * editable después a mano en Inventario.
    */
   restockQuantity: number;
 }
@@ -21,31 +21,55 @@ const DEFAULT_RESTOCK: Record<Ingredient["base_unit"], number> = {
   unit: 2,
 };
 
+function totalStock(i: Ingredient): number {
+  return i.office_inventory + i.home_inventory;
+}
+
+/** Suma, por ingrediente, cuánto hace falta a lo largo de varias propuestas de día. */
+function sumUpcomingNeed(proposals: readonly DayProposal[]): Map<string, number> {
+  const needed = new Map<string, number>();
+  for (const proposal of proposals) {
+    for (const mealProposal of proposal.meals) {
+      if (!mealProposal.resolved) continue;
+      for (const component of mealProposal.resolved.components) {
+        needed.set(
+          component.ingredient.id,
+          (needed.get(component.ingredient.id) ?? 0) + component.quantity,
+        );
+      }
+    }
+  }
+  return needed;
+}
+
 /**
- * Deriva la lista de la compra a partir del inventario actual y los
- * requisitos dietéticos — nunca es una lista editable a mano (ver ADR de
- * diseño de interfaz). Dos motivos posibles, no excluyentes:
- *   - "out_of_stock": inventario total (oficina+casa) <= 0.
- *   - "requirement": es el ingrediente concreto de un dietary_requirement
- *     mandatory de tipo `ingredient` cuyo mínimo no cubre el stock actual
- *     (comprobación de stock físico, no de acumulado por periodo real —
- *     misma simplificación que el resto del motor mientras no se escriba
- *     en requirement_log).
+ * Deriva la lista de la compra: solo lo que realmente hace falta para las
+ * próximas propuestas de día (ej. hoy + mañana), más lo que haga falta para
+ * cubrir un `dietary_requirement` mandatory pendiente — nunca una lista
+ * editable a mano.
+ *
+ * `upcomingProposals` debe venir de `generateProposalsForDates` para el
+ * horizonte deseado (ver `upcomingDates`). Con 0 propuestas, el primer
+ * motivo simplemente no aporta nada (no "todo lo agotado", a diferencia de
+ * la versión anterior de este cálculo).
  */
 export function computeShoppingList(
   ingredients: readonly Ingredient[],
   requirements: readonly DietaryRequirement[],
+  upcomingProposals: readonly DayProposal[] = [],
 ): ShoppingListItem[] {
   const items = new Map<string, ShoppingListItem>();
-
-  const totalStock = (i: Ingredient) => i.office_inventory + i.home_inventory;
+  const upcomingNeed = sumUpcomingNeed(upcomingProposals);
 
   for (const ingredient of ingredients) {
-    if (totalStock(ingredient) <= 0) {
+    const needed = upcomingNeed.get(ingredient.id);
+    if (needed == null) continue;
+    const deficit = needed - totalStock(ingredient);
+    if (deficit > 0) {
       items.set(ingredient.id, {
         ingredient,
-        reasons: ["out_of_stock"],
-        restockQuantity: DEFAULT_RESTOCK[ingredient.base_unit],
+        reasons: ["upcoming_need"],
+        restockQuantity: Math.ceil(deficit),
       });
     }
   }

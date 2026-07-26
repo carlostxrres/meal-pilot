@@ -56,9 +56,19 @@ Tab bar inferior, 3 secciones (no sidebar — mobile-first):
 
 ## Radix UI usage
 
-- `Checkbox` — confirmar meal, tachar compra.
-- `Dialog` — editar cantidad de inventario.
-- No `Tabs` de Radix para la nav principal (tab bar custom); reservar `Tabs` para subvistas futuras si aparecen.
+Se usa **Radix Primitives** (sin estilo), no Radix Themes — confirmado explícitamente por el usuario para no traer una identidad visual ajena a estos tokens. `<button>`/`<input>` nativos, maquetados a mano.
+
+- `Checkbox` — confirmar meal, tachar compra (envuelto en `<label htmlFor>` para que el click en el texto también togee).
+- `Dialog` — editar ingrediente (cantidades + `image_url`).
+- `Progress` — base de `CapsuleMeter` (la banda de tolerancia es un overlay propio encima).
+- `Popover` — valores nutricionales por meal.
+- `Tabs` — selector Hoy/Mañana dentro de la pestaña Hoy (subvista, no nav principal).
+- `Select` — criterio de orden en Inventario.
+- No `Tabs` de Radix para la nav principal (tab bar custom).
+
+## Iconografía
+
+**Tabler Icons** (`@tabler/icons-react`) en toda la app — tab bar, checkmarks, warning, logout, editar, buscar, ordenar, placeholder de imagen. Un único set, sin mezclar con emoji.
 
 ## Reglas
 

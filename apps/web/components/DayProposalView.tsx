@@ -1,6 +1,8 @@
-import type { DayProposal } from "@comida-diaria/core";
+import { computeMealNutrition, type DayProposal } from "@meal-pilot/core";
+import { IconAlertTriangle, IconFlask } from "@tabler/icons-react";
 import { CapsuleMeter } from "./CapsuleMeter";
 import { MealConfirmCheckbox } from "./MealConfirmCheckbox";
+import { NutritionPopover } from "./NutritionPopover";
 
 function formatTime(time: string): string {
   return time.slice(0, 5);
@@ -9,9 +11,11 @@ function formatTime(time: string): string {
 export function DayProposalView({
   proposal,
   confirmedMealIds,
+  isToday,
 }: {
   proposal: DayProposal;
   confirmedMealIds: Set<string>;
+  isToday: boolean;
 }) {
   return (
     <div>
@@ -21,13 +25,20 @@ export function DayProposalView({
         <section key={mealProposal.meal.id} className="meal-row">
           <div className="meal-row-head">
             <h2 className="ticket-header">{mealProposal.meal.name}</h2>
-            <span className="meal-time">
-              {formatTime(mealProposal.meal.usual_start_time)}–{formatTime(mealProposal.meal.usual_end_time)}
-            </span>
+            <div className="meal-row-head-right">
+              <span className="meal-time">
+                {formatTime(mealProposal.meal.usual_start_time)}–{formatTime(mealProposal.meal.usual_end_time)}
+              </span>
+              {mealProposal.resolved && (
+                <NutritionPopover totals={computeMealNutrition(mealProposal.resolved)} />
+              )}
+            </div>
           </div>
 
           {!mealProposal.resolved ? (
-            <p className="warning">⚠ Sin propuesta válida: {mealProposal.unresolvedReason}</p>
+            <p className="warning">
+              <IconAlertTriangle size={16} stroke={1.75} /> Sin propuesta válida: {mealProposal.unresolvedReason}
+            </p>
           ) : (
             <>
               <p className="dish-name">{mealProposal.resolved.dish.name}</p>
@@ -47,11 +58,12 @@ export function DayProposalView({
 
           {mealProposal.supplement && (
             <p className="supplement-note">
-              + {mealProposal.supplement.name} ({mealProposal.supplement.relative_timing})
+              <IconFlask size={14} stroke={1.75} /> {mealProposal.supplement.name} (
+              {mealProposal.supplement.relative_timing})
             </p>
           )}
 
-          {mealProposal.resolved && (
+          {mealProposal.resolved && isToday && (
             <MealConfirmCheckbox
               date={proposal.date}
               mealId={mealProposal.meal.id}

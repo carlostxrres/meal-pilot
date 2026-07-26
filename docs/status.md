@@ -20,9 +20,11 @@ Fase 4 ampliada: además de login + ver la propuesta del día, ya hay inventario
 
 Reestructurado como monorepo npm workspaces (ver [ADR-0016](adrs/0016-monorepo-npm-workspaces-para-compartir-engine-y-data.md)):
 
-- `packages/core` (`@comida-diaria/core`) — el motor: `src/engine/` (algoritmo puro, sin Supabase) + `src/data/` (acceso a Supabase + tipos autogenerados en `database.types.ts`, regenerables con `npm run gen:types -w @comida-diaria/core`). Se compila a `dist/` (`npm run build -w @comida-diaria/core`) — **hay que reconstruirlo tras cualquier cambio** si se va a probar solo el CLI (la web lo hace sola vía hooks `predev`/`prebuild`).
-- `apps/cli` (`@comida-diaria/cli`) — el CLI de terminal (`npm run generate`), sin cambios de comportamiento tras el movimiento.
-- `apps/web` (`@comida-diaria/web`) — la app Next.js de la fase 4 (ver abajo).
+- `packages/core` (`@meal-pilot/core`) — el motor: `src/engine/` (algoritmo puro, sin Supabase) + `src/data/` (acceso a Supabase + tipos autogenerados en `database.types.ts`, regenerables con `npm run gen:types -w @meal-pilot/core`). Se compila a `dist/` (`npm run build -w @meal-pilot/core`) — **hay que reconstruirlo tras cualquier cambio** si se va a probar solo el CLI (la web lo hace sola vía hooks `predev`/`prebuild`).
+- `apps/cli` (`@meal-pilot/cli`) — el CLI de terminal (`npm run generate`), sin cambios de comportamiento tras el movimiento.
+- `apps/web` (`@meal-pilot/web`) — la app Next.js de la fase 4 (ver abajo).
+
+Nota: el nombre de cara al usuario de la app es **Meal Pilot** (título, copy de la web, scope de los paquetes npm). El repo en disco y el histórico de docs/ADRs se quedan como `comida-diaria` — decisión explícita para no romper rutas a mitad de sesión.
 
 ## Motor de generación (fase 3)
 
@@ -39,17 +41,19 @@ Reestructurado como monorepo npm workspaces (ver [ADR-0016](adrs/0016-monorepo-n
 - Diseño previo: plan de la fase 4 (brainstorming + Plan agent), resumido en [ADR-0016](adrs/0016-monorepo-npm-workspaces-para-compartir-engine-y-data.md); IA/diseño de interfaz en la sección de arriba.
 - `apps/web`: Next.js 16 (App Router, Turbopack), `@supabase/ssr` para auth server-side. 4 rutas: `/login`, y dentro de `app/(app)/` (layout con header + tab bar) — `/` (Hoy), `/inventory`, `/shopping`.
 - **Auth**: `proxy.ts` (antes `middleware.ts` — Next 16 renombró la convención, ver [nota de migración](https://nextjs.org/docs/messages/middleware-to-proxy)) refresca la sesión y redirige a `/login` si no hay usuario, protegiendo automáticamente cualquier página nueva bajo `(app)`. Login/logout como Server Actions (`app/login/actions.ts`) con `@supabase/ssr`. Usa **solo** `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY` — nunca la service_role key.
-- **Hoy** (`/`): ticket del día (`DayProposalView`) + `CapsuleMeter` por requisito + `MealConfirmCheckbox` (Radix Checkbox) por meal — al confirmar, escribe/borra en `meal_log` vía `setMealConfirmed` (nuevo en `packages/core/src/data/mealConfirmation.ts`).
-- **Inventario** (`/inventory`): `fetchIngredients` agrupado por `storage_type`; `InventoryEditDialog` (Radix Dialog) edita `office_inventory`/`home_inventory` vía `updateIngredientInventory`.
-- **Compra** (`/shopping`): `computeShoppingList` (nuevo, `packages/core/src/engine/shoppingList.ts`, con tests) deriva la lista de ingredientes agotados (`office_inventory + home_inventory <= 0`) o necesarios para un `dietary_requirement` mandatory de tipo `ingredient` no cubierto por el stock actual — **nunca editable a mano**. Tachar (`PurchaseCheckbox`) llama a `addToHomeInventory` con una cantidad de reposición fija por tipo de unidad (200g/ml, 2 unidades) y refresca la página — el ítem desaparece solo porque ya no cumple la condición de "agotado"/"insuficiente". No existe tabla `shopping_list`, es 100% derivada.
-- **Verificado**: `npm test` (20 tests, incluye 5 nuevos de `computeShoppingList`) y `next build` (type-check + compila las 4 rutas) en verde. La verificación interactiva completa (login + navegar las 3 pestañas + confirmar/editar/tachar en el navegador) la está haciendo el propio usuario con su `npm run dev` local — no se relanzó un servidor de desarrollo propio para no interferir con esa sesión.
+- **Hoy** (`/`): selector **Hoy/Mañana** (`DayTabs`, Radix Tabs) — cada pestaña es un `DayProposalView` para esa fecha. Cada meal tiene un botón de valores nutricionales (`NutritionPopover`, Radix Popover, usa `computeMealNutrition` — suma kcal/proteína/hidratos/grasa/fibra reales de los componentes resueltos) y, solo en "Hoy", un checkbox de confirmar (`MealConfirmCheckbox`, clicable también por su label) que escribe/borra en `meal_log` vía `setMealConfirmed`. `CapsuleMeter` (ahora sobre `@radix-ui/react-progress`) por cada `dietary_requirement`.
+- **Inventario** (`/inventory`): `InventoryList` (client) separa **En stock** / **Agotado**, con buscador por nombre y un `Select` de Radix para ordenar (cantidad ↓ por defecto, cantidad ↑, nombre A-Z/Z-A). `InventoryEditDialog` edita `office_inventory`/`home_inventory` y ahora también `image_url` (columna nueva, migración `20260726203336_ingredient_image_url.sql`).
+- **Compra** (`/shopping`): `computeShoppingList` rediseñado — ya no lista "todo lo agotado", sino solo lo que hace falta para las propuestas de los **próximos 2 días** (`generateProposalsForDates` + `upcomingDates`, mismo motor que "Hoy") más lo pendiente de un `dietary_requirement` mandatory. La cantidad de reposición del motivo "próximos días" ya no es una estimación fija — es el déficit real (necesidad agregada de esos días menos stock actual); el motivo "requisito" sigue usando un valor fijo por tipo de unidad al no haber una necesidad concreta que medir. Cada fila muestra la imagen del ingrediente (`image_url`) o un icono Tabler de repuesto. Tachar sigue sin tabla `shopping_list` — 100% derivada, sumar al home_inventory hace que el ítem desaparezca solo.
+- **Sistema de interfaz, iteración de feedback**: iconos Tabler en toda la web (tab bar, checkmarks, warning, logout, editar, buscar, ordenar), Radix ampliado a Progress/Popover/Tabs/Select (además de Checkbox/Dialog) — se mantuvo la decisión de **no** adoptar Radix Themes, para no traer una identidad visual ajena a los tokens propios (papel/tinta, cápsula de tolerancia) definidos en la sesión de diseño.
+- **Verificado**: `npm test` (21 tests, incluye los de `computeShoppingList` reescritos para el cálculo por próximos días) y `next build` (type-check + compila las 4 rutas) en verde tras cada bloque de cambios. La verificación interactiva en navegador la sigue haciendo el propio usuario con su `npm run dev` local.
 - **Problema real encontrado y resuelto durante la implementación (fase 4 inicial)**: Turbopack no resuelve los imports internos de `packages/core` en convención NodeNext (`import "./foo.js"` apuntando a `foo.ts`) ni con `transpilePackages` ni con `turbopack.resolveExtensions`. Solución: `packages/core` se compila a `dist/` real (`tsc`, `declaration: true`), consumido como JS normal de `node_modules`. Detalle en [ADR-0016](adrs/0016-monorepo-npm-workspaces-para-compartir-engine-y-data.md).
 - **`npm audit`**: 3 vulnerabilidades "high" transitivas en `next@16.2.12` (postcss/sharp, sin parche disponible). No afectan a este v1. Revisar antes de desplegar públicamente.
 - **Simplificaciones de este v1, documentadas a propósito** (no son bugs):
   - Confirmar un meal es sí/no — no permite editar qué se comió realmente si hubo desviación.
   - Confirmar un meal escribe en `meal_log` pero **no** recalcula `requirement_log` — los `CapsuleMeter` de "Hoy" siguen mostrando el aporte de la propuesta generada, no un acumulado histórico real de lo confirmado.
-  - La cantidad de reposición al tachar en Compra es un valor fijo por tipo de unidad, no calculado a partir de las dishes reales que usan ese ingrediente.
-  - El umbral de "agotado" en Compra es literal (stock ≤ 0) — no hay un nivel de reorden (par level) configurable por ingrediente todavía.
+  - Cada día del horizonte (hoy/mañana, y el de Compra) se genera **de forma independiente** — no encadena la diversidad de un día con el siguiente, así que podrían repetirse ingredientes rotables entre días consecutivos. Ver comentario en `packages/core/src/data/multiDay.ts`.
+  - El motivo "requisito" en Compra sigue usando una cantidad de reposición fija (no calculada), a diferencia del motivo "próximos días" que ya sí calcula el déficit real.
+  - Las imágenes de ingrediente son URLs manuales (sin pipeline de subida/CDN) — el usuario las pega a mano desde Inventario.
 - Despliegue a Vercel no hecho todavía (diseño no lo impide).
 
 ## Proyecto Supabase
@@ -92,4 +96,4 @@ Reestructurado como monorepo npm workspaces (ver [ADR-0016](adrs/0016-monorepo-n
 
 ## Próximo paso concreto
 
-El usuario está probando la app en su navegador (`npm run dev` local). Tras su verificación: elegir entre (a) desplegar `apps/web` a Vercel, o (b) construir el recálculo real de `requirement_log` a partir de `meal_log` confirmado antes de desplegar.
+El usuario está probando la app en su navegador (`npm run dev` local) tras la ronda de feedback de UI. Tras su verificación: elegir entre (a) desplegar `apps/web` a Vercel, o (b) construir el recálculo real de `requirement_log` a partir de `meal_log` confirmado antes de desplegar.

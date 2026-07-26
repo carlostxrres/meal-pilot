@@ -1,8 +1,9 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
+import { IconPencil } from "@tabler/icons-react";
 import { useState } from "react";
-import type { Ingredient } from "@comida-diaria/core";
+import type { Ingredient } from "@meal-pilot/core";
 import { updateInventoryAction } from "../app/(app)/actions";
 
 export function InventoryEditDialog({ ingredient }: { ingredient: Ingredient }) {
@@ -11,8 +12,8 @@ export function InventoryEditDialog({ ingredient }: { ingredient: Ingredient }) 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
-        <button type="button" className="inventory-edit-btn">
-          Editar
+        <button type="button" className="inventory-edit-btn" aria-label={`Editar ${ingredient.name}`}>
+          <IconPencil size={16} stroke={1.75} />
         </button>
       </Dialog.Trigger>
       <Dialog.Portal>
@@ -48,6 +49,16 @@ export function InventoryEditDialog({ ingredient }: { ingredient: Ingredient }) 
                 min={0}
                 defaultValue={ingredient.home_inventory}
                 required
+              />
+            </div>
+            <div className="field">
+              <label htmlFor={`image-${ingredient.id}`}>URL de imagen (opcional)</label>
+              <input
+                id={`image-${ingredient.id}`}
+                name="image_url"
+                type="url"
+                placeholder="https://..."
+                defaultValue={ingredient.image_url ?? ""}
               />
             </div>
             <div className="dialog-actions">

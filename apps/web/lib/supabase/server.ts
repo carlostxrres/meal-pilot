@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import type { Database } from "@comida-diaria/core";
+import type { Database } from "@meal-pilot/core";
 
 /**
  * Cliente de Supabase para Server Components/Actions: usa el anon key +
