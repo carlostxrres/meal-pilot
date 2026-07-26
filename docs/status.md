@@ -6,7 +6,18 @@
 
 ## Fase actual
 
-Fase 2d (valores nutricionales) completada. **Fase 2 (modelo de datos) cerrada por completo.** Lista para arrancar la **fase 3** (motor de generación de menú).
+Fase 3 (motor de generación) completada en su v1: CLI funcionando de punta a punta contra el proyecto real. Lista para arrancar la **fase 4** (web mobile-first) o para iterar sobre las limitaciones conocidas del motor (ver abajo).
+
+## Motor de generación (fase 3)
+
+- Diseño previo en [`plans/2026-07-26-fase3-motor-generacion-design.md`](plans/2026-07-26-fase3-motor-generacion-design.md).
+- Proyecto Node/TS en la raíz del repo: `src/engine/` (algoritmo puro, sin Supabase), `src/data/` (acceso a Supabase + tipos autogenerados en `database.types.ts`, regenerables con `npm run gen:types`), `src/cli.ts` (entrypoint de `npm run generate`).
+- `npm test` (vitest): 15 tests en verde sobre `engine/` con fixtures en memoria — resolución de huecos, priorización (inventario/requisito/diversidad), semilla por fecha, dish descartada por requisito mandatory, meal sin candidata.
+- `npm run generate` ejecutado contra `meal-pilot`: produce la propuesta completa de los 4 meals de hoy + resumen de los 5 `dietary_requirement`, sin errores.
+- **Limitaciones conocidas, encontradas al ejecutarlo de verdad** (no son bugs, son simplificaciones deliberadas de esta v1, candidatas a mejorar en una iteración futura):
+  - No se prioriza por caducidad (el esquema no guarda fecha de apertura de cada ingrediente — ver diseño de fase 3).
+  - La cantidad de cada componente flexible es siempre la fija del `dish_ingredient` (o su mínimo si hay rango), nunca se estira hacia `quantity_max` aunque ayudaría a cumplir un requisito — por eso, por ejemplo, el aguacate de la ensalada (15g) no llega ni de lejos al mínimo diario (100g): la ensalada no está pensada como única fuente de ese requisito. Si se quiere que un requisito se cumpla de verdad con el catálogo actual, hay que revisar las cantidades/dishes semilla, no es una limitación del motor en sí.
+  - El motor no escribe en `requirement_log` ni `meal_log` (decisión explícita del diseño); por tanto el resumen de requisitos que imprime el CLI es solo "lo que aportaría la propuesta de hoy", no un acumulado semanal real todavía.
 
 ## Proyecto Supabase
 
@@ -30,7 +41,7 @@ Fase 2d (valores nutricionales) completada. **Fase 2 (modelo de datos) cerrada p
 | 2b | DDL del esquema (`supabase/migrations/`) | ✅ Hecho |
 | 2c | Datos semilla (catálogo de meals/dishes/ingredients/supplements/requisitos) | ✅ Hecho |
 | 2d | Valores nutricionales reales de los ingredientes semilla | ✅ Hecho |
-| 3 | Motor de generación de menú diario (TypeScript/Node) | ⬜ Pendiente |
+| 3 | Motor de generación de menú diario (TypeScript/Node) | ✅ Hecho (v1) |
 | 4 | Web mobile-first de gestión | ⬜ Pendiente |
 | 5 | Usos de IA (opcional, ver sección 8 de `diseno-sistema.md`) | ⬜ Pendiente |
 
@@ -41,7 +52,9 @@ Fase 2d (valores nutricionales) completada. **Fase 2 (modelo de datos) cerrada p
 - **Alcance de la fase 5 (IA)**: cuál de las 5 ideas de la sección 8 abordar primero, si alguna. No bloquea nada antes de la fase 5.
 - **Gramos de hidratos en el almuerzo**: nunca se formalizó como fila en 3.3, no bloquea nada — añadir como `dietary_requirement` nuevo cuando se decida.
 - **Precisión de los valores nutricionales**: son estimaciones a mano (ver arriba), no vienen de una fuente validada. No bloquea la fase 3, pero conviene tenerlo presente al interpretar cualquier cálculo de cumplimiento.
+- **Cantidades semilla insuficientes para algunos requisitos** (ver hallazgo de la fase 3 arriba): revisar si el catálogo de dishes necesita ajustes (ej. un topping de aguacate más generoso, o una dish dedicada) para que los requisitos se puedan cumplir de verdad con una combinación real de meals.
+- **Escritura en `requirement_log`/`meal_log`**: el motor de la fase 3 es solo lectura; falta decidir cuándo se construye el flujo de confirmación que sí escriba ahí (¿parte de la fase 4?).
 
 ## Próximo paso concreto
 
-Arrancar fase 3: motor de generación de menú diario en TypeScript/Node, implementando el algoritmo de la sección 5 de `diseno-sistema.md` sobre el esquema y los datos ya cargados en Supabase.
+Arrancar fase 4 (web mobile-first) reutilizando `src/engine/` y `src/data/`, o iterar primero sobre las limitaciones conocidas del motor (cantidades semilla, escritura de logs) antes de construir la web.

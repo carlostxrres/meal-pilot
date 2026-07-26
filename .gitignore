@@ -3,3 +3,7 @@
 .env.*
 !.env.example
 supabase-access-token
+
+# Node
+node_modules/
+dist/
