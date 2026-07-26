@@ -24,6 +24,37 @@
   --success-soft: #dfeee6;
   --off: #b3453c;
   --off-soft: #f6dedc;
+
+  /* Spacing — escala base 8px (ver .interface-design/system.md) */
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-48: 48px;
+
+  /* Typography */
+  --text-70: 0.7rem;
+  --text-75: 0.75rem;
+  --text-80: 0.8rem;
+  --text-85: 0.85rem;
+  --text-90: 0.9rem;
+  --text-100: 1rem;
+  --text-115: 1.15rem;
+  --font-mono: ui-monospace, "SF Mono", "Roboto Mono", Consolas, monospace;
+
+  /* Shape */
+  --radius-pill: 9999px;
+  --border-width: 1px;
+  --border-width-thick: 2px;
+
+  /* Layout */
+  --shell-width: 480px;
+  --tabbar-clearance: 88px;
+
+  /* Overlay (siempre oscuro, independiente del tema) */
+  --scrim: rgba(17, 17, 17, 0.4);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -71,17 +102,17 @@ body {
   text-transform: uppercase;
   line-height: 1.05;
   letter-spacing: -0.01em;
-  font-size: 1.15rem;
+  font-size: var(--text-115);
   margin: 0;
 }
 
 .data-mono {
-  font-family: ui-monospace, "SF Mono", "Roboto Mono", Consolas, monospace;
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
 .label {
-  font-size: 0.8rem;
+  font-size: var(--text-80);
   font-weight: 600;
   color: var(--mute);
 }
@@ -89,21 +120,21 @@ body {
 /* --- Layout shell --- */
 
 .app-shell {
-  max-width: 480px;
+  max-width: var(--shell-width);
   margin: 0 auto;
   min-height: 100dvh;
-  padding: 16px 16px 88px;
+  padding: var(--space-16) var(--space-16) var(--tabbar-clearance);
 }
 
 .app-header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-16);
 }
 
 .app-title {
-  font-size: 1rem;
+  font-size: var(--text-100);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.02em;
@@ -114,11 +145,11 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--hairline);
+  border: var(--border-width) solid var(--hairline);
   background: var(--canvas);
   color: var(--ink);
-  padding: 8px;
-  border-radius: 9999px;
+  padding: var(--space-8);
+  border-radius: var(--radius-pill);
 }
 
 /* --- Bottom tab bar --- */
@@ -129,9 +160,9 @@ body {
   left: 0;
   right: 0;
   display: flex;
-  border-top: 1px solid var(--hairline);
+  border-top: var(--border-width) solid var(--hairline);
   background: var(--canvas);
-  max-width: 480px;
+  max-width: var(--shell-width);
   margin: 0 auto;
 }
 
@@ -140,15 +171,15 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px));
+  gap: var(--space-4);
+  padding: var(--space-12) 0 calc(var(--space-12) + env(safe-area-inset-bottom, 0px));
   color: var(--mute);
-  font-size: 0.7rem;
+  font-size: var(--text-70);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.02em;
   text-decoration: none;
-  border-top: 2px solid transparent;
+  border-top: var(--border-width-thick) solid transparent;
 }
 
 .tabbar-item[data-active="true"] {
@@ -164,32 +195,32 @@ body {
 
 .ticket-date {
   color: var(--mute);
-  font-size: 0.85rem;
-  margin: 0 0 16px;
+  font-size: var(--text-85);
+  margin: 0 0 var(--space-16);
 }
 
 .meal-row {
   background: var(--canvas);
-  border: 1px solid var(--hairline);
-  padding: 14px 16px;
-  margin-bottom: 10px;
+  border: var(--border-width) solid var(--hairline);
+  padding: var(--space-16) var(--space-16);
+  margin-bottom: var(--space-12);
 }
 
 .meal-row-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--space-8);
 }
 
 .meal-row-head-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-8);
 }
 
 .meal-time {
-  font-size: 0.75rem;
+  font-size: var(--text-75);
   color: var(--mute);
   white-space: nowrap;
 }
@@ -203,8 +234,8 @@ body {
 
 .nutrition-popover {
   background: var(--canvas);
-  border: 1px solid var(--hairline);
-  padding: 10px 14px;
+  border: var(--border-width) solid var(--hairline);
+  padding: var(--space-12) var(--space-16);
   min-width: 160px;
 }
 
@@ -216,19 +247,19 @@ body {
   list-style: none;
   margin: 0;
   padding: 0;
-  font-size: 0.85rem;
+  font-size: var(--text-85);
 }
 
 .nutrition-list li {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
-  padding: 2px 0;
+  gap: var(--space-12);
+  padding: var(--space-4) 0;
 }
 
 .dish-name {
   font-weight: 600;
-  margin: 8px 0 4px;
+  margin: var(--space-8) 0 var(--space-4);
 }
 
 .ingredient-list {
@@ -236,14 +267,14 @@ body {
   margin: 0;
   padding: 0;
   color: var(--charcoal);
-  font-size: 0.9rem;
+  font-size: var(--text-90);
 }
 
 .ingredient-list li {
   display: flex;
   justify-content: space-between;
-  padding: 3px 0;
-  border-bottom: 1px solid var(--hairline-soft);
+  padding: var(--space-4) 0;
+  border-bottom: var(--border-width) solid var(--hairline-soft);
 }
 
 .ingredient-list li:last-child {
@@ -253,31 +284,31 @@ body {
 .supplement-note {
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin-top: 8px;
-  font-size: 0.85rem;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+  font-size: var(--text-85);
   color: var(--turmeric);
 }
 
 .warning {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-8);
   color: var(--off);
-  font-size: 0.9rem;
+  font-size: var(--text-90);
 }
 
 .meal-confirm-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--hairline-soft);
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+  padding-top: var(--space-12);
+  border-top: var(--border-width) solid var(--hairline-soft);
 }
 
 .meal-confirm-label {
-  font-size: 0.85rem;
+  font-size: var(--text-85);
   color: var(--mute);
   cursor: pointer;
 }
@@ -286,16 +317,16 @@ body {
 
 .day-tabs-list {
   display: flex;
-  gap: 4px;
-  margin-bottom: 16px;
+  gap: var(--space-4);
+  margin-bottom: var(--space-16);
 }
 
 .day-tabs-trigger {
   all: unset;
-  padding: 6px 16px;
-  border: 1px solid var(--hairline);
-  border-radius: 9999px;
-  font-size: 0.8rem;
+  padding: var(--space-8) var(--space-16);
+  border: var(--border-width) solid var(--hairline);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-80);
   font-weight: 600;
   color: var(--mute);
   cursor: pointer;
@@ -310,14 +341,14 @@ body {
 /* --- Capsule meter (signature) --- */
 
 .capsule-meter {
-  margin-bottom: 10px;
+  margin-bottom: var(--space-12);
 }
 
 .capsule-meter-label {
   display: flex;
   justify-content: space-between;
-  font-size: 0.8rem;
-  margin-bottom: 4px;
+  font-size: var(--text-80);
+  margin-bottom: var(--space-4);
 }
 
 .capsule-meter-desc {
@@ -325,15 +356,15 @@ body {
 }
 
 .capsule-meter-value {
-  font-family: ui-monospace, "SF Mono", "Roboto Mono", Consolas, monospace;
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   color: var(--mute);
 }
 
 .capsule-meter-track {
   position: relative;
-  height: 10px;
-  border-radius: 9999px;
+  height: var(--space-12);
+  border-radius: var(--radius-pill);
   background: var(--hairline-soft);
   overflow: hidden;
 }
@@ -351,7 +382,7 @@ body {
   bottom: 0;
   left: 0;
   width: 100%;
-  border-radius: 9999px;
+  border-radius: var(--radius-pill);
   background: var(--success);
   transition: transform 300ms ease;
 }
@@ -365,13 +396,13 @@ body {
 .section-title {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.8rem;
+  gap: var(--space-8);
+  font-size: var(--text-80);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--mute);
-  margin: 24px 0 8px;
+  margin: var(--space-24) 0 var(--space-8);
 }
 
 .section-title:first-child {
@@ -382,25 +413,25 @@ body {
 
 .inventory-controls {
   display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: var(--space-8);
+  margin-bottom: var(--space-16);
 }
 
 .search-field {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 6px;
-  border: 1px solid var(--hairline);
+  gap: var(--space-8);
+  border: var(--border-width) solid var(--hairline);
   background: var(--paper);
-  padding: 0 10px;
+  padding: 0 var(--space-12);
 }
 
 .search-field input {
   border: none;
   background: transparent;
   color: var(--ink);
-  padding: 8px 0;
+  padding: var(--space-8) 0;
   width: 100%;
 }
 
@@ -411,25 +442,25 @@ body {
 .select-trigger {
   display: flex;
   align-items: center;
-  gap: 6px;
-  border: 1px solid var(--hairline);
+  gap: var(--space-8);
+  border: var(--border-width) solid var(--hairline);
   background: var(--canvas);
   color: var(--ink);
-  padding: 0 10px;
-  font-size: 0.8rem;
+  padding: 0 var(--space-12);
+  font-size: var(--text-80);
   white-space: nowrap;
 }
 
 .select-content {
   background: var(--canvas);
-  border: 1px solid var(--hairline);
+  border: var(--border-width) solid var(--hairline);
   overflow: hidden;
   z-index: 20;
 }
 
 .select-item {
-  padding: 8px 14px;
-  font-size: 0.85rem;
+  padding: var(--space-8) var(--space-16);
+  font-size: var(--text-85);
   color: var(--ink);
   cursor: pointer;
   outline: none;
@@ -443,11 +474,11 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-12);
   background: var(--canvas);
-  border: 1px solid var(--hairline);
+  border: var(--border-width) solid var(--hairline);
   margin-bottom: -1px;
-  padding: 12px 16px;
+  padding: var(--space-12) var(--space-16);
 }
 
 .inventory-name {
@@ -456,24 +487,24 @@ body {
 
 .inventory-qty {
   display: flex;
-  gap: 12px;
-  font-size: 0.85rem;
+  gap: var(--space-12);
+  font-size: var(--text-85);
   color: var(--mute);
 }
 
 .inventory-qty strong {
   color: var(--ink);
-  font-family: ui-monospace, "SF Mono", "Roboto Mono", Consolas, monospace;
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
 .inventory-edit-btn {
-  border: 1px solid var(--hairline);
+  border: var(--border-width) solid var(--hairline);
   background: transparent;
   color: var(--ink);
-  padding: 6px 14px;
-  border-radius: 9999px;
-  font-size: 0.8rem;
+  padding: var(--space-8) var(--space-16);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-80);
 }
 
 /* --- Shopping --- */
@@ -481,11 +512,11 @@ body {
 .shopping-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-12);
   background: var(--canvas);
-  border: 1px solid var(--hairline);
+  border: var(--border-width) solid var(--hairline);
   margin-bottom: -1px;
-  padding: 10px 16px;
+  padding: var(--space-12) var(--space-16);
 }
 
 .shopping-image {
@@ -513,15 +544,15 @@ body {
 }
 
 .shopping-reason {
-  font-size: 0.75rem;
+  font-size: var(--text-75);
   color: var(--mute);
 }
 
 .shopping-empty,
 .inventory-empty {
   color: var(--mute);
-  font-size: 0.9rem;
-  padding: 16px 0;
+  font-size: var(--text-90);
+  padding: var(--space-16) 0;
 }
 
 /* --- Checkbox (Radix) --- */
@@ -531,7 +562,7 @@ body {
   width: 22px;
   height: 22px;
   flex-shrink: 0;
-  border: 1px solid var(--hairline);
+  border: var(--border-width) solid var(--hairline);
   background: var(--canvas);
   display: flex;
   align-items: center;
@@ -545,7 +576,7 @@ body {
 
 .checkbox-indicator {
   color: var(--canvas);
-  font-size: 0.8rem;
+  font-size: var(--text-80);
   line-height: 1;
 }
 
@@ -554,7 +585,7 @@ body {
 .dialog-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(17, 17, 17, 0.4);
+  background: var(--scrim);
 }
 
 .dialog-content {
@@ -562,39 +593,39 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  max-width: 480px;
+  max-width: var(--shell-width);
   margin: 0 auto;
   background: var(--canvas);
-  border: 1px solid var(--hairline);
+  border: var(--border-width) solid var(--hairline);
   border-bottom: none;
-  padding: 20px;
-  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  padding: var(--space-24);
+  padding-bottom: calc(var(--space-24) + env(safe-area-inset-bottom, 0px));
 }
 
 .dialog-title {
-  font-size: 1rem;
+  font-size: var(--text-100);
   font-weight: 700;
   text-transform: uppercase;
-  margin: 0 0 16px;
+  margin: 0 0 var(--space-16);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-bottom: 14px;
+  gap: var(--space-4);
+  margin-bottom: var(--space-16);
 }
 
 .field label {
-  font-size: 0.8rem;
+  font-size: var(--text-80);
   color: var(--mute);
 }
 
 .field input {
   font: inherit;
-  font-family: ui-monospace, "SF Mono", "Roboto Mono", Consolas, monospace;
-  padding: 10px 12px;
-  border: 1px solid var(--hairline);
+  font-family: var(--font-mono);
+  padding: var(--space-12) var(--space-12);
+  border: var(--border-width) solid var(--hairline);
   background: var(--paper);
   color: var(--ink);
   border-radius: 0;
@@ -602,8 +633,8 @@ body {
 
 .dialog-actions {
   display: flex;
-  gap: 8px;
-  margin-top: 16px;
+  gap: var(--space-8);
+  margin-top: var(--space-16);
 }
 
 /* --- Buttons --- */
@@ -615,9 +646,9 @@ input {
 
 .btn-primary {
   flex: 1;
-  padding: 12px;
+  padding: var(--space-12);
   border: none;
-  border-radius: 9999px;
+  border-radius: var(--radius-pill);
   background: var(--ink);
   color: var(--canvas);
   font-weight: 600;
@@ -625,9 +656,9 @@ input {
 
 .btn-secondary {
   flex: 1;
-  padding: 12px;
-  border: 1px solid var(--hairline);
-  border-radius: 9999px;
+  padding: var(--space-12);
+  border: var(--border-width) solid var(--hairline);
+  border-radius: var(--radius-pill);
   background: transparent;
   color: var(--ink);
   font-weight: 600;
@@ -636,37 +667,37 @@ input {
 /* --- Login --- */
 
 .login-page {
-  max-width: 480px;
+  max-width: var(--shell-width);
   margin: 0 auto;
-  padding: 1rem;
+  padding: var(--space-16);
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin-top: 2rem;
+  gap: var(--space-16);
+  margin-top: var(--space-32);
 }
 
 .login-form label {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  font-size: 0.9rem;
+  gap: var(--space-4);
+  font-size: var(--text-90);
   color: var(--charcoal);
 }
 
 .login-form input {
-  padding: 0.6rem;
-  border: 1px solid var(--hairline);
+  padding: var(--space-8);
+  border: var(--border-width) solid var(--hairline);
   background: var(--paper);
   color: var(--ink);
 }
 
 .login-form button {
-  padding: 0.7rem;
+  padding: var(--space-12);
   border: none;
-  border-radius: 9999px;
+  border-radius: var(--radius-pill);
   background: var(--ink);
   color: var(--canvas);
   font-weight: 600;
@@ -674,5 +705,5 @@ input {
 
 .login-form .error {
   color: var(--off);
-  font-size: 0.9rem;
+  font-size: var(--text-90);
 }
