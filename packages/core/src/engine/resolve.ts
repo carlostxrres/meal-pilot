@@ -209,10 +209,14 @@ function scoreResolvedDish(
   runningAccumulated: ReadonlyMap<string, number>,
   ctx: DailyContext,
 ): number {
-  return resolved.components.reduce(
+  // Media, no suma: si sumaramos, una dish con mas componentes ganaria casi
+  // siempre solo por tener mas huecos que puntuan (WEIGHT_IN_STOCK etc.),
+  // independientemente de si es realmente la mejor opcion para el meal.
+  const total = resolved.components.reduce(
     (sum, c) => sum + scoreIngredient(c.ingredient, c.quantity, applicable, ctx, runningAccumulated),
     0,
   );
+  return total / resolved.components.length;
 }
 
 function resolveMeal(
