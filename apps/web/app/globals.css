@@ -191,14 +191,6 @@ body {
   display: block;
 }
 
-/* --- Ticket (Hoy) --- */
-
-.ticket-date {
-  color: var(--mute);
-  font-size: var(--text-85);
-  margin: 0 0 var(--space-16);
-}
-
 .meal-row {
   background: var(--canvas);
   border: var(--border-width) solid var(--hairline);
@@ -516,21 +508,6 @@ body {
   background: var(--off);
   color: var(--canvas);
   font-weight: 600;
-}
-
-.inventory-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-12);
-  background: var(--canvas);
-  border: var(--border-width) solid var(--hairline);
-  margin-bottom: -1px;
-  padding: var(--space-12) var(--space-16);
-}
-
-.inventory-name {
-  font-weight: 500;
 }
 
 .inventory-qty {

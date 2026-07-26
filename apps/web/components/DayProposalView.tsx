@@ -10,19 +10,15 @@ function formatTime(time: string): string {
 
 export function DayProposalView({
   proposal,
-  label,
   confirmedMealIds,
   isToday,
 }: {
   proposal: DayProposal;
-  label: string;
   confirmedMealIds: Set<string>;
   isToday: boolean;
 }) {
   return (
     <div>
-      <p className="ticket-date">{label}</p>
-
       {proposal.meals.map((mealProposal) => (
         <section key={mealProposal.meal.id} className="meal-row">
           <div className="meal-row-head">

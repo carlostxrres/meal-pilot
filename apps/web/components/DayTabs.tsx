@@ -18,7 +18,6 @@ export function DayTabs({ days }: { days: DayTabData[] }) {
     return (
       <DayProposalView
         proposal={only.proposal}
-        label={only.label}
         confirmedMealIds={only.confirmedMealIds}
         isToday={only.isToday}
       />
@@ -38,7 +37,6 @@ export function DayTabs({ days }: { days: DayTabData[] }) {
         <Tabs.Content key={day.date} value={day.date}>
           <DayProposalView
             proposal={day.proposal}
-            label={day.label}
             confirmedMealIds={day.confirmedMealIds}
             isToday={day.isToday}
           />
