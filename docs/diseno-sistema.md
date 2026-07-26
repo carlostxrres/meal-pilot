@@ -182,9 +182,9 @@ Esto da 4 combinaciones posibles, y un requisito siempre cae en una de ellas. Ad
 | --------------------------------- | --------------------------------------------------- | ------------------------ | -------- | ---------------------- | ---------------------------- | ------------------------------------ | ------------ |
 | 2 latas de sardinas a la semana   | ingredient                                         | Sardinas en lata         | week   | —                      | 2 servings (240g)          | 2 servings (o sin techo)            | mandatory  |
 | 1 aguacate (~100g) al día         | ingredient                                         | Aguacate                 | day    | —                      | 100g                        | —                                    | mandatory  |
-| Mínimo de vitamina C diario       | nutrient                                           | `vitamin_c_mg_per_100`      | day    | —                      | (valor a definir, ej. RDA) | —                                    | mandatory  |
-| Limitar atún por metales pesados  | ingredient (o category "pescado azul grande")      | Atún en lata             | week   | —                      | —                            | (valor a definir, ej. 2 servings)   | mandatory  |
-| Mínimo de proteína post-entreno   | nutrient                                           | `protein_g_per_100`        | day    | Snack post-entreno    | (valor a definir, ej. 25g) | —                                    | mandatory  |
+| Mínimo de vitamina C diario       | nutrient                                           | `vitamin_c_mg_per_100`      | day    | —                      | 80mg (NRV UE)               | —                                    | mandatory  |
+| Limitar atún por metales pesados  | ingredient (o category "pescado azul grande")      | Atún en lata             | week   | —                      | —                            | 2 servings (240g)                   | mandatory  |
+| Mínimo de proteína post-entreno   | nutrient                                           | `protein_g_per_100`        | day    | Snack post-entreno    | 35g                          | —                                    | mandatory  |
 
 El caso del atún es interesante porque combina la norma de **diversidad** (rotar proteína) con un requisito de **máximo semanal**: el sistema no solo debe evitar servir atún todos los días por variedad, sino que además nunca debe superar el techo semanal aunque el usuario quisiera repetirlo.
 
@@ -387,8 +387,11 @@ No entran en el alcance de v1, pero conviene dejarlas anotadas porque encajan de
 - **Modelo de acceso**: Supabase Auth + RLS desde el principio (`owner_id` en todas las tablas), aunque hoy solo haya un usuario. Ver 4.1.
 - **Estrategia de IDs**: `uuid` con `gen_random_uuid()` en todas las PKs, no enteros autoincrementales. Ver sección 2 y 4.1.
 - **División de la fase 2**: en sub-fases 2a–2d (proyecto Supabase, DDL, datos semilla, valores nutricionales reales). Ver [Roadmap](#7-roadmap-por-fases).
+- **Vitamina C mínima diaria**: 80mg (NRV UE para adultos). Ver 3.3.
+- **Proteína mínima post-entreno**: 35g, calculado como 0,3–0,4 g/kg de peso corporal del usuario. Ver 3.3.
+- **Equivalencia ración → gramos** (necesaria para cargar sardinas/atún como datos semilla): 1 ración de pescado en lata = 120g (asunción tomada al escribir la fase 2c, ajustable). Ver `supabase/migrations/20260726130000_seed_initial_catalog.sql`.
 
 ### Aún abiertas
 
-- **Valores concretos de los requisitos nuevos**: falta fijar cifras reales (ej. gramos exactos de proteína en el snack post-entreno, gramos de hidratos en el almuerzo, RDA de vitamina C) — se pueden dejar como placeholders en los datos semilla de la fase 2c y ajustarlos con uso real.
 - **Alcance de la fase 5 (IA)**: de las 5 ideas de la sección 8, cuál (si alguna) se aborda primero — no es necesario decidirlo ahora, solo antes de empezar esa fase.
+- **Gramos de hidratos en el almuerzo**: mencionado como idea en la sección 9 original, pero nunca se formalizó como fila en 3.3 — no bloquea nada, se puede añadir como `dietary_requirement` nuevo cuando se decida.
