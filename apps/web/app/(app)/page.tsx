@@ -7,8 +7,7 @@ import {
 } from "@meal-pilot/core";
 import { createClient } from "@/lib/supabase/server";
 import { DayTabs, type DayTabData } from "@/components/DayTabs";
-
-const DAY_LABELS = ["Hoy", "Mañana", "Pasado mañana"];
+import { formatFriendlyDate } from "@/lib/friendlyDate";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -19,7 +18,7 @@ export default async function HomePage() {
 
   const days: DayTabData[] = contexts.map((ctx, i) => ({
     date: ctx.date,
-    label: DAY_LABELS[i] ?? ctx.date,
+    label: formatFriendlyDate(ctx.date, dates[0] ?? ctx.date),
     proposal: proposals[i]!,
     confirmedMealIds: ctx.confirmedMealIds,
     isToday: i === 0,
