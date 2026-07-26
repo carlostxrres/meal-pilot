@@ -4,7 +4,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { IconPencil } from "@tabler/icons-react";
 import { useState } from "react";
 import type { Ingredient } from "@meal-pilot/core";
-import { updateInventoryAction } from "../app/(app)/actions";
+import { updateInventoryAction } from "@/app/(app)/actions";
 
 export function InventoryEditDialog({ ingredient }: { ingredient: Ingredient }) {
   const [open, setOpen] = useState(false);

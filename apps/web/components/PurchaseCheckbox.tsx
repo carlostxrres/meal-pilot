@@ -4,7 +4,7 @@ import * as Checkbox from "@radix-ui/react-checkbox";
 import { IconCheck } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useId, useState, useTransition } from "react";
-import { markPurchasedAction } from "../app/(app)/actions";
+import { markPurchasedAction } from "@/app/(app)/actions";
 import { IngredientThumb } from "./IngredientThumb";
 
 export function PurchaseCheckbox({

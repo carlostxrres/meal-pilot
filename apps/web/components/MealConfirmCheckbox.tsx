@@ -3,7 +3,7 @@
 import * as Checkbox from "@radix-ui/react-checkbox";
 import { IconCheck } from "@tabler/icons-react";
 import { useId, useState, useTransition } from "react";
-import { confirmMealAction } from "../app/(app)/actions";
+import { confirmMealAction } from "@/app/(app)/actions";
 
 export function MealConfirmCheckbox({
   date,

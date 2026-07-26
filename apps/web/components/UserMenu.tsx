@@ -4,7 +4,7 @@ import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { IconLogout, IconMenu2 } from "@tabler/icons-react";
 import { useState, useTransition } from "react";
-import { signOut } from "../app/login/actions";
+import { signOut } from "@/app/login/actions";
 
 export function UserMenu() {
   const [menuOpen, setMenuOpen] = useState(false);
