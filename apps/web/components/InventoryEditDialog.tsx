@@ -51,16 +51,6 @@ export function InventoryEditDialog({ ingredient }: { ingredient: Ingredient }) 
                 required
               />
             </div>
-            <div className="field">
-              <label htmlFor={`image-${ingredient.id}`}>URL de imagen (opcional)</label>
-              <input
-                id={`image-${ingredient.id}`}
-                name="image_url"
-                type="url"
-                placeholder="https://..."
-                defaultValue={ingredient.image_url ?? ""}
-              />
-            </div>
             <div className="dialog-actions">
               <Dialog.Close asChild>
                 <button type="button" className="btn-secondary">

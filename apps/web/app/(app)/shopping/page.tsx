@@ -43,7 +43,6 @@ export default async function ShoppingPage() {
           name={item.ingredient.name}
           reasonText={item.reasons.map((r) => REASON_LABELS[r]).join(" · ")}
           restockQuantity={item.restockQuantity}
-          imageUrl={item.ingredient.image_url}
         />
       ))}
     </div>

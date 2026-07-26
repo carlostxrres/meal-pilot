@@ -27,7 +27,6 @@ export function makeIngredient(overrides: Partial<Ingredient> = {}): Ingredient 
     recommended_time: "any",
     office_inventory: 0,
     home_inventory: 0,
-    image_url: null,
     kcal_per_100: null,
     protein_g_per_100: null,
     carbs_g_per_100: null,

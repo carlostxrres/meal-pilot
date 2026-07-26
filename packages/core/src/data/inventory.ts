@@ -19,7 +19,7 @@ export async function fetchIngredients(
 export async function updateIngredientInventory(
   supabase: SupabaseClient<Database>,
   ingredientId: string,
-  values: { office_inventory: number; home_inventory: number; image_url?: string | null },
+  values: { office_inventory: number; home_inventory: number },
 ): Promise<void> {
   const { error } = await supabase
     .from("ingredient")

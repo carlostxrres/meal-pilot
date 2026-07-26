@@ -19,13 +19,11 @@ export async function updateInventoryAction(formData: FormData) {
   const ingredientId = String(formData.get("ingredientId"));
   const office = Number(formData.get("office_inventory"));
   const home = Number(formData.get("home_inventory"));
-  const imageUrl = String(formData.get("image_url") ?? "").trim();
 
   const supabase = await createClient();
   await updateIngredientInventory(supabase, ingredientId, {
     office_inventory: office,
     home_inventory: home,
-    image_url: imageUrl.length > 0 ? imageUrl : null,
   });
   revalidatePath("/inventory");
   revalidatePath("/shopping");
