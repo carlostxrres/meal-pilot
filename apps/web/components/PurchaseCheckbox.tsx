@@ -1,11 +1,11 @@
 "use client";
 
 import * as Checkbox from "@radix-ui/react-checkbox";
-import { IconCheck, IconPhoto } from "@tabler/icons-react";
+import { IconCheck } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useId, useState, useTransition } from "react";
 import { markPurchasedAction } from "../app/(app)/actions";
-import { ingredientImageUrl } from "@/lib/ingredientImage";
+import { IngredientThumb } from "./IngredientThumb";
 
 export function PurchaseCheckbox({
   ingredientId,
@@ -19,28 +19,15 @@ export function PurchaseCheckbox({
   restockQuantity: number;
 }) {
   const [purchased, setPurchased] = useState(false);
-  const [imageFailed, setImageFailed] = useState(false);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const id = useId();
 
   return (
-    <div className="shopping-row">
-      {imageFailed ? (
-        <div className="shopping-image shopping-image-placeholder">
-          <IconPhoto size={18} stroke={1.5} />
-        </div>
-      ) : (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={ingredientImageUrl(ingredientId)}
-          alt=""
-          className="shopping-image"
-          onError={() => setImageFailed(true)}
-        />
-      )}
-      <label htmlFor={id} className="shopping-info">
-        <p className="shopping-name">{name}</p>
+    <div className="ingredient-row">
+      <IngredientThumb ingredientId={ingredientId} />
+      <label htmlFor={id} className="ingredient-row-info shopping-info">
+        <p className="ingredient-row-name">{name}</p>
         <p className="shopping-reason">{reasonText}</p>
       </label>
       <Checkbox.Root

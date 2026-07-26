@@ -532,9 +532,9 @@ body {
   font-size: var(--text-80);
 }
 
-/* --- Shopping --- */
+/* --- Ingredient row (compartida entre Inventario y Compra) --- */
 
-.shopping-row {
+.ingredient-row {
   display: flex;
   align-items: center;
   gap: var(--space-12);
@@ -544,14 +544,14 @@ body {
   padding: var(--space-12) var(--space-16);
 }
 
-.shopping-image {
+.ingredient-thumb {
   width: 40px;
   height: 40px;
   flex-shrink: 0;
   object-fit: cover;
 }
 
-.shopping-image-placeholder {
+.ingredient-thumb-placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -559,13 +559,17 @@ body {
   background: var(--paper);
 }
 
-.shopping-info {
+.ingredient-row-info {
   flex: 1;
-  cursor: pointer;
+  min-width: 0;
 }
 
-.shopping-name {
+.ingredient-row-name {
   font-weight: 500;
+}
+
+.shopping-info {
+  cursor: pointer;
 }
 
 .shopping-reason {

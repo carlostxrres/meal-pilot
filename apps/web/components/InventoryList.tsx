@@ -4,6 +4,7 @@ import * as Select from "@radix-ui/react-select";
 import { IconBox, IconChevronDown, IconCircleOff, IconSearch } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import type { Ingredient } from "@meal-pilot/core";
+import { IngredientThumb } from "./IngredientThumb";
 import { InventoryEditDialog } from "./InventoryEditDialog";
 
 type SortKey = "qty-desc" | "qty-asc" | "name-asc" | "name-desc";
@@ -21,9 +22,10 @@ function totalStock(i: Ingredient): number {
 
 function IngredientRow({ ingredient }: { ingredient: Ingredient }) {
   return (
-    <div className="inventory-row">
-      <div>
-        <p className="inventory-name">{ingredient.name}</p>
+    <div className="ingredient-row">
+      <IngredientThumb ingredientId={ingredient.id} />
+      <div className="ingredient-row-info">
+        <p className="ingredient-row-name">{ingredient.name}</p>
         <p className="inventory-qty">
           <span>
             Oficina <strong>{ingredient.office_inventory}</strong>
