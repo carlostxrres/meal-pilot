@@ -672,10 +672,12 @@ body {
 
 .dialog-content {
   position: fixed;
-  bottom: 0;
+  bottom: var(--keyboard-inset, 0px);
   left: 0;
   right: 0;
   max-width: var(--shell-width);
+  max-height: 80vh;
+  overflow-y: auto;
   margin: 0 auto;
   background: var(--canvas);
   border: var(--border-width) solid var(--hairline);
