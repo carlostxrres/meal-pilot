@@ -11,7 +11,7 @@ function makeProposal(date: string, ingredient: ReturnType<typeof makeIngredient
     meals: [
       {
         meal,
-        supplement: null,
+        supplements: [],
         resolved: { dish, components: [{ ingredient, quantity }] },
         unresolvedReason: null,
       },

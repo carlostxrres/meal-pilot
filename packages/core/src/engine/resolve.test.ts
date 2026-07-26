@@ -163,7 +163,7 @@ describe("generateDayProposal", () => {
       requirements: [],
     });
     // Se añade el meal manualmente sin candidatos, simulando meal_dish vacío.
-    ctx.meals.push({ meal, candidates: [], supplement: null });
+    ctx.meals.push({ meal, candidates: [], supplements: [] });
 
     const proposal = generateDayProposal(ctx, createSeededRandom("2026-08-01"));
     const mealProposal = proposal.meals.find((m) => m.meal.id === meal.id)!;

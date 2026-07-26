@@ -233,7 +233,7 @@ function resolveMeal(
   if (mealCtx.candidates.length === 0) {
     return {
       meal: mealCtx.meal,
-      supplement: mealCtx.supplement,
+      supplements: mealCtx.supplements,
       resolved: null,
       unresolvedReason: "No hay ninguna dish registrada para este meal (meal_dish vacío).",
     };
@@ -246,7 +246,7 @@ function resolveMeal(
   if (resolvedCandidates.length === 0) {
     return {
       meal: mealCtx.meal,
-      supplement: mealCtx.supplement,
+      supplements: mealCtx.supplements,
       resolved: null,
       unresolvedReason:
         "Ninguna dish candidata pudo resolverse (algún hueco flexible sin ingredientes disponibles).",
@@ -260,7 +260,7 @@ function resolveMeal(
   if (validCandidates.length === 0) {
     return {
       meal: mealCtx.meal,
-      supplement: mealCtx.supplement,
+      supplements: mealCtx.supplements,
       resolved: null,
       unresolvedReason:
         "Todas las dishes candidatas violarían un requisito obligatorio (fuera de margen de tolerancia).",
@@ -280,7 +280,7 @@ function resolveMeal(
 
   return {
     meal: mealCtx.meal,
-    supplement: mealCtx.supplement,
+    supplements: mealCtx.supplements,
     resolved: chosen,
     unresolvedReason: null,
   };

@@ -10,16 +10,18 @@ function formatTime(time: string): string {
 
 export function DayProposalView({
   proposal,
+  label,
   confirmedMealIds,
   isToday,
 }: {
   proposal: DayProposal;
+  label: string;
   confirmedMealIds: Set<string>;
   isToday: boolean;
 }) {
   return (
     <div>
-      <p className="ticket-date">{proposal.date}</p>
+      <p className="ticket-date">{label}</p>
 
       {proposal.meals.map((mealProposal) => (
         <section key={mealProposal.meal.id} className="meal-row">
@@ -56,12 +58,11 @@ export function DayProposalView({
             </>
           )}
 
-          {mealProposal.supplement && (
-            <p className="supplement-note">
-              <IconFlask size={14} stroke={1.75} /> {mealProposal.supplement.name} (
-              {mealProposal.supplement.relative_timing})
+          {mealProposal.supplements.map((supplement) => (
+            <p key={supplement.id} className="supplement-note">
+              <IconFlask size={14} stroke={1.75} /> {supplement.name} ({supplement.relative_timing})
             </p>
-          )}
+          ))}
 
           {mealProposal.resolved && isToday && (
             <MealConfirmCheckbox
@@ -74,10 +75,19 @@ export function DayProposalView({
         </section>
       ))}
 
-      <h3 className="section-title">Requisitos dietéticos del día</h3>
-      {proposal.requirementStatuses.map((status) => (
-        <CapsuleMeter key={status.requirement.id} status={status} />
-      ))}
+      <h3 className="section-title">Requisitos diarios</h3>
+      {proposal.requirementStatuses
+        .filter((status) => status.requirement.period === "day")
+        .map((status) => (
+          <CapsuleMeter key={status.requirement.id} status={status} />
+        ))}
+
+      <h3 className="section-title">Requisitos semanales</h3>
+      {proposal.requirementStatuses
+        .filter((status) => status.requirement.period === "week")
+        .map((status) => (
+          <CapsuleMeter key={status.requirement.id} status={status} />
+        ))}
     </div>
   );
 }

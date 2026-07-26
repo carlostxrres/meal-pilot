@@ -40,7 +40,7 @@ export interface DishWithComponents {
 export interface MealWithCandidates {
   meal: Meal;
   candidates: { dish: DishWithComponents; quantityUnits: number }[];
-  supplement: Supplement | null;
+  supplements: Supplement[];
 }
 
 /** Todo lo necesario para generar la propuesta de un día concreto. */
@@ -83,7 +83,7 @@ export interface RequirementStatus {
 
 export interface MealProposal {
   meal: Meal;
-  supplement: Supplement | null;
+  supplements: Supplement[];
   resolved: ResolvedDish | null;
   /** Si resolved es null, motivo por el que no hubo candidata válida. */
   unresolvedReason: string | null;

@@ -117,9 +117,9 @@ export async function fetchDailyContext(
       })
       .filter((c): c is { dish: DishWithComponents; quantityUnits: number } => c !== null);
 
-    const supplement = (supplements ?? []).find((s) => s.meal_id === meal.id) ?? null;
+    const mealSupplements = (supplements ?? []).filter((s) => s.meal_id === meal.id);
 
-    return { meal, candidates, supplement };
+    return { meal, candidates, supplements: mealSupplements };
   });
 
   const latestLogByRequirement = new Map<string, RequirementLog>();

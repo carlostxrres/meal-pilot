@@ -43,8 +43,8 @@ function formatProposal(proposal: DayProposal): string {
       }
     }
 
-    if (mealProposal.supplement) {
-      lines.push(`  Suplemento: ${mealProposal.supplement.name} (${mealProposal.supplement.relative_timing})`);
+    for (const supplement of mealProposal.supplements) {
+      lines.push(`  Suplemento: ${supplement.name} (${supplement.relative_timing})`);
     }
 
     lines.push("");

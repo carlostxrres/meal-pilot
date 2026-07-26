@@ -103,7 +103,7 @@ interface BuildContextInput {
   date: string;
   ingredients: Ingredient[];
   categoryLinks?: { ingredientId: string; categoryId: string }[];
-  meals: { meal: Meal; dish: Dish; components: DishIngredient[]; supplement?: Supplement | null }[];
+  meals: { meal: Meal; dish: Dish; components: DishIngredient[]; supplements?: Supplement[] }[];
   requirements?: DietaryRequirement[];
   mealLogs?: MealLog[];
 }
@@ -133,7 +133,7 @@ export function buildTestContext(input: BuildContextInput): DailyContext {
   const meals: MealWithCandidates[] = input.meals.map((m) => ({
     meal: m.meal,
     candidates: [{ dish: { dish: m.dish, components: m.components }, quantityUnits: 1 }],
-    supplement: m.supplement ?? null,
+    supplements: m.supplements ?? [],
   }));
 
   return {
