@@ -14,10 +14,17 @@ import type { Database } from "./database.types.js";
 const DIVERSITY_WINDOW_DAYS = 3;
 
 /**
- * Nota sobre owner_id: este CLI usa la service_role key (bypassa RLS) y hoy
- * solo existe un usuario real en el sistema, así que no se filtra por
- * owner_id en ninguna query. Cuando exista sesión de usuario real (fase 4,
- * vía anon key + Supabase Auth), esto debe revisarse y filtrar de verdad.
+ * Nota sobre owner_id: nunca se filtra explícitamente por owner_id en
+ * ninguna query. Hay dos consumidores con dos modelos de acceso distintos:
+ * - `apps/cli` usa la service_role key (bypassa RLS); como hoy solo existe
+ *   un usuario en todo el sistema, el efecto es el mismo que filtrar por él.
+ * - `apps/web` (fase 4) pasa el cliente autenticado del usuario (anon key +
+ *   sesión real vía Supabase Auth); ahí el filtrado lo hace RLS de forma
+ *   automática (`owner_id = auth.uid()`, ver supabase/migrations/... y
+ *   docs/adrs/0005-*.md), así que tampoco hace falta añadirlo aquí.
+ * Si en el futuro hay más de un usuario, esto sigue siendo correcto para
+ * `apps/web` (cada sesión ve solo lo suyo), pero `apps/cli` pasaría a
+ * necesitar un owner_id explícito en vez de asumir "el único que hay".
  */
 export async function fetchDailyContext(
   supabase: SupabaseClient<Database>,

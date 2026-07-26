@@ -1,0 +1,17 @@
+{
+  "name": "@comida-diaria/cli",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@comida-diaria/core": "*",
+    "@supabase/supabase-js": "^2.45.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

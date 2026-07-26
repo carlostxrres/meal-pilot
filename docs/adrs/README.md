@@ -19,6 +19,7 @@ Registro de decisiones de arquitectura del proyecto. Cada ADR es un archivo con 
 | [0013](0013-definicion-de-racion-en-gramos.md) | Definición de "ración" en gramos |
 | [0014](0014-supplements-no-diarios-como-regla-de-calendario.md) | Supplements no diarios como regla de calendario |
 | [0015](0015-fuente-de-datos-nutricionales-api-externa-mas-overrides.md) | Fuente de datos nutricionales: API externa + overrides |
+| [0016](0016-monorepo-npm-workspaces-para-compartir-engine-y-data.md) | Monorepo npm workspaces para compartir `engine`/`data` (CLI + web) |
 
 ## Cómo añadir un ADR nuevo
 

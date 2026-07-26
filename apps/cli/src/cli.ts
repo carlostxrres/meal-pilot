@@ -1,9 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
-import type { Database } from "./data/database.types.js";
-import { fetchDailyContext } from "./data/fetchDailyContext.js";
-import { createSeededRandom } from "./engine/random.js";
-import { generateDayProposal } from "./engine/resolve.js";
-import type { DayProposal } from "./engine/types.js";
+import {
+  createSeededRandom,
+  fetchDailyContext,
+  generateDayProposal,
+  type DayProposal,
+  type Database,
+} from "@comida-diaria/core";
 
 function parseDateArg(argv: string[]): string {
   const flagIndex = argv.indexOf("--date");

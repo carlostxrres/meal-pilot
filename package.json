@@ -1,19 +1,14 @@
 {
   "name": "comida-diaria",
   "private": true,
-  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "generate": "tsx src/cli.ts",
-    "test": "vitest run",
-    "gen:types": "npx -y supabase gen types typescript --linked > src/data/database.types.ts"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.45.4"
-  },
-  "devDependencies": {
-    "@types/node": "^22.10.2",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.2",
-    "vitest": "^4.1.10"
+    "generate": "npm run generate -w @comida-diaria/cli",
+    "test": "npm test -w @comida-diaria/core",
+    "gen:types": "npm run gen:types -w @comida-diaria/core",
+    "dev:web": "npm run dev -w @comida-diaria/web"
   }
 }

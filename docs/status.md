@@ -6,18 +6,35 @@
 
 ## Fase actual
 
-Fase 3 (motor de generación) completada en su v1: CLI funcionando de punta a punta contra el proyecto real. Lista para arrancar la **fase 4** (web mobile-first) o para iterar sobre las limitaciones conocidas del motor (ver abajo).
+Fase 4 (web mobile-first) completada en su v1: login + ver la propuesta del día, funcionando de punta a punta contra el proyecto real. Sin edición de inventario ni lista de la compra todavía (fuera de alcance de este v1, ver roadmap).
+
+## Estructura del repo (monorepo, desde la fase 4)
+
+Reestructurado como monorepo npm workspaces (ver [ADR-0016](adrs/0016-monorepo-npm-workspaces-para-compartir-engine-y-data.md)):
+
+- `packages/core` (`@comida-diaria/core`) — el motor: `src/engine/` (algoritmo puro, sin Supabase) + `src/data/` (acceso a Supabase + tipos autogenerados en `database.types.ts`, regenerables con `npm run gen:types -w @comida-diaria/core`). Se compila a `dist/` (`npm run build -w @comida-diaria/core`) — **hay que reconstruirlo tras cualquier cambio** si se va a probar solo el CLI (la web lo hace sola vía hooks `predev`/`prebuild`).
+- `apps/cli` (`@comida-diaria/cli`) — el CLI de terminal (`npm run generate`), sin cambios de comportamiento tras el movimiento.
+- `apps/web` (`@comida-diaria/web`) — la app Next.js de la fase 4 (ver abajo).
 
 ## Motor de generación (fase 3)
 
 - Diseño previo en [`plans/2026-07-26-fase3-motor-generacion-design.md`](plans/2026-07-26-fase3-motor-generacion-design.md).
-- Proyecto Node/TS en la raíz del repo: `src/engine/` (algoritmo puro, sin Supabase), `src/data/` (acceso a Supabase + tipos autogenerados en `database.types.ts`, regenerables con `npm run gen:types`), `src/cli.ts` (entrypoint de `npm run generate`).
-- `npm test` (vitest): 15 tests en verde sobre `engine/` con fixtures en memoria — resolución de huecos, priorización (inventario/requisito/diversidad), semilla por fecha, dish descartada por requisito mandatory, meal sin candidata.
+- `npm test` (vitest): 15 tests en verde sobre `packages/core/src/engine/` con fixtures en memoria — resolución de huecos, priorización (inventario/requisito/diversidad), semilla por fecha, dish descartada por requisito mandatory, meal sin candidata.
 - `npm run generate` ejecutado contra `meal-pilot`: produce la propuesta completa de los 4 meals de hoy + resumen de los 5 `dietary_requirement`, sin errores.
 - **Limitaciones conocidas, encontradas al ejecutarlo de verdad** (no son bugs, son simplificaciones deliberadas de esta v1, candidatas a mejorar en una iteración futura):
   - No se prioriza por caducidad (el esquema no guarda fecha de apertura de cada ingrediente — ver diseño de fase 3).
   - La cantidad de cada componente flexible es siempre la fija del `dish_ingredient` (o su mínimo si hay rango), nunca se estira hacia `quantity_max` aunque ayudaría a cumplir un requisito — por eso, por ejemplo, el aguacate de la ensalada (15g) no llega ni de lejos al mínimo diario (100g): la ensalada no está pensada como única fuente de ese requisito. Si se quiere que un requisito se cumpla de verdad con el catálogo actual, hay que revisar las cantidades/dishes semilla, no es una limitación del motor en sí.
-  - El motor no escribe en `requirement_log` ni `meal_log` (decisión explícita del diseño); por tanto el resumen de requisitos que imprime el CLI es solo "lo que aportaría la propuesta de hoy", no un acumulado semanal real todavía.
+  - El motor no escribe en `requirement_log` ni `meal_log` (decisión explícita del diseño); por tanto el resumen de requisitos que imprime el CLI/la web es solo "lo que aportaría la propuesta de hoy", no un acumulado semanal real todavía.
+
+## Web (fase 4)
+
+- Diseño previo: plan de la fase 4 (brainstorming + Plan agent), resumido en [ADR-0016](adrs/0016-monorepo-npm-workspaces-para-compartir-engine-y-data.md).
+- `apps/web`: Next.js 16 (App Router, Turbopack), `@supabase/ssr` para auth server-side. Una sola página protegida (`app/page.tsx`) que llama a `fetchDailyContext` + `generateDayProposal` de `@comida-diaria/core` y renderiza `DayProposalView` (HTML mobile-first, sin librería de componentes).
+- **Auth**: `proxy.ts` (antes `middleware.ts` — Next 16 renombró la convención, ver [nota de migración](https://nextjs.org/docs/messages/middleware-to-proxy)) refresca la sesión y redirige a `/login` si no hay usuario, protegiendo automáticamente cualquier página futura. Login/logout como Server Actions (`app/login/actions.ts`) con `@supabase/ssr`. Usa **solo** `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY` (`apps/web/.env.local`, gitignored) — nunca la service_role key.
+- **Verificado de punta a punta** (`next build` + `next dev` local, sin desplegar): sin sesión → redirect a `/login`; login con `ctorresmoral@gmail.com` → redirect a `/` con la propuesta renderizada; **la página autenticada devuelve exactamente los mismos meals/dishes/ingredientes/cantidades/estado de requisitos que `npm run generate` para la misma fecha** — confirma que RLS bajo sesión real (anon key) da el mismo resultado que la service_role key del CLI, sin haber tenido que tocar `fetchDailyContext`. Logout también verificado (limpia la cookie, vuelve a redirigir a `/login`).
+- **Problema real encontrado y resuelto durante la implementación**: Turbopack no resuelve los imports internos de `packages/core` en convención NodeNext (`import "./foo.js"` apuntando a `foo.ts`) ni con `transpilePackages` ni con `turbopack.resolveExtensions` — esa opción solo afecta a imports *sin* extensión. Solución adoptada: `packages/core` se compila a `dist/` real (`tsc`, con `declaration: true`) y `apps/web`/`apps/cli` consumen ese JS ya compilado como cualquier dependencia normal de `node_modules`, sin necesitar que el bundler entienda la convención del paquete de origen. Detalle completo en [ADR-0016](adrs/0016-monorepo-npm-workspaces-para-compartir-engine-y-data.md).
+- **`npm audit`**: 3 vulnerabilidades "high" reportadas, todas transitivas dentro del propio `next@16.2.12` (postcss/sharp, CVEs de 2026 aún no parcheados en ninguna versión reciente de Next — el fix sugerido por `audit` es degradar a `next@9.3.3`, inviable). No afectan a este v1 (no se usa `next/image` ni se procesa CSS/sourcemaps de origen no confiable). Revisar `npm audit` de nuevo antes de cualquier despliegue público.
+- **Fuera de alcance de este v1** (a propósito): edición de inventario, lista de la compra dinámica, escritura en `requirement_log`/`meal_log`. Despliegue a Vercel no hecho todavía (diseño no lo impide — ver notas de despliegue en el plan de la fase 4).
 
 ## Proyecto Supabase
 
@@ -42,7 +59,7 @@ Fase 3 (motor de generación) completada en su v1: CLI funcionando de punta a pu
 | 2c | Datos semilla (catálogo de meals/dishes/ingredients/supplements/requisitos) | ✅ Hecho |
 | 2d | Valores nutricionales reales de los ingredientes semilla | ✅ Hecho |
 | 3 | Motor de generación de menú diario (TypeScript/Node) | ✅ Hecho (v1) |
-| 4 | Web mobile-first de gestión | ⬜ Pendiente |
+| 4 | Web mobile-first de gestión | ✅ Hecho (v1: login + ver propuesta) |
 | 5 | Usos de IA (opcional, ver sección 8 de `diseno-sistema.md`) | ⬜ Pendiente |
 
 ## Decisiones aún abiertas
@@ -53,8 +70,10 @@ Fase 3 (motor de generación) completada en su v1: CLI funcionando de punta a pu
 - **Gramos de hidratos en el almuerzo**: nunca se formalizó como fila en 3.3, no bloquea nada — añadir como `dietary_requirement` nuevo cuando se decida.
 - **Precisión de los valores nutricionales**: son estimaciones a mano (ver arriba), no vienen de una fuente validada. No bloquea la fase 3, pero conviene tenerlo presente al interpretar cualquier cálculo de cumplimiento.
 - **Cantidades semilla insuficientes para algunos requisitos** (ver hallazgo de la fase 3 arriba): revisar si el catálogo de dishes necesita ajustes (ej. un topping de aguacate más generoso, o una dish dedicada) para que los requisitos se puedan cumplir de verdad con una combinación real de meals.
-- **Escritura en `requirement_log`/`meal_log`**: el motor de la fase 3 es solo lectura; falta decidir cuándo se construye el flujo de confirmación que sí escriba ahí (¿parte de la fase 4?).
+- **Escritura en `requirement_log`/`meal_log`**: la web y el CLI son de solo lectura; falta decidir cuándo se construye el flujo de confirmación que sí escriba ahí (¿parte de la siguiente iteración de la web?).
+- **`npm audit` (3 high, transitivas en `next@16.2.12`)**: no bloquea el desarrollo local, pero revisar de nuevo antes de desplegar públicamente (ver detalle en la sección "Web (fase 4)").
+- **`supabase/config.toml` (`site_url`/`additional_redirect_urls`)**: siguen apuntando a `localhost`, pendiente de revisar antes de desplegar `apps/web` a Vercel.
 
 ## Próximo paso concreto
 
-Arrancar fase 4 (web mobile-first) reutilizando `src/engine/` y `src/data/`, o iterar primero sobre las limitaciones conocidas del motor (cantidades semilla, escritura de logs) antes de construir la web.
+Elegir entre: (a) desplegar `apps/web` a Vercel tal cual (v1 read-only), (b) construir el flujo de confirmación (escribir en `meal_log`/`requirement_log`) antes de desplegar, o (c) añadir la edición de inventario/lista de la compra que quedó fuera de este v1.
