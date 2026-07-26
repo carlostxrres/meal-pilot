@@ -6,14 +6,21 @@
 
 ## Fase actual
 
-Fase 1 (documento de diseño) completada. Lista para arrancar **fase 2a**.
+Fase 2a (proyecto Supabase base) completada. Lista para arrancar **fase 2b** (DDL del esquema).
+
+## Proyecto Supabase
+
+- **Nombre**: `meal-pilot`, org `carlostxrres's Org`, región `eu-central-1` (Frankfurt).
+- **Project ref**: `mpcembushoagmskcqajd` (ver `.env`, no versionado — plantilla en `.env.example`).
+- **Auth**: email/password activo por defecto (`external_email_enabled = true`, `disable_signup = false`, confirmación por email requerida). No ha hecho falta tocar nada — es el estado por defecto de todo proyecto Supabase nuevo.
+- **CLI local**: repo linkado (`supabase link`) contra este proyecto; `supabase/config.toml` scaffoldeado con `supabase init` (aún no se ha hecho `supabase config push` — el `site_url`/`additional_redirect_urls` de ese archivo son placeholders de `localhost` para desarrollo local, hay que revisarlos antes de ir a producción en la fase 4).
 
 ## Progreso por fase
 
 | Fase | Descripción | Estado |
 | --- | --- | --- |
 | 1 | Documento de diseño (`diseno-sistema.md`) | ✅ Hecho |
-| 2a | Proyecto Supabase base (Auth, convención UUID + RLS) | ⬜ Pendiente |
+| 2a | Proyecto Supabase base (Auth, convención UUID + RLS) | ✅ Hecho |
 | 2b | DDL del esquema (`supabase/migrations/`) | ⬜ Pendiente |
 | 2c | Datos semilla (catálogo de meals/dishes/ingredients/supplements/requisitos) | ⬜ Pendiente |
 | 2d | Valores nutricionales reales de los ingredientes semilla | ⬜ Pendiente |
@@ -30,4 +37,4 @@ Fase 1 (documento de diseño) completada. Lista para arrancar **fase 2a**.
 
 ## Próximo paso concreto
 
-Arrancar fase 2a: crear el proyecto en Supabase y activar Auth.
+Arrancar fase 2b: escribir el DDL de las tablas de la sección 4.2 de `diseno-sistema.md` como migración SQL en `supabase/migrations/`.
