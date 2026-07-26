@@ -298,6 +298,20 @@ body {
   font-size: var(--text-90);
 }
 
+.dish-meal-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin: var(--space-8) 0;
+}
+
+.dish-meal-chip {
+  border: var(--border-width) solid var(--hairline);
+  padding: 2px var(--space-8);
+  font-size: var(--text-70);
+  color: var(--mute);
+}
+
 .meal-confirm-row {
   display: flex;
   align-items: center;

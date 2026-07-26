@@ -1,6 +1,6 @@
 "use client";
 
-import { IconFridge, IconReceipt2, IconShoppingCart } from "@tabler/icons-react";
+import { IconFridge, IconReceipt2, IconShoppingCart, IconToolsKitchen2 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -8,6 +8,7 @@ const TABS = [
   { href: "/", label: "Hoy", Icon: IconReceipt2 },
   { href: "/inventory", label: "Inventario", Icon: IconFridge },
   { href: "/shopping", label: "Compra", Icon: IconShoppingCart },
+  { href: "/dishes", label: "Dishes", Icon: IconToolsKitchen2 },
 ];
 
 export function TabBar() {
