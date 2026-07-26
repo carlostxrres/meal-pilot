@@ -330,25 +330,29 @@ body {
 /* --- Day tabs (Hoy / Mañana) --- */
 
 .day-tabs-list {
-  display: flex;
-  gap: var(--space-4);
+  display: inline-flex;
+  border: var(--border-width) solid var(--hairline);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
   margin-bottom: var(--space-16);
 }
 
 .day-tabs-trigger {
   all: unset;
-  padding: var(--space-8) var(--space-16);
-  border: var(--border-width) solid var(--hairline);
-  border-radius: var(--radius-pill);
-  font-size: var(--text-80);
+  padding: var(--space-4) var(--space-12);
+  border-right: var(--border-width) solid var(--hairline);
+  font-size: var(--text-75);
   font-weight: 600;
   color: var(--mute);
   cursor: pointer;
 }
 
+.day-tabs-trigger:last-child {
+  border-right: none;
+}
+
 .day-tabs-trigger[data-state="active"] {
   background: var(--ink);
-  border-color: var(--ink);
   color: var(--canvas);
 }
 
