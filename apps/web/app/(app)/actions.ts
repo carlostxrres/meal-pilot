@@ -36,3 +36,14 @@ export async function markPurchasedAction(ingredientId: string, restockQuantity:
   revalidatePath("/shopping");
   revalidatePath("/inventory");
 }
+
+export async function zeroInventoryAction(ingredientId: string) {
+  const supabase = await createClient();
+  await updateIngredientInventory(supabase, ingredientId, {
+    office_inventory: 0,
+    home_inventory: 0,
+  });
+  revalidatePath("/inventory");
+  revalidatePath("/shopping");
+  revalidatePath("/");
+}

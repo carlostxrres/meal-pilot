@@ -2,15 +2,20 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { IconPencil } from "@tabler/icons-react";
-import { useState } from "react";
 import type { Ingredient } from "@meal-pilot/core";
 import { updateInventoryAction } from "@/app/(app)/actions";
 
-export function InventoryEditDialog({ ingredient }: { ingredient: Ingredient }) {
-  const [open, setOpen] = useState(false);
-
+export function InventoryEditDialog({
+  ingredient,
+  open,
+  onOpenChange,
+}: {
+  ingredient: Ingredient;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Trigger asChild>
         <button type="button" className="inventory-edit-btn" aria-label={`Editar ${ingredient.name}`}>
           <IconPencil size={16} stroke={1.75} />
@@ -23,7 +28,7 @@ export function InventoryEditDialog({ ingredient }: { ingredient: Ingredient }) 
           <form
             action={async (formData) => {
               await updateInventoryAction(formData);
-              setOpen(false);
+              onOpenChange(false);
             }}
           >
             <input type="hidden" name="ingredientId" value={ingredient.id} />

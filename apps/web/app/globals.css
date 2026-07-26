@@ -532,6 +532,46 @@ body {
   font-size: var(--text-80);
 }
 
+/* --- Swipe gestures (Inventario) --- */
+
+.swipe-row {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: -1px;
+}
+
+.swipe-row-action {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: 0 var(--space-24);
+  font-size: var(--text-80);
+  font-weight: 600;
+  color: var(--canvas);
+}
+
+.swipe-row-action-left {
+  left: 0;
+  background: var(--off);
+}
+
+.swipe-row-action-right {
+  right: 0;
+  background: var(--turmeric);
+}
+
+.swipe-row-content {
+  position: relative;
+  touch-action: pan-y;
+}
+
+.swipe-row-content .ingredient-row {
+  margin-bottom: 0;
+}
+
 /* --- Ingredient row (compartida entre Inventario y Compra) --- */
 
 .ingredient-row {

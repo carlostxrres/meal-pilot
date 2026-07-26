@@ -1,11 +1,14 @@
 "use client";
 
 import * as Select from "@radix-ui/react-select";
-import { IconBox, IconChevronDown, IconCircleOff, IconSearch } from "@tabler/icons-react";
-import { useMemo, useState } from "react";
+import { IconBox, IconChevronDown, IconCircleOff, IconPencil, IconSearch, IconTrash } from "@tabler/icons-react";
+import { useRouter } from "next/navigation";
+import { useMemo, useState, useTransition } from "react";
 import type { Ingredient } from "@meal-pilot/core";
+import { zeroInventoryAction } from "@/app/(app)/actions";
 import { IngredientThumb } from "./IngredientThumb";
 import { InventoryEditDialog } from "./InventoryEditDialog";
+import { SwipeableRow } from "./SwipeableRow";
 
 type SortKey = "qty-desc" | "qty-asc" | "name-asc" | "name-desc";
 
@@ -21,24 +24,46 @@ function totalStock(i: Ingredient): number {
 }
 
 function IngredientRow({ ingredient }: { ingredient: Ingredient }) {
+  const [editOpen, setEditOpen] = useState(false);
+  const [, startTransition] = useTransition();
+  const router = useRouter();
+
   return (
-    <div className="ingredient-row">
-      <IngredientThumb ingredientId={ingredient.id} />
-      <div className="ingredient-row-info">
-        <p className="ingredient-row-name">{ingredient.name}</p>
-        <p className="inventory-qty">
-          <span>
-            Oficina <strong>{ingredient.office_inventory}</strong>
-            {ingredient.base_unit}
-          </span>
-          <span>
-            Casa <strong>{ingredient.home_inventory}</strong>
-            {ingredient.base_unit}
-          </span>
-        </p>
+    <SwipeableRow
+      leftAction={{
+        label: "Vaciar",
+        icon: <IconTrash size={18} stroke={1.75} />,
+        onTrigger: () => {
+          startTransition(async () => {
+            await zeroInventoryAction(ingredient.id);
+            router.refresh();
+          });
+        },
+      }}
+      rightAction={{
+        label: "Editar",
+        icon: <IconPencil size={18} stroke={1.75} />,
+        onTrigger: () => setEditOpen(true),
+      }}
+    >
+      <div className="ingredient-row">
+        <IngredientThumb ingredientId={ingredient.id} />
+        <div className="ingredient-row-info">
+          <p className="ingredient-row-name">{ingredient.name}</p>
+          <p className="inventory-qty">
+            <span>
+              Oficina <strong>{ingredient.office_inventory}</strong>
+              {ingredient.base_unit}
+            </span>
+            <span>
+              Casa <strong>{ingredient.home_inventory}</strong>
+              {ingredient.base_unit}
+            </span>
+          </p>
+        </div>
+        <InventoryEditDialog ingredient={ingredient} open={editOpen} onOpenChange={setEditOpen} />
       </div>
-      <InventoryEditDialog ingredient={ingredient} />
-    </div>
+    </SwipeableRow>
   );
 }
 
