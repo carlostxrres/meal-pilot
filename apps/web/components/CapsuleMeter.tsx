@@ -41,7 +41,6 @@ export function CapsuleMeter({ status }: { status: RequirementStatus }) {
           {target && ` / ${target} ${requirement.unit}`}
         </span>
       </div>
-      {requirement.description && <p className="capsule-meter-detail">{requirement.description}</p>}
       <Progress.Root className="capsule-meter-track" value={accumulated} max={scaleMax}>
         <div
           className="capsule-meter-band"
@@ -53,6 +52,7 @@ export function CapsuleMeter({ status }: { status: RequirementStatus }) {
           style={{ transform: `translateX(-${100 - fillPct}%)` }}
         />
       </Progress.Root>
+      {requirement.description && <p className="capsule-meter-detail">{requirement.description}</p>}
     </div>
   );
 }
