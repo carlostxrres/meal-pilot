@@ -6,7 +6,7 @@
 
 ## Fase actual
 
-Fase 2a (proyecto Supabase base) completada. Lista para arrancar **fase 2b** (DDL del esquema).
+Fase 2b (DDL del esquema) completada. Lista para arrancar **fase 2c** (datos semilla).
 
 ## Proyecto Supabase
 
@@ -14,6 +14,8 @@ Fase 2a (proyecto Supabase base) completada. Lista para arrancar **fase 2b** (DD
 - **Project ref**: `mpcembushoagmskcqajd` (ver `.env`, no versionado — plantilla en `.env.example`).
 - **Auth**: email/password activo por defecto (`external_email_enabled = true`, `disable_signup = false`, confirmación por email requerida). No ha hecho falta tocar nada — es el estado por defecto de todo proyecto Supabase nuevo.
 - **CLI local**: repo linkado (`supabase link`) contra este proyecto; `supabase/config.toml` scaffoldeado con `supabase init` (aún no se ha hecho `supabase config push` — el `site_url`/`additional_redirect_urls` de ese archivo son placeholders de `localhost` para desarrollo local, hay que revisarlos antes de ir a producción en la fase 4).
+- **Esquema**: aplicado vía `supabase/migrations/20260726120546_initial_schema.sql` — las 12 tablas de la sección 4.2 de `diseno-sistema.md`, con RLS activado y policy `owner_id = auth.uid()` (directa en las tablas con `owner_id`, vía `EXISTS` al padre en las tablas puente/hijas). Verificado en remoto: 12 tablas creadas, RLS activo en las 12.
+- **Detalles de implementación no cubiertos por el diseño conceptual** (traducción a columnas físicas, ver comentario al inicio de la migración): `dietary_requirement.scope_ref` se parte en `scope_ingredient_id` / `scope_category_id` / `scope_nutrient_column` + CHECK; `dish_ingredient.quantity` añade `quantity_max` nullable para rangos; `supplement.relative_timing` añade `relative_timing_hours` nullable para el caso "X horas después".
 
 ## Progreso por fase
 
@@ -21,7 +23,7 @@ Fase 2a (proyecto Supabase base) completada. Lista para arrancar **fase 2b** (DD
 | --- | --- | --- |
 | 1 | Documento de diseño (`diseno-sistema.md`) | ✅ Hecho |
 | 2a | Proyecto Supabase base (Auth, convención UUID + RLS) | ✅ Hecho |
-| 2b | DDL del esquema (`supabase/migrations/`) | ⬜ Pendiente |
+| 2b | DDL del esquema (`supabase/migrations/`) | ✅ Hecho |
 | 2c | Datos semilla (catálogo de meals/dishes/ingredients/supplements/requisitos) | ⬜ Pendiente |
 | 2d | Valores nutricionales reales de los ingredientes semilla | ⬜ Pendiente |
 | 3 | Motor de generación de menú diario (TypeScript/Node) | ⬜ Pendiente |
@@ -37,4 +39,4 @@ Fase 2a (proyecto Supabase base) completada. Lista para arrancar **fase 2b** (DD
 
 ## Próximo paso concreto
 
-Arrancar fase 2b: escribir el DDL de las tablas de la sección 4.2 de `diseno-sistema.md` como migración SQL en `supabase/migrations/`.
+Arrancar fase 2c: cargar el catálogo real (4 meals, dishes conocidas, ingredientes de la ensalada, supplements y los `dietary_requirement` de la sección 3.3) como datos semilla.
