@@ -296,23 +296,106 @@ function buildRequirementStatuses(
   });
 }
 
-/** Punto de entrada del motor: genera la propuesta completa de un día. */
+const WEEKDAY_INDEX: Record<string, number> = {
+  sun: 0,
+  mon: 1,
+  tue: 2,
+  wed: 3,
+  thu: 4,
+  fri: 5,
+  sat: 6,
+};
+
+/** Fecha (YYYY-MM-DD) de inicio de la ventana semanal de `date`, dado el día de reset. */
+function weekPeriodStart(date: string, resetDay: string): string {
+  const d = new Date(`${date}T00:00:00Z`);
+  const diff = (d.getUTCDay() - (WEEKDAY_INDEX[resetDay] ?? 1) + 7) % 7;
+  d.setUTCDate(d.getUTCDate() - diff);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Genera la propuesta de varios días **encadenados**: la diversidad y el
+ * acumulado de los requisitos semanales se arrastran de un día al
+ * siguiente dentro de la ventana (no cada día parte de cero), para que el
+ * sistema pueda repartir a lo largo de la semana requisitos escasos (ej.
+ * sardinas 2x/semana) y evitar repetir ingredientes rotables entre días
+ * consecutivos del plan.
+ *
+ * Reglas de arrastre entre día N y N+1:
+ *   - `period = day`: se reinicia cada día (empieza de 0, o del valor real
+ *     de `requirement_log` para ese día si existiera).
+ *   - `period = week`: se mantiene mientras las dos fechas caigan en la
+ *     misma ventana semanal (según `week_reset_day`); si el plan cruza un
+ *     reset de semana, también se reinicia.
+ *   - Diversidad: los ingredientes usados en el día N (fijos y de huecos
+ *     flexibles, ya que aquí sí sabemos exactamente cuáles se eligieron)
+ *     se añaden al conjunto de "usados recientemente" antes de resolver
+ *     el día N+1.
+ *
+ * Limitación conocida: sigue siendo un algoritmo voraz día a día (usa la
+ * prioridad de "ayuda a un requisito no cumplido" en cada hueco), no un
+ * solver que mire todos los días a la vez para encontrar el reparto
+ * óptimo — pero ya no genera cada día de forma aislada.
+ */
+export function generateMultiDayPlan(
+  contexts: readonly DailyContext[],
+  rand: () => number,
+): DayProposal[] {
+  if (contexts.length === 0) return [];
+
+  const requirements = contexts[0]!.requirements;
+  const runningAccumulated = new Map<string, number>();
+  for (const [reqId, log] of contexts[0]!.latestLogByRequirement) {
+    runningAccumulated.set(reqId, log.accumulated);
+  }
+  const recentlyUsed = new Set(contexts[0]!.recentlyUsedIngredientIds);
+
+  const results: DayProposal[] = [];
+
+  contexts.forEach((ctx, dayIndex) => {
+    if (dayIndex > 0) {
+      const previousDate = contexts[dayIndex - 1]!.date;
+      for (const req of requirements) {
+        if (req.period === "day") {
+          runningAccumulated.set(req.id, ctx.latestLogByRequirement.get(req.id)?.accumulated ?? 0);
+        } else if (req.period === "week" && req.week_reset_day) {
+          const samePeriod =
+            weekPeriodStart(previousDate, req.week_reset_day) === weekPeriodStart(ctx.date, req.week_reset_day);
+          if (!samePeriod) {
+            runningAccumulated.set(req.id, ctx.latestLogByRequirement.get(req.id)?.accumulated ?? 0);
+          }
+        }
+      }
+      for (const id of ctx.recentlyUsedIngredientIds) recentlyUsed.add(id);
+    }
+
+    const effectiveCtx: DailyContext = { ...ctx, recentlyUsedIngredientIds: recentlyUsed };
+    const meals = ctx.meals.map((mealCtx) =>
+      resolveMeal(mealCtx, requirements, runningAccumulated, effectiveCtx, rand),
+    );
+
+    for (const mealProposal of meals) {
+      if (!mealProposal.resolved) continue;
+      for (const component of mealProposal.resolved.components) {
+        recentlyUsed.add(component.ingredient.id);
+      }
+    }
+
+    results.push({
+      date: ctx.date,
+      meals,
+      requirementStatuses: buildRequirementStatuses(requirements, runningAccumulated),
+    });
+  });
+
+  return results;
+}
+
+/** Punto de entrada del motor para un único día (caso particular de un plan de 1 día). */
 export function generateDayProposal(
   ctx: DailyContext,
   rand: () => number,
 ): DayProposal {
-  const runningAccumulated = new Map<string, number>();
-  for (const [reqId, log] of ctx.latestLogByRequirement) {
-    runningAccumulated.set(reqId, log.accumulated);
-  }
-
-  const meals = ctx.meals.map((mealCtx) =>
-    resolveMeal(mealCtx, ctx.requirements, runningAccumulated, ctx, rand),
-  );
-
-  return {
-    date: ctx.date,
-    meals,
-    requirementStatuses: buildRequirementStatuses(ctx.requirements, runningAccumulated),
-  };
+  return generateMultiDayPlan([ctx], rand)[0]!;
 }

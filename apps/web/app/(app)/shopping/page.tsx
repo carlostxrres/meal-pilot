@@ -1,17 +1,21 @@
-import { computeShoppingList, fetchIngredients, generateProposalsForDates, upcomingDates } from "@meal-pilot/core";
+import {
+  computeShoppingList,
+  fetchIngredients,
+  generateProposalsForDates,
+  PLANNING_HORIZON_DAYS,
+  upcomingDates,
+} from "@meal-pilot/core";
 import { createClient } from "@/lib/supabase/server";
 import { PurchaseCheckbox } from "@/components/PurchaseCheckbox";
 
-const SHOPPING_HORIZON_DAYS = 2;
-
 const REASON_LABELS: Record<string, string> = {
-  upcoming_need: `Para los próximos ${SHOPPING_HORIZON_DAYS} días`,
+  upcoming_need: `Para los próximos ${PLANNING_HORIZON_DAYS} días`,
   requirement: "Para un requisito pendiente",
 };
 
 export default async function ShoppingPage() {
   const supabase = await createClient();
-  const dates = upcomingDates(SHOPPING_HORIZON_DAYS);
+  const dates = upcomingDates(PLANNING_HORIZON_DAYS);
 
   const [ingredients, proposals, { data: requirements, error }] = await Promise.all([
     fetchIngredients(supabase),
@@ -25,7 +29,7 @@ export default async function ShoppingPage() {
   if (items.length === 0) {
     return (
       <p className="shopping-empty">
-        Nada pendiente de comprar para los próximos {SHOPPING_HORIZON_DAYS} días.
+        Nada pendiente de comprar para los próximos {PLANNING_HORIZON_DAYS} días.
       </p>
     );
   }

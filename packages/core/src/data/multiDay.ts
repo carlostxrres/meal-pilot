@@ -1,32 +1,35 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createSeededRandom } from "../engine/random.js";
-import { generateDayProposal } from "../engine/resolve.js";
-import type { DayProposal } from "../engine/types.js";
+import { generateMultiDayPlan } from "../engine/resolve.js";
+import type { DailyContext, DayProposal } from "../engine/types.js";
 import { fetchDailyContext } from "./fetchDailyContext.js";
 import type { Database } from "./database.types.js";
 
+/** Horizonte de planificación por defecto: hoy + los siguientes días, encadenados. */
+export const PLANNING_HORIZON_DAYS = 3;
+
 /**
- * Genera la propuesta de varios días (ej. hoy + mañana), para el selector
- * de días en "Hoy" y para calcular la lista de la compra de los próximos
- * N días en "Compra".
- *
- * Limitación conocida: cada día se genera de forma independiente (misma
- * ventana de diversidad de 3 días basada en meal_log real) — no encadena
- * la elección de un día con la del día siguiente, así que dos días
- * seguidos podrían repetir el mismo ingrediente rotable. Aceptable para
- * un horizonte corto (2-3 días); se resolvería con un solver que mire
- * varios días a la vez, fuera de alcance por ahora.
+ * Recupera el contexto de varias fechas y genera un plan encadenado
+ * (`generateMultiDayPlan`) — la diversidad y los requisitos semanales se
+ * arrastran entre días, no se genera cada uno de forma aislada. Se usa
+ * tanto para el selector de días en "Hoy" como para calcular la lista de
+ * la compra de los próximos días en "Compra": ambas vistas deben usar
+ * exactamente el mismo plan, no recalcularlo cada una por su lado.
  */
 export async function generateProposalsForDates(
   supabase: SupabaseClient<Database>,
   dates: readonly string[],
 ): Promise<DayProposal[]> {
-  return Promise.all(
-    dates.map(async (date) => {
-      const ctx = await fetchDailyContext(supabase, date);
-      return generateDayProposal(ctx, createSeededRandom(date));
-    }),
-  );
+  const contexts = await fetchContextsForDates(supabase, dates);
+  return generateMultiDayPlan(contexts, createSeededRandom(dates[0] ?? ""));
+}
+
+/** Como `generateProposalsForDates`, pero también devuelve los `DailyContext` (ej. para `confirmedMealIds`). */
+export async function fetchContextsForDates(
+  supabase: SupabaseClient<Database>,
+  dates: readonly string[],
+): Promise<DailyContext[]> {
+  return Promise.all(dates.map((date) => fetchDailyContext(supabase, date)));
 }
 
 /** YYYY-MM-DD de hoy + los siguientes `days - 1` días (incluye hoy). */
