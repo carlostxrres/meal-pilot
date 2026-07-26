@@ -1,5 +1,4 @@
 import { createSeededRandom, fetchDailyContext, generateDayProposal } from "@comida-diaria/core";
-import { signOut } from "./login/actions";
 import { createClient } from "@/lib/supabase/server";
 import { DayProposalView } from "@/components/DayProposalView";
 
@@ -9,17 +8,5 @@ export default async function HomePage() {
   const ctx = await fetchDailyContext(supabase, date);
   const proposal = generateDayProposal(ctx, createSeededRandom(date));
 
-  return (
-    <main className="page">
-      <header className="page-header">
-        <h1>comida-diaria</h1>
-        <form action={signOut}>
-          <button type="submit" className="signout">
-            Salir
-          </button>
-        </form>
-      </header>
-      <DayProposalView proposal={proposal} />
-    </main>
-  );
+  return <DayProposalView proposal={proposal} confirmedMealIds={ctx.confirmedMealIds} />;
 }

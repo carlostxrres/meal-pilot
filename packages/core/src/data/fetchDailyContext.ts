@@ -137,6 +137,10 @@ export async function fetchDailyContext(
     DIVERSITY_WINDOW_DAYS,
   );
 
+  const confirmedMealIds = new Set<string>(
+    (mealLogs ?? []).filter((log) => log.date === date && log.confirmed).map((log) => log.meal_id),
+  );
+
   return {
     date,
     meals,
@@ -147,5 +151,6 @@ export async function fetchDailyContext(
     requirements: requirements ?? [],
     latestLogByRequirement,
     recentlyUsedIngredientIds,
+    confirmedMealIds,
   };
 }

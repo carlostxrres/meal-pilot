@@ -58,6 +58,8 @@ export interface DailyContext {
   latestLogByRequirement: Map<string, RequirementLog>;
   /** ids de ingrediente consumidos en los últimos N días (ver diversity.ts). */
   recentlyUsedIngredientIds: Set<string>;
+  /** ids de meal ya confirmados (meal_log.confirmed=true) para `date`. */
+  confirmedMealIds: Set<string>;
 }
 
 /** Un ingrediente ya resuelto dentro de una dish, con la cantidad concreta a usar. */

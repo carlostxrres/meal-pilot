@@ -6,7 +6,15 @@
 
 ## Fase actual
 
-Fase 4 (web mobile-first) completada en su v1: login + ver la propuesta del día, funcionando de punta a punta contra el proyecto real. Sin edición de inventario ni lista de la compra todavía (fuera de alcance de este v1, ver roadmap).
+Fase 4 ampliada: además de login + ver la propuesta del día, ya hay inventario editable, lista de la compra derivada, y confirmación de meals (escribe en `meal_log`). Sistema de interfaz propio (no genérico) aplicado con Radix UI.
+
+## Sistema de interfaz (diseño)
+
+- Sesión con el skill `interface-design`, inspirada en [`DESIGN.md`](DESIGN.md) (Nike) pero adaptada al dominio real — no es un e-commerce, es un ticket de cocina personal. Razonamiento completo en [`plans/2026-07-26-ui-design-system-and-ia.md`](plans/2026-07-26-ui-design-system-and-ia.md); patrones reutilizables guardados en `.interface-design/system.md` (para que futuras sesiones los apliquen sin repetir la exploración).
+- Tokens propios en `apps/web/app/globals.css`: paleta papel/tinta + dos acentos con significado fijo (`--turmeric` = ritual diario, `--sardine-teal` = rotación de proteína), tipografía `ticket-header` (mayúsculas, para nombres de meal) + `data-mono` (monoespaciada tabular, para cantidades), superficies planas sin sombra (`radius: none` salvo en píldoras de acción/medidor).
+- **Signature**: `CapsuleMeter` — sustituye la barra de progreso plana por una cápsula con banda de tolerancia (visualiza `effectiveMinimum`/`effectiveMaximum` reales, no solo un %). Se usa en "Hoy" para los 5 `dietary_requirement`.
+- **IA**: tab bar inferior con 3 secciones — `/` (Hoy), `/inventory` (Inventario), `/shopping` (Compra) — dentro de un route group `app/(app)/` con layout compartido (header + tab bar).
+- **Radix UI** (`@radix-ui/react-checkbox`, `@radix-ui/react-dialog`): confirmar meal y tachar compra (Checkbox), editar cantidad de inventario (Dialog). Sin `Tabs` de Radix — la navegación principal es la tab bar custom.
 
 ## Estructura del repo (monorepo, desde la fase 4)
 
@@ -28,13 +36,21 @@ Reestructurado como monorepo npm workspaces (ver [ADR-0016](adrs/0016-monorepo-n
 
 ## Web (fase 4)
 
-- Diseño previo: plan de la fase 4 (brainstorming + Plan agent), resumido en [ADR-0016](adrs/0016-monorepo-npm-workspaces-para-compartir-engine-y-data.md).
-- `apps/web`: Next.js 16 (App Router, Turbopack), `@supabase/ssr` para auth server-side. Una sola página protegida (`app/page.tsx`) que llama a `fetchDailyContext` + `generateDayProposal` de `@comida-diaria/core` y renderiza `DayProposalView` (HTML mobile-first, sin librería de componentes).
-- **Auth**: `proxy.ts` (antes `middleware.ts` — Next 16 renombró la convención, ver [nota de migración](https://nextjs.org/docs/messages/middleware-to-proxy)) refresca la sesión y redirige a `/login` si no hay usuario, protegiendo automáticamente cualquier página futura. Login/logout como Server Actions (`app/login/actions.ts`) con `@supabase/ssr`. Usa **solo** `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY` (`apps/web/.env.local`, gitignored) — nunca la service_role key.
-- **Verificado de punta a punta** (`next build` + `next dev` local, sin desplegar): sin sesión → redirect a `/login`; login con `ctorresmoral@gmail.com` → redirect a `/` con la propuesta renderizada; **la página autenticada devuelve exactamente los mismos meals/dishes/ingredientes/cantidades/estado de requisitos que `npm run generate` para la misma fecha** — confirma que RLS bajo sesión real (anon key) da el mismo resultado que la service_role key del CLI, sin haber tenido que tocar `fetchDailyContext`. Logout también verificado (limpia la cookie, vuelve a redirigir a `/login`).
-- **Problema real encontrado y resuelto durante la implementación**: Turbopack no resuelve los imports internos de `packages/core` en convención NodeNext (`import "./foo.js"` apuntando a `foo.ts`) ni con `transpilePackages` ni con `turbopack.resolveExtensions` — esa opción solo afecta a imports *sin* extensión. Solución adoptada: `packages/core` se compila a `dist/` real (`tsc`, con `declaration: true`) y `apps/web`/`apps/cli` consumen ese JS ya compilado como cualquier dependencia normal de `node_modules`, sin necesitar que el bundler entienda la convención del paquete de origen. Detalle completo en [ADR-0016](adrs/0016-monorepo-npm-workspaces-para-compartir-engine-y-data.md).
-- **`npm audit`**: 3 vulnerabilidades "high" reportadas, todas transitivas dentro del propio `next@16.2.12` (postcss/sharp, CVEs de 2026 aún no parcheados en ninguna versión reciente de Next — el fix sugerido por `audit` es degradar a `next@9.3.3`, inviable). No afectan a este v1 (no se usa `next/image` ni se procesa CSS/sourcemaps de origen no confiable). Revisar `npm audit` de nuevo antes de cualquier despliegue público.
-- **Fuera de alcance de este v1** (a propósito): edición de inventario, lista de la compra dinámica, escritura en `requirement_log`/`meal_log`. Despliegue a Vercel no hecho todavía (diseño no lo impide — ver notas de despliegue en el plan de la fase 4).
+- Diseño previo: plan de la fase 4 (brainstorming + Plan agent), resumido en [ADR-0016](adrs/0016-monorepo-npm-workspaces-para-compartir-engine-y-data.md); IA/diseño de interfaz en la sección de arriba.
+- `apps/web`: Next.js 16 (App Router, Turbopack), `@supabase/ssr` para auth server-side. 4 rutas: `/login`, y dentro de `app/(app)/` (layout con header + tab bar) — `/` (Hoy), `/inventory`, `/shopping`.
+- **Auth**: `proxy.ts` (antes `middleware.ts` — Next 16 renombró la convención, ver [nota de migración](https://nextjs.org/docs/messages/middleware-to-proxy)) refresca la sesión y redirige a `/login` si no hay usuario, protegiendo automáticamente cualquier página nueva bajo `(app)`. Login/logout como Server Actions (`app/login/actions.ts`) con `@supabase/ssr`. Usa **solo** `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY` — nunca la service_role key.
+- **Hoy** (`/`): ticket del día (`DayProposalView`) + `CapsuleMeter` por requisito + `MealConfirmCheckbox` (Radix Checkbox) por meal — al confirmar, escribe/borra en `meal_log` vía `setMealConfirmed` (nuevo en `packages/core/src/data/mealConfirmation.ts`).
+- **Inventario** (`/inventory`): `fetchIngredients` agrupado por `storage_type`; `InventoryEditDialog` (Radix Dialog) edita `office_inventory`/`home_inventory` vía `updateIngredientInventory`.
+- **Compra** (`/shopping`): `computeShoppingList` (nuevo, `packages/core/src/engine/shoppingList.ts`, con tests) deriva la lista de ingredientes agotados (`office_inventory + home_inventory <= 0`) o necesarios para un `dietary_requirement` mandatory de tipo `ingredient` no cubierto por el stock actual — **nunca editable a mano**. Tachar (`PurchaseCheckbox`) llama a `addToHomeInventory` con una cantidad de reposición fija por tipo de unidad (200g/ml, 2 unidades) y refresca la página — el ítem desaparece solo porque ya no cumple la condición de "agotado"/"insuficiente". No existe tabla `shopping_list`, es 100% derivada.
+- **Verificado**: `npm test` (20 tests, incluye 5 nuevos de `computeShoppingList`) y `next build` (type-check + compila las 4 rutas) en verde. La verificación interactiva completa (login + navegar las 3 pestañas + confirmar/editar/tachar en el navegador) la está haciendo el propio usuario con su `npm run dev` local — no se relanzó un servidor de desarrollo propio para no interferir con esa sesión.
+- **Problema real encontrado y resuelto durante la implementación (fase 4 inicial)**: Turbopack no resuelve los imports internos de `packages/core` en convención NodeNext (`import "./foo.js"` apuntando a `foo.ts`) ni con `transpilePackages` ni con `turbopack.resolveExtensions`. Solución: `packages/core` se compila a `dist/` real (`tsc`, `declaration: true`), consumido como JS normal de `node_modules`. Detalle en [ADR-0016](adrs/0016-monorepo-npm-workspaces-para-compartir-engine-y-data.md).
+- **`npm audit`**: 3 vulnerabilidades "high" transitivas en `next@16.2.12` (postcss/sharp, sin parche disponible). No afectan a este v1. Revisar antes de desplegar públicamente.
+- **Simplificaciones de este v1, documentadas a propósito** (no son bugs):
+  - Confirmar un meal es sí/no — no permite editar qué se comió realmente si hubo desviación.
+  - Confirmar un meal escribe en `meal_log` pero **no** recalcula `requirement_log` — los `CapsuleMeter` de "Hoy" siguen mostrando el aporte de la propuesta generada, no un acumulado histórico real de lo confirmado.
+  - La cantidad de reposición al tachar en Compra es un valor fijo por tipo de unidad, no calculado a partir de las dishes reales que usan ese ingrediente.
+  - El umbral de "agotado" en Compra es literal (stock ≤ 0) — no hay un nivel de reorden (par level) configurable por ingrediente todavía.
+- Despliegue a Vercel no hecho todavía (diseño no lo impide).
 
 ## Proyecto Supabase
 
@@ -70,10 +86,10 @@ Reestructurado como monorepo npm workspaces (ver [ADR-0016](adrs/0016-monorepo-n
 - **Gramos de hidratos en el almuerzo**: nunca se formalizó como fila en 3.3, no bloquea nada — añadir como `dietary_requirement` nuevo cuando se decida.
 - **Precisión de los valores nutricionales**: son estimaciones a mano (ver arriba), no vienen de una fuente validada. No bloquea la fase 3, pero conviene tenerlo presente al interpretar cualquier cálculo de cumplimiento.
 - **Cantidades semilla insuficientes para algunos requisitos** (ver hallazgo de la fase 3 arriba): revisar si el catálogo de dishes necesita ajustes (ej. un topping de aguacate más generoso, o una dish dedicada) para que los requisitos se puedan cumplir de verdad con una combinación real de meals.
-- **Escritura en `requirement_log`/`meal_log`**: la web y el CLI son de solo lectura; falta decidir cuándo se construye el flujo de confirmación que sí escriba ahí (¿parte de la siguiente iteración de la web?).
+- **Escritura en `requirement_log`**: `meal_log` ya se escribe (confirmar meal en "Hoy"), pero `requirement_log` sigue sin recalcularse a partir de confirmaciones reales — pendiente para una iteración futura.
 - **`npm audit` (3 high, transitivas en `next@16.2.12`)**: no bloquea el desarrollo local, pero revisar de nuevo antes de desplegar públicamente (ver detalle en la sección "Web (fase 4)").
 - **`supabase/config.toml` (`site_url`/`additional_redirect_urls`)**: siguen apuntando a `localhost`, pendiente de revisar antes de desplegar `apps/web` a Vercel.
 
 ## Próximo paso concreto
 
-Elegir entre: (a) desplegar `apps/web` a Vercel tal cual (v1 read-only), (b) construir el flujo de confirmación (escribir en `meal_log`/`requirement_log`) antes de desplegar, o (c) añadir la edición de inventario/lista de la compra que quedó fuera de este v1.
+El usuario está probando la app en su navegador (`npm run dev` local). Tras su verificación: elegir entre (a) desplegar `apps/web` a Vercel, o (b) construir el recálculo real de `requirement_log` a partir de `meal_log` confirmado antes de desplegar.

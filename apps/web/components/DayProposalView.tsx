@@ -1,33 +1,44 @@
 import type { DayProposal } from "@comida-diaria/core";
+import { CapsuleMeter } from "./CapsuleMeter";
+import { MealConfirmCheckbox } from "./MealConfirmCheckbox";
 
 function formatTime(time: string): string {
   return time.slice(0, 5);
 }
 
-export function DayProposalView({ proposal }: { proposal: DayProposal }) {
+export function DayProposalView({
+  proposal,
+  confirmedMealIds,
+}: {
+  proposal: DayProposal;
+  confirmedMealIds: Set<string>;
+}) {
   return (
-    <div className="proposal">
-      <p className="proposal-date">Propuesta del {proposal.date}</p>
+    <div>
+      <p className="ticket-date">{proposal.date}</p>
 
       {proposal.meals.map((mealProposal) => (
-        <section key={mealProposal.meal.id} className="meal">
-          <h2>
-            {mealProposal.meal.name}
+        <section key={mealProposal.meal.id} className="meal-row">
+          <div className="meal-row-head">
+            <h2 className="ticket-header">{mealProposal.meal.name}</h2>
             <span className="meal-time">
               {formatTime(mealProposal.meal.usual_start_time)}–{formatTime(mealProposal.meal.usual_end_time)}
             </span>
-          </h2>
+          </div>
 
           {!mealProposal.resolved ? (
             <p className="warning">⚠ Sin propuesta válida: {mealProposal.unresolvedReason}</p>
           ) : (
             <>
               <p className="dish-name">{mealProposal.resolved.dish.name}</p>
-              <ul className="ingredients">
+              <ul className="ingredient-list">
                 {mealProposal.resolved.components.map((component, i) => (
                   <li key={i}>
-                    {component.ingredient.name}: {component.quantity}
-                    {component.ingredient.base_unit}
+                    <span>{component.ingredient.name}</span>
+                    <span className="data-mono">
+                      {component.quantity}
+                      {component.ingredient.base_unit}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -35,27 +46,26 @@ export function DayProposalView({ proposal }: { proposal: DayProposal }) {
           )}
 
           {mealProposal.supplement && (
-            <p className="supplement">
-              Suplemento: {mealProposal.supplement.name} ({mealProposal.supplement.relative_timing})
+            <p className="supplement-note">
+              + {mealProposal.supplement.name} ({mealProposal.supplement.relative_timing})
             </p>
+          )}
+
+          {mealProposal.resolved && (
+            <MealConfirmCheckbox
+              date={proposal.date}
+              mealId={mealProposal.meal.id}
+              dishId={mealProposal.resolved.dish.id}
+              initialConfirmed={confirmedMealIds.has(mealProposal.meal.id)}
+            />
           )}
         </section>
       ))}
 
-      <section className="requirements">
-        <h2>Requisitos dietéticos del día</h2>
-        <ul>
-          {proposal.requirementStatuses.map((status) => (
-            <li key={status.requirement.id} className={status.withinRange ? "ok" : "off"}>
-              <span className="mark">{status.withinRange ? "✓" : "✗"}</span>{" "}
-              {status.requirement.description ?? status.requirement.id}: {status.accumulated.toFixed(1)}{" "}
-              {status.requirement.unit}
-              {status.effectiveMinimum != null && ` (min ${status.effectiveMinimum.toFixed(1)})`}
-              {status.effectiveMaximum != null && ` (max ${status.effectiveMaximum.toFixed(1)})`}
-            </li>
-          ))}
-        </ul>
-      </section>
+      <h3 className="section-title">Requisitos dietéticos del día</h3>
+      {proposal.requirementStatuses.map((status) => (
+        <CapsuleMeter key={status.requirement.id} status={status} />
+      ))}
     </div>
   );
 }

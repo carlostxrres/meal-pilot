@@ -1,22 +1,48 @@
+/*
+  Sistema de interfaz de comida-diaria — ver .interface-design/system.md
+  y docs/plans/2026-07-26-ui-design-system-and-ia.md para el razonamiento
+  completo. Resumen: ticket de cocina / parte de laboratorio, no dashboard
+  SaaS. Superficies planas (radius: none), sin sombras, dos acentos con
+  significado fijo (turmeric = ritual diario, sardine-teal = rotación de
+  proteína). La píldora (radius: pill) se reserva para medidores y acciones,
+  nunca para cards ni filas.
+*/
+
 :root {
-  --bg: #ffffff;
-  --fg: #1a1a1a;
-  --muted: #6b6b6b;
-  --border: #e2e2e2;
-  --ok: #1a7f37;
-  --off: #b3261e;
-  --accent: #2f6f4f;
+  --ink: #111111;
+  --canvas: #ffffff;
+  --paper: #f5f5f4;
+  --hairline: #d8d5d0;
+  --hairline-soft: #e8e6e2;
+  --charcoal: #3a3a38;
+  --mute: #6f6b64;
+  --turmeric: #c9861a;
+  --turmeric-soft: #f1e2c4;
+  --sardine-teal: #2c6e6b;
+  --sardine-teal-soft: #d7e6e5;
+  --success: #3f7d5c;
+  --success-soft: #dfeee6;
+  --off: #b3453c;
+  --off-soft: #f6dedc;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #14161a;
-    --fg: #f0f0f0;
-    --muted: #a0a0a0;
-    --border: #2c2f34;
-    --ok: #4ade80;
-    --off: #f87171;
-    --accent: #6fbf94;
+    --ink: #f2f1ee;
+    --canvas: #171715;
+    --paper: #1e1e1c;
+    --hairline: #38372f;
+    --hairline-soft: #2a2a26;
+    --charcoal: #d8d6d0;
+    --mute: #a4a099;
+    --turmeric: #d69a1f;
+    --turmeric-soft: #3a2f16;
+    --sardine-teal: #4a9c98;
+    --sardine-teal-soft: #1c3230;
+    --success: #5fa77f;
+    --success-soft: #1c3226;
+    --off: #d8756c;
+    --off-soft: #3a201d;
   }
 }
 
@@ -24,112 +50,452 @@
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--fg);
+  padding: 0;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
 }
 
-.page,
-.login-page {
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 1rem 1rem 3rem;
-}
+/* --- Typography --- */
 
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
-
-h1 {
-  font-size: 1.25rem;
+.ticket-header {
+  font-weight: 700;
+  text-transform: uppercase;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  font-size: 1.15rem;
   margin: 0;
 }
 
-.proposal-date {
-  color: var(--muted);
-  margin-top: 0;
+.data-mono {
+  font-family: ui-monospace, "SF Mono", "Roboto Mono", Consolas, monospace;
+  font-variant-numeric: tabular-nums;
 }
 
-.meal {
-  border-bottom: 1px solid var(--border);
-  padding: 1rem 0;
+.label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--mute);
 }
 
-.meal h2 {
-  font-size: 1.05rem;
+/* --- Layout shell --- */
+
+.app-shell {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  padding: 16px 16px 88px;
+}
+
+.app-header {
   display: flex;
-  justify-content: space-between;
   align-items: baseline;
-  margin: 0 0 0.5rem;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.app-title {
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.icon-btn {
+  border: 1px solid var(--hairline);
+  background: var(--canvas);
+  color: var(--ink);
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+}
+
+/* --- Bottom tab bar --- */
+
+.tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  border-top: 1px solid var(--hairline);
+  background: var(--canvas);
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.tabbar-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px));
+  color: var(--mute);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  border-top: 2px solid transparent;
+}
+
+.tabbar-item[data-active="true"] {
+  color: var(--ink);
+  border-top-color: var(--ink);
+}
+
+.tabbar-icon {
+  font-size: 1.05rem;
+}
+
+/* --- Ticket (Hoy) --- */
+
+.ticket-date {
+  color: var(--mute);
+  font-size: 0.85rem;
+  margin: 0 0 16px;
+}
+
+.meal-row {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+
+.meal-row-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .meal-time {
-  font-size: 0.85rem;
-  color: var(--muted);
-  font-weight: normal;
+  font-size: 0.75rem;
+  color: var(--mute);
+  white-space: nowrap;
+  margin-top: 2px;
 }
 
 .dish-name {
   font-weight: 600;
-  margin: 0 0 0.25rem;
+  margin: 8px 0 4px;
 }
 
-.ingredients {
+.ingredient-list {
+  list-style: none;
   margin: 0;
-  padding-left: 1.1rem;
-  color: var(--muted);
+  padding: 0;
+  color: var(--charcoal);
+  font-size: 0.9rem;
 }
 
-.supplement {
-  font-size: 0.9rem;
-  color: var(--accent);
+.ingredient-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--hairline-soft);
+}
+
+.ingredient-list li:last-child {
+  border-bottom: none;
+}
+
+.supplement-note {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: var(--turmeric);
 }
 
 .warning {
   color: var(--off);
-}
-
-.requirements ul {
-  list-style: none;
-  padding: 0;
-  margin: 0.5rem 0 0;
-}
-
-.requirements li {
-  padding: 0.35rem 0;
   font-size: 0.9rem;
 }
 
-.mark {
-  display: inline-block;
-  width: 1.2rem;
+.meal-confirm-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--hairline-soft);
 }
 
-.ok .mark {
-  color: var(--ok);
+.meal-confirm-label {
+  font-size: 0.85rem;
+  color: var(--mute);
 }
 
-.off .mark {
-  color: var(--off);
+/* --- Capsule meter (signature) --- */
+
+.capsule-meter {
+  margin-bottom: 10px;
 }
+
+.capsule-meter-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+}
+
+.capsule-meter-desc {
+  color: var(--charcoal);
+}
+
+.capsule-meter-value {
+  font-family: ui-monospace, "SF Mono", "Roboto Mono", Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  color: var(--mute);
+}
+
+.capsule-meter-track {
+  position: relative;
+  height: 10px;
+  border-radius: 9999px;
+  background: var(--hairline-soft);
+  overflow: hidden;
+}
+
+.capsule-meter-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--hairline);
+}
+
+.capsule-meter-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 9999px;
+  background: var(--success);
+}
+
+.capsule-meter-fill[data-off="true"] {
+  background: var(--off);
+}
+
+/* --- Sections --- */
+
+.section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--mute);
+  margin: 24px 0 8px;
+}
+
+.section-title:first-child {
+  margin-top: 0;
+}
+
+/* --- Inventory --- */
+
+.inventory-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-top-width: 0;
+  padding: 12px 16px;
+}
+
+.inventory-row:first-of-type {
+  border-top-width: 1px;
+}
+
+.inventory-name {
+  font-weight: 500;
+}
+
+.inventory-qty {
+  display: flex;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: var(--mute);
+}
+
+.inventory-qty strong {
+  color: var(--ink);
+  font-family: ui-monospace, "SF Mono", "Roboto Mono", Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.inventory-edit-btn {
+  border: 1px solid var(--hairline);
+  background: transparent;
+  color: var(--ink);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+}
+
+/* --- Shopping --- */
+
+.shopping-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-top-width: 0;
+  padding: 12px 16px;
+}
+
+.shopping-row:first-of-type {
+  border-top-width: 1px;
+}
+
+.shopping-info {
+  flex: 1;
+}
+
+.shopping-name {
+  font-weight: 500;
+}
+
+.shopping-reason {
+  font-size: 0.75rem;
+  color: var(--mute);
+}
+
+.shopping-empty,
+.inventory-empty {
+  color: var(--mute);
+  font-size: 0.9rem;
+  padding: 16px 0;
+}
+
+/* --- Checkbox (Radix) --- */
+
+.checkbox-root {
+  all: unset;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border: 1px solid var(--hairline);
+  background: var(--canvas);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkbox-root[data-state="checked"] {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.checkbox-indicator {
+  color: var(--canvas);
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+/* --- Dialog (Radix) --- */
+
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 17, 17, 0.4);
+}
+
+.dialog-content {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-bottom: none;
+  padding: 20px;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+}
+
+.dialog-title {
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin: 0 0 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.field label {
+  font-size: 0.8rem;
+  color: var(--mute);
+}
+
+.field input {
+  font: inherit;
+  font-family: ui-monospace, "SF Mono", "Roboto Mono", Consolas, monospace;
+  padding: 10px 12px;
+  border: 1px solid var(--hairline);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 0;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* --- Buttons --- */
 
 button,
 input {
   font: inherit;
 }
 
-.signout {
-  border: 1px solid var(--border);
+.btn-primary {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 9999px;
+  background: var(--ink);
+  color: var(--canvas);
+  font-weight: 600;
+}
+
+.btn-secondary {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 9999px;
   background: transparent;
-  color: var(--fg);
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* --- Login --- */
+
+.login-page {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1rem;
 }
 
 .login-form {
@@ -144,22 +510,22 @@ input {
   flex-direction: column;
   gap: 0.35rem;
   font-size: 0.9rem;
+  color: var(--charcoal);
 }
 
 .login-form input {
   padding: 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg);
-  color: var(--fg);
+  border: 1px solid var(--hairline);
+  background: var(--paper);
+  color: var(--ink);
 }
 
 .login-form button {
   padding: 0.7rem;
   border: none;
-  border-radius: 6px;
-  background: var(--accent);
-  color: #fff;
+  border-radius: 9999px;
+  background: var(--ink);
+  color: var(--canvas);
   font-weight: 600;
 }
 
