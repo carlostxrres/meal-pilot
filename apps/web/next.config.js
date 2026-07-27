@@ -2,10 +2,12 @@ const path = require("path");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Monorepo: sin esto, Turbopack infiere apps/web como raíz y no consigue
-  // resolver el paquete `next` (hoisted en node_modules de la raíz) cuando un
-  // componente cliente importa código en runtime de @meal-pilot/core — panic
-  // "Next.js package not found" al compilar /dishes en dev.
+  // Monorepo: raíz explícita para que Turbopack no tenga que inferirla.
+  // Nota: esto NO fue lo que arregló el panic "Next.js package not found" de
+  // 2026-07-27 en /dishes — aquello era un node_modules dañado (un `npm i`
+  // accidental fuera de sitio) más la caché incremental de dev envenenada.
+  // El remedio real fue `npm ci` en la raíz + borrar apps/web/.next. Se
+  // mantiene el root explícito porque es lo recomendado en monorepos.
   turbopack: {
     root: path.join(__dirname, "../.."),
   },
