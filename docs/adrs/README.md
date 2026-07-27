@@ -20,6 +20,8 @@ Registro de decisiones de arquitectura del proyecto. Cada ADR es un archivo con 
 | [0014](0014-supplements-no-diarios-como-regla-de-calendario.md) | Supplements no diarios como regla de calendario |
 | [0015](0015-fuente-de-datos-nutricionales-api-externa-mas-overrides.md) | Fuente de datos nutricionales: API externa + overrides |
 | [0016](0016-monorepo-npm-workspaces-para-compartir-engine-y-data.md) | Monorepo npm workspaces para compartir `engine`/`data` (CLI + web) |
+| [0017](0017-requisitos-dieteticos-por-meal-como-mecanismo-principal.md) | Requisitos dietéticos por meal como mecanismo principal, vista "Prepara tu cena" |
+| [0018](0018-dish-fija-con-meal-unico.md) | Toda dish es fija y pertenece a exactamente un meal (sustituye a 0008) |
 
 ## Cómo añadir un ADR nuevo
 

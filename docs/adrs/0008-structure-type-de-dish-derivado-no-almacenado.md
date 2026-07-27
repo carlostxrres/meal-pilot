@@ -1,6 +1,6 @@
 # ADR-0008: `structure_type` de Dish derivado, no almacenado
 
-- **Estado**: Aceptada
+- **Estado**: Superseded by [ADR-0018](0018-dish-fija-con-meal-unico.md)
 - **Fecha**: 2026-07-26
 
 ## Contexto
