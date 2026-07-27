@@ -1,10 +1,12 @@
 "use client";
 
-import { IconAlertTriangle, IconSearch, IconToolsKitchen2 } from "@tabler/icons-react";
+import { IconAlertTriangle, IconCircleCheck, IconSearch, IconToolsKitchen2 } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import type { DishCatalogEntry } from "@meal-pilot/core";
 
 function DishCard({ entry }: { entry: DishCatalogEntry }) {
+  const failing = entry.compliance.checks.filter((check) => !check.withinWindow);
+
   return (
     <div className="meal-row">
       <div className="meal-row-head">
@@ -12,30 +14,27 @@ function DishCard({ entry }: { entry: DishCatalogEntry }) {
         <span className="meal-time">{entry.dish.dish_type}</span>
       </div>
 
-      {entry.mealNames.length > 0 ? (
-        <div className="dish-meal-chips">
-          {entry.mealNames.map((name) => (
-            <span key={name} className="dish-meal-chip">
-              {name}
+      <div className="dish-meal-chips">
+        {entry.mealName && <span className="dish-meal-chip">{entry.mealName}</span>}
+        {entry.compliance.checks.length > 0 &&
+          (entry.compliance.compliant ? (
+            <span className="dish-meal-chip" data-compliance="ok">
+              <IconCircleCheck size={12} stroke={2} /> Dentro de la ventana del meal
+            </span>
+          ) : (
+            <span className="dish-meal-chip" data-compliance="off">
+              <IconAlertTriangle size={12} stroke={2} /> Fuera de ventana:{" "}
+              {failing.map((check) => check.requirement.name).join(", ")}
             </span>
           ))}
-        </div>
-      ) : (
-        <p className="warning">
-          <IconAlertTriangle size={16} stroke={1.75} /> Sin vincular a ningún meal (nunca se propondrá)
-        </p>
-      )}
+      </div>
 
       <ul className="ingredient-list">
         {entry.components.map((component, i) => (
           <li key={i}>
-            <span>
-              {component.ingredientName ?? `Categoría: ${component.categoryName}`}
-              {!component.required && " (opcional)"}
-            </span>
+            <span>{component.ingredientName}</span>
             <span className="data-mono">
               {component.quantity}
-              {component.quantityMax != null && `–${component.quantityMax}`}
               {component.unit ?? ""}
             </span>
           </li>

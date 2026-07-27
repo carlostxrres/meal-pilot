@@ -8,7 +8,6 @@ import type {
   MealProposal,
   MealWithCandidates,
   RequirementStatus,
-  ResolvedComponent,
   ResolvedDish,
 } from "./types.js";
 
@@ -19,20 +18,13 @@ const WEIGHT_IN_STOCK = 100;
 const WEIGHT_HELPS_MANDATORY_MIN = 10;
 const WEIGHT_NOT_RECENTLY_USED = 1;
 
-function effectiveBounds(requirement: DietaryRequirement) {
+export function effectiveBounds(requirement: DietaryRequirement) {
   const margin = requirement.tolerance_margin;
   const effectiveMinimum =
     requirement.minimum == null ? null : requirement.minimum * (1 - margin);
   const effectiveMaximum =
     requirement.maximum == null ? null : requirement.maximum * (1 + margin);
   return { effectiveMinimum, effectiveMaximum };
-}
-
-function isRequirementApplicableToMeal(
-  requirement: DietaryRequirement,
-  mealId: string,
-): boolean {
-  return requirement.meal_id === null || requirement.meal_id === mealId;
 }
 
 function ingredientMatchesRequirementScope(
@@ -85,11 +77,11 @@ function contribution(
 
 function helpsUnmetMandatoryMinimum(
   ingredient: Ingredient,
-  applicable: readonly DietaryRequirement[],
+  globalRequirements: readonly DietaryRequirement[],
   runningAccumulated: ReadonlyMap<string, number>,
   categoryIdsByIngredientId: ReadonlyMap<string, Set<string>>,
 ): boolean {
-  return applicable.some((req) => {
+  return globalRequirements.some((req) => {
     if (req.strictness !== "mandatory" || req.minimum == null) return false;
     const { effectiveMinimum } = effectiveBounds(req);
     if (effectiveMinimum == null) return false;
@@ -106,14 +98,14 @@ function helpsUnmetMandatoryMinimum(
 function scoreIngredient(
   ingredient: Ingredient,
   quantity: number,
-  applicable: readonly DietaryRequirement[],
+  globalRequirements: readonly DietaryRequirement[],
   ctx: DailyContext,
   runningAccumulated: ReadonlyMap<string, number>,
 ): number {
   const inStock = ingredient.office_inventory + ingredient.home_inventory >= quantity;
   const helps = helpsUnmetMandatoryMinimum(
     ingredient,
-    applicable,
+    globalRequirements,
     runningAccumulated,
     ctx.categoryIdsByIngredientId,
   );
@@ -137,41 +129,20 @@ function pickBestByScore<T>(
 }
 
 /**
- * Resuelve todos los huecos de una dish (fijos + flexibles) contra el
- * catálogo real. Devuelve null si algún hueco flexible no tiene ningún
- * ingrediente disponible en su categoría (no debería pasar con el catálogo
- * semilla, pero es una entrada externa y conviene no asumirlo).
+ * Materializa una dish fija (ADR-0018): cada componente es un ingrediente
+ * concreto con su cantidad. Devuelve null si algún ingrediente referenciado
+ * no existe en el catálogo (entrada externa, conviene no asumirlo).
  */
-export function resolveDishSlots(
+export function toResolvedDish(
   dishWithComponents: DishWithComponents,
-  applicable: readonly DietaryRequirement[],
-  runningAccumulated: ReadonlyMap<string, number>,
   ctx: DailyContext,
-  rand: () => number,
 ): ResolvedDish | null {
-  const components: ResolvedComponent[] = [];
-
+  const components = [];
   for (const component of dishWithComponents.components) {
-    if (component.ingredient_id) {
-      const ingredient = ctx.ingredientsById.get(component.ingredient_id);
-      if (!ingredient) return null;
-      components.push({ ingredient, quantity: component.quantity });
-      continue;
-    }
-
-    if (!component.category_id) return null;
-    const options = ctx.ingredientsByCategory.get(component.category_id) ?? [];
-    if (options.length === 0) return null;
-
-    const chosen = pickBestByScore(
-      options,
-      (ingredient) =>
-        scoreIngredient(ingredient, component.quantity, applicable, ctx, runningAccumulated),
-      rand,
-    );
-    components.push({ ingredient: chosen, quantity: component.quantity });
+    const ingredient = ctx.ingredientsById.get(component.ingredient_id);
+    if (!ingredient) return null;
+    components.push({ ingredient, quantity: component.quantity });
   }
-
   return { dish: dishWithComponents.dish, components };
 }
 
@@ -187,13 +158,20 @@ function totalContribution(
   );
 }
 
+/**
+ * Filtro duro de generación: solo los requisitos globales (meal_id = null)
+ * mandatory con techo — ej. el máximo semanal de atún. Las ventanas
+ * nutricionales del propio meal (meal_id != null, ADR-0017) no se filtran
+ * aquí: las dishes fijas las cumplen por construcción (se validan al
+ * crearlas, ver compliance.ts), no en generación.
+ */
 function violatesMandatoryMaximum(
   resolved: ResolvedDish,
-  applicable: readonly DietaryRequirement[],
+  globalRequirements: readonly DietaryRequirement[],
   runningAccumulated: ReadonlyMap<string, number>,
   categoryIdsByIngredientId: ReadonlyMap<string, Set<string>>,
 ): boolean {
-  return applicable.some((req) => {
+  return globalRequirements.some((req) => {
     if (req.strictness !== "mandatory" || req.maximum == null) return false;
     const { effectiveMaximum } = effectiveBounds(req);
     if (effectiveMaximum == null) return false;
@@ -205,15 +183,15 @@ function violatesMandatoryMaximum(
 
 function scoreResolvedDish(
   resolved: ResolvedDish,
-  applicable: readonly DietaryRequirement[],
+  globalRequirements: readonly DietaryRequirement[],
   runningAccumulated: ReadonlyMap<string, number>,
   ctx: DailyContext,
 ): number {
   // Media, no suma: si sumaramos, una dish con mas componentes ganaria casi
-  // siempre solo por tener mas huecos que puntuan (WEIGHT_IN_STOCK etc.),
+  // siempre solo por tener mas componentes que puntuan (WEIGHT_IN_STOCK etc.),
   // independientemente de si es realmente la mejor opcion para el meal.
   const total = resolved.components.reduce(
-    (sum, c) => sum + scoreIngredient(c.ingredient, c.quantity, applicable, ctx, runningAccumulated),
+    (sum, c) => sum + scoreIngredient(c.ingredient, c.quantity, globalRequirements, ctx, runningAccumulated),
     0,
   );
   return total / resolved.components.length;
@@ -226,21 +204,19 @@ function resolveMeal(
   ctx: DailyContext,
   rand: () => number,
 ): MealProposal {
-  const applicable = allRequirements.filter((r) =>
-    isRequirementApplicableToMeal(r, mealCtx.meal.id),
-  );
+  const globalRequirements = allRequirements.filter((r) => r.meal_id === null);
 
   if (mealCtx.candidates.length === 0) {
     return {
       meal: mealCtx.meal,
       supplements: mealCtx.supplements,
       resolved: null,
-      unresolvedReason: "No hay ninguna dish registrada para este meal (meal_dish vacío).",
+      unresolvedReason: "No hay ninguna dish registrada para este meal (dish.meal_id).",
     };
   }
 
   const resolvedCandidates = mealCtx.candidates
-    .map((c) => resolveDishSlots(c.dish, applicable, runningAccumulated, ctx, rand))
+    .map((c) => toResolvedDish(c, ctx))
     .filter((r): r is ResolvedDish => r !== null);
 
   if (resolvedCandidates.length === 0) {
@@ -249,12 +225,12 @@ function resolveMeal(
       supplements: mealCtx.supplements,
       resolved: null,
       unresolvedReason:
-        "Ninguna dish candidata pudo resolverse (algún hueco flexible sin ingredientes disponibles).",
+        "Ninguna dish candidata pudo materializarse (algún ingrediente referenciado no existe).",
     };
   }
 
   const validCandidates = resolvedCandidates.filter(
-    (r) => !violatesMandatoryMaximum(r, applicable, runningAccumulated, ctx.categoryIdsByIngredientId),
+    (r) => !violatesMandatoryMaximum(r, globalRequirements, runningAccumulated, ctx.categoryIdsByIngredientId),
   );
 
   if (validCandidates.length === 0) {
@@ -269,11 +245,14 @@ function resolveMeal(
 
   const chosen = pickBestByScore(
     validCandidates,
-    (r) => scoreResolvedDish(r, applicable, runningAccumulated, ctx),
+    (r) => scoreResolvedDish(r, globalRequirements, runningAccumulated, ctx),
     rand,
   );
 
-  for (const req of applicable) {
+  // El acumulado sí incluye los requisitos del propio meal (ADR-0017): su
+  // status del día es exactamente el aporte de la dish elegida para ese meal.
+  for (const req of allRequirements) {
+    if (req.meal_id !== null && req.meal_id !== mealCtx.meal.id) continue;
     const added = totalContribution(chosen, req, ctx.categoryIdsByIngredientId);
     runningAccumulated.set(req.id, (runningAccumulated.get(req.id) ?? 0) + added);
   }
@@ -332,14 +311,12 @@ function weekPeriodStart(date: string, resetDay: string): string {
  *   - `period = week`: se mantiene mientras las dos fechas caigan en la
  *     misma ventana semanal (según `week_reset_day`); si el plan cruza un
  *     reset de semana, también se reinicia.
- *   - Diversidad: los ingredientes usados en el día N (fijos y de huecos
- *     flexibles, ya que aquí sí sabemos exactamente cuáles se eligieron)
- *     se añaden al conjunto de "usados recientemente" antes de resolver
- *     el día N+1.
+ *   - Diversidad: los ingredientes usados en el día N se añaden al conjunto
+ *     de "usados recientemente" antes de resolver el día N+1.
  *
  * Limitación conocida: sigue siendo un algoritmo voraz día a día (usa la
- * prioridad de "ayuda a un requisito no cumplido" en cada hueco), no un
- * solver que mire todos los días a la vez para encontrar el reparto
+ * prioridad de "ayuda a un requisito no cumplido" al puntuar cada dish),
+ * no un solver que mire todos los días a la vez para encontrar el reparto
  * óptimo — pero ya no genera cada día de forma aislada.
  */
 export function generateMultiDayPlan(

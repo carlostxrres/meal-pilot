@@ -7,7 +7,6 @@ export type IngredientCategory = Tables["ingredient_category"]["Row"];
 export type Dish = Tables["dish"]["Row"];
 export type DishIngredient = Tables["dish_ingredient"]["Row"];
 export type Meal = Tables["meal"]["Row"];
-export type MealDish = Tables["meal_dish"]["Row"];
 export type Supplement = Tables["supplement"]["Row"];
 export type DietaryRequirement = Tables["dietary_requirement"]["Row"];
 export type RequirementLog = Tables["requirement_log"]["Row"];
@@ -30,16 +29,16 @@ export const NUTRIENT_COLUMNS = [
 
 export type NutrientColumn = (typeof NUTRIENT_COLUMNS)[number];
 
-/** Dish con sus componentes ya resueltos (ingredient/category cargados). */
+/** Dish (siempre fija, ver ADR-0018) con sus componentes. */
 export interface DishWithComponents {
   dish: Dish;
   components: DishIngredient[];
 }
 
-/** Meal con las dishes candidatas (vía meal_dish) ya resueltas. */
+/** Meal con sus dishes candidatas (las que tienen `dish.meal_id` = este meal). */
 export interface MealWithCandidates {
   meal: Meal;
-  candidates: { dish: DishWithComponents; quantityUnits: number }[];
+  candidates: DishWithComponents[];
   supplements: Supplement[];
 }
 
@@ -49,9 +48,7 @@ export interface DailyContext {
   meals: MealWithCandidates[];
   ingredientsById: Map<string, Ingredient>;
   categoriesById: Map<string, IngredientCategory>;
-  /** Ingredientes de cada categoría (para resolver huecos flexibles). */
-  ingredientsByCategory: Map<string, Ingredient[]>;
-  /** Categorías a las que pertenece cada ingrediente (inverso del mapa anterior). */
+  /** Categorías a las que pertenece cada ingrediente (para requisitos por categoría). */
   categoryIdsByIngredientId: Map<string, Set<string>>;
   requirements: DietaryRequirement[];
   /** Último requirement_log conocido por requirement_id (puede no existir aún). */

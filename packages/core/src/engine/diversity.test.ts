@@ -16,37 +16,31 @@ function makeMealLog(overrides: Partial<MealLog>): MealLog {
 }
 
 describe("getRecentlyUsedIngredientIds", () => {
-  it("incluye los ingredientes fijos de dishes servidas dentro de la ventana", () => {
+  it("incluye todos los componentes de dishes servidas dentro de la ventana", () => {
     const dishIngredientsByDishId = new Map([
-      ["dish-1", [makeDishIngredient({ dish_id: "dish-1", ingredient_id: "ing-pollo", required: true })]],
+      [
+        "dish-1",
+        [
+          makeDishIngredient({ dish_id: "dish-1", ingredient_id: "ing-pollo" }),
+          makeDishIngredient({ dish_id: "dish-1", ingredient_id: "ing-pan" }),
+        ],
+      ],
     ]);
     const logs = [makeMealLog({ date: "2026-08-05", dish_id: "dish-1" })];
 
     const recent = getRecentlyUsedIngredientIds(logs, dishIngredientsByDishId, "2026-08-07", 3);
     expect(recent.has("ing-pollo")).toBe(true);
+    expect(recent.has("ing-pan")).toBe(true);
   });
 
   it("excluye registros anteriores a la ventana", () => {
     const dishIngredientsByDishId = new Map([
-      ["dish-1", [makeDishIngredient({ dish_id: "dish-1", ingredient_id: "ing-pollo", required: true })]],
+      ["dish-1", [makeDishIngredient({ dish_id: "dish-1", ingredient_id: "ing-pollo" })]],
     ]);
     const logs = [makeMealLog({ date: "2026-08-01", dish_id: "dish-1" })];
 
     const recent = getRecentlyUsedIngredientIds(logs, dishIngredientsByDishId, "2026-08-07", 3);
     expect(recent.has("ing-pollo")).toBe(false);
-  });
-
-  it("no cuenta componentes de huecos flexibles (solo required=true)", () => {
-    const dishIngredientsByDishId = new Map([
-      [
-        "dish-1",
-        [makeDishIngredient({ dish_id: "dish-1", ingredient_id: "ing-flex", required: false, category_id: "cat-1" })],
-      ],
-    ]);
-    const logs = [makeMealLog({ date: "2026-08-06", dish_id: "dish-1" })];
-
-    const recent = getRecentlyUsedIngredientIds(logs, dishIngredientsByDishId, "2026-08-07", 3);
-    expect(recent.has("ing-flex")).toBe(false);
   });
 
   it("con meal_log vacío (estado actual real) no excluye nada", () => {

@@ -76,41 +76,27 @@ Todos los `*_per_100` son "por 100 `base_unit`" (100g, 100ml, o 100 unidades, se
 
 Conjunto de 1+ ingredientes que forma una unidad alimenticia pre-diseñada (nunca generada libremente por el sistema). Es el equivalente en inglés de lo que la idea original llama "comida" (ej. un bocadillo, una ensalada) — se renombra para no chocar con `Meal`.
 
-| Campo      | Tipo               | Ejemplo                                  |
-| ----------- | -------------------- | ------------------------------------------ |
-| id         | uuid (PK)       | 3                                          |
-| name       | string              | "Bocadillo de pollo/pavo con pimientos"    |
-| dish_type  | string/enum libre   | Sandwich                                   |
-| components | ver `dish_ingredient` | —                                        |
+**Toda dish es fija y pertenece a exactamente un meal** *(ver [ADR-0018](adrs/0018-dish-fija-con-meal-unico.md), que sustituye al modelo fija/flexible/semiflexible del ADR-0008)*: su composición es una lista cerrada de (ingrediente, cantidad), así que su perfil nutricional es una suma estática — y eso permite garantizar, al crearla, que cumple la ventana nutricional de su meal (ver 3.9). La rotación (norma "Diverso") ya no ocurre *dentro* de una dish con huecos flexibles, sino *entre* varias dishes fijas del mismo meal.
 
-**`structure_type` ya no es una columna** *(cambio de este ciclo)*: es una propiedad implícita, derivada de las filas de `dish_ingredient` asociadas a la comida, según cuántas tengan `required = true`:
+| Campo      | Tipo                  | Ejemplo                                  |
+| ----------- | ----------------------- | ------------------------------------------ |
+| id         | uuid (PK)          | 3                                          |
+| name       | string                 | "Bocadillo de pollo con pimientos"         |
+| dish_type  | string/enum libre      | Sandwich                                   |
+| meal_id    | FK a `meal`, NOT NULL  | Snack de media mañana                      |
+| components | ver `dish_ingredient`  | —                                          |
 
-- Ninguna obligatoria → **flexible**.
-- Todas obligatorias → **fija**.
-- Alguna sí y alguna no → **semiflexible**.
+**Componente de comida** (`dish_ingredient`): cada fila liga una dish con un ingredient concreto y su cantidad. (Las categorías de ingrediente siguen existiendo, pero ya no participan en la composición de dishes — solo en requisitos por categoría y en la futura alta asistida de dishes.)
 
-No hace falta almacenarlo ni mantenerlo sincronizado; se calcula con una query o una vista cuando haga falta.
-
-**Tres subtipos** (igual que en la idea original, ahora derivados en vez de un campo propio):
-
-- **Fija**: lista cerrada de ingredientes concretos, sin alternativas ni grupos. Ej: un bocadillo con 4 ingredientes obligatorios.
-- **Flexible**: N grupos (categorías), y hay que tomar 1+ ingrediente de cada grupo, sin importar cuál. Ej: la ensalada, con sus 5 categorías.
-- **Semiflexible**: mezcla de ambas — algunos ingredientes fijos + al menos un componente que se resuelve eligiendo dentro de un grupo/categoría. Ej: el bocadillo de pollo/pavo, donde pan/queso/mezclum/pimientos/salsa son fijos pero pollo-o-pavo es una elección dentro de un grupo de 2.
-
-**Componente de comida** (`dish_ingredient`): cada fila liga una dish con un ingredient o una category, e indica si es obligatorio, alternativa dentro de un grupo, o parte de un grupo flexible, más la cantidad (fija o rango).
-
-| Campo        | Tipo                                                 | Ejemplo   |
-| ------------- | ------------------------------------------------------ | ----------- |
-| dish_id      | FK                                                    | 3         |
-| ingredient_id| FK, nullable si se referencia una category            | 8 (Pollo) |
-| category_id  | FK, nullable si se referencia un ingredient concreto   | null      |
-| slot_group   | int (agrupa alternativas del mismo hueco)             | 1         |
-| quantity     | decimal + unidad                                      | 50g       |
-| required     | bool                                                  | true      |
+| Campo        | Tipo             | Ejemplo   |
+| ------------- | ------------------ | ----------- |
+| dish_id      | FK                | 3         |
+| ingredient_id| FK, NOT NULL      | 8 (Pollo) |
+| quantity     | decimal + unidad  | 50g       |
 
 ### Meal
 
-Una actividad de comida en un momento del día. Consiste en 1+ Dishes.
+Una actividad de comida en un momento del día, con su propia ventana nutricional (ver 3.9). Cada día se le propone **una** dish de entre las suyas (`dish.meal_id`).
 
 | Campo             | Tipo                                                                     | Ejemplo             |
 | ------------------ | --------------------------------------------------------------------------| ---------------------|
@@ -118,7 +104,7 @@ Una actividad de comida en un momento del día. Consiste en 1+ Dishes.
 | name              | string                                                                   | "Desayuno en casa"   |
 | usual_start_time  | time                                                                     | 08:00                |
 | usual_end_time    | time                                                                     | 08:10                |
-| dishes            | relación N:M con `Dish` (vía `meal_dish`, con cantidad de unidades)      | —                    |
+| dishes            | relación 1:N — las dishes con `dish.meal_id` = este meal                 | —                    |
 
 `usual_start_time`/`usual_end_time` sustituyen a la antigua `hora_habitual` única: cada meal tiene una **ventana horaria habitual** (ej. "entre las 08:00 y las 08:10"), no un instante exacto — encaja mejor con cómo describe el usuario sus horarios reales (ver catálogo abajo) y es lo que usará el generador para, por ejemplo, decidir si aún hay tiempo de preparación disponible.
 
@@ -184,7 +170,7 @@ Esto da 4 combinaciones posibles, y un requisito siempre cae en una de ellas. Ad
 | 1 aguacate (~100g) al día         | ingredient                                         | Aguacate                 | day    | —                      | 100g                        | —                                    | mandatory  |
 | Mínimo de vitamina C diario       | nutrient                                           | `vitamin_c_mg_per_100`      | day    | —                      | 80mg (NRV UE)               | —                                    | mandatory  |
 | Limitar atún por metales pesados  | ingredient (o category "pescado azul grande")      | Atún en lata             | week   | —                      | —                            | 2 servings (240g)                   | mandatory  |
-| Mínimo de proteína post-entreno   | nutrient                                           | `protein_g_per_100`        | day    | Snack post-entreno    | 35g                          | —                                    | mandatory  |
+| Proteína del snack post-entreno   | nutrient                                           | `protein_g_per_100`        | day    | Snack post-entreno    | 25g                          | 35g                                  | mandatory  |
 
 El caso del atún es interesante porque combina la norma de **diversidad** (rotar proteína) con un requisito de **máximo semanal**: el sistema no solo debe evitar servir atún todos los días por variedad, sino que además nunca debe superar el techo semanal aunque el usuario quisiera repetirlo.
 
@@ -244,18 +230,16 @@ Cuando no existe combinación de comidas que satisfaga todos los requisitos del 
 
 El sistema mantiene un `requirement_log` (ver esquema, sección 4) que guarda, para cada requisito y cada periodo (día o semana concretos), el acumulado en tiempo real. Esto permite responder en cualquier momento preguntas como "¿cuántas latas de sardinas llevo esta semana?" y es la entrada directa que usa tanto el generador de menús como la lista de la compra dinámica (sección 6).
 
-### 3.9 Requisitos ligados a un meal concreto
+### 3.9 Requisitos por meal: el mecanismo principal
 
-**Problema**: algunos requisitos nutricionales no son sobre el total del día, sino sobre un meal específico. Ej: el snack post-entreno necesita cierta cantidad de proteína **en sí mismo** (para la ventana de recuperación), no como parte de una suma diaria de proteína que podría venir de cualquier otro meal; el almuerzo necesita cierta cantidad de hidratos antes del entreno.
+*(Actualizado por [ADR-0017](adrs/0017-requisitos-dieteticos-por-meal-como-mecanismo-principal.md): lo que empezó como caso excepcional del ADR-0011 es ahora el mecanismo central del modelo.)*
 
-**Solución elegida**: no crear un tipo de entidad nueva, sino añadir un único campo opcional, `meal_id` (nullable), a `dietary_requirement` (ver 3.2):
+Cada uno de los 4 meals define su propia **ventana nutricional completa** (mín/máx de energía, grasas, saturadas, hidratos, azúcares, fibra, proteína y sodio), cargada como filas de `dietary_requirement` con `meal_id` no nulo (`scope_type = nutrient`, `period = day`, mandatory). Los valores concretos por meal viven en `supabase/migrations/20260727121000_per_meal_nutritional_requirements.sql` y en el [documento de diseño del cambio](plans/2026-07-27-requisitos-por-meal-y-dishes-fijas-design.md). La sal se almacena como sodio (1 g sal ≈ 400 mg de sodio).
 
-- Si `meal_id` es `null` (caso general, todo lo descrito en 3.1–3.8): el requisito se evalúa contra el acumulado de **todo** el periodo (día o semana), sin importar en qué meal se consumió cada cosa. Es el comportamiento de siempre.
-- Si `meal_id` no es `null`: el requisito se evalúa **solo** contra lo consumido en las ocurrencias de ese meal dentro del periodo — normalmente `period = day` y una única ocurrencia diaria de ese meal. El resto del modelo (scope_type/scope_ref, tolerance_margin, strictness, resolución de conflictos) funciona exactamente igual; `meal_id` solo acota de dónde sale el `accumulated`.
+Mecánica (sin cambios respecto al ADR-0011):
 
-Esto es deliberadamente mínimo: reutiliza toda la maquinaria ya definida (3.2–3.8) en vez de introducir un segundo modelo de requisitos en paralelo. El generador, al resolver los huecos flexibles/semiflexibles de una dish para un meal concreto (sección 5), simplemente filtra primero los requisitos con `meal_id` igual al meal que está resolviendo, además de los requisitos globales (`meal_id = null`) que sigan abiertos ese día.
-
-**Ejemplo**: "el snack post-entreno debe aportar ≥ 25g de proteína" → `dietary_requirement { scope_type: nutrient, scope_ref: protein_g_per_100, period: day, meal_id: <Snack post-entreno>, minimum: 25, unit: g, strictness: mandatory }`.
+- Si `meal_id` es `null`: el requisito se evalúa contra el acumulado de **todo** el periodo (día o semana). Los objetivos de día completo (2.800 kcal, 160 g de proteína...) siguen siendo de este tipo, pero su lectura en la UI cambió: en vez de una sección "Requisitos diarios" imposible de completar sin la cena, "Hoy" muestra **"Prepara tu cena"** — el residuo `objetivo − suma de los 4 meals`, es decir, lo que la cena (fuera de alcance, ADR-0001) debe aportar.
+- Si `meal_id` no es `null`: el acumulado solo considera lo consumido en ese meal. Combinado con las dishes fijas del ADR-0018, estos requisitos **se cumplen por construcción**: cada dish se valida contra la ventana de su meal al crearla (`checkDishCompliance` en `@meal-pilot/core`), no al generar — el generador no los usa como filtro, y la página `/dishes` marca cualquier dish fuera de ventana.
 
 ---
 
@@ -277,10 +261,9 @@ Aunque es un sistema de un único usuario, se decide usar **Supabase Auth + Row 
 - **ingredient** (id, owner_id, name, base_unit, storage_type, opened_shelf_life_days, recommended_time, office_inventory, home_inventory, kcal_per_100, protein_g_per_100, carbs_g_per_100, sugar_g_per_100, fiber_g_per_100, fat_g_per_100, saturated_fat_g_per_100, sodium_mg_per_100, vitamin_c_mg_per_100, iron_mg_per_100, calcium_mg_per_100, omega3_g_per_100 — todos "por 100 base_unit")
 - **ingredient_category** (id, owner_id, name) — ej. "Protein (salad)"
 - **ingredient_category_link** (ingredient_id → ingredient, category_id → ingredient_category) — N:M
-- **dish** (id, owner_id, name, dish_type) — sin `structure_type`, se deriva de `dish_ingredient` (ver sección 2)
-- **dish_ingredient** (dish_id → dish, ingredient_id → ingredient nullable, category_id → ingredient_category nullable, slot_group, quantity, required)
+- **dish** (id, owner_id, name, dish_type, meal_id → meal NOT NULL) — fija y de un único meal (ADR-0018)
+- **dish_ingredient** (dish_id → dish, ingredient_id → ingredient NOT NULL, quantity)
 - **meal** (id, owner_id, name, usual_start_time, usual_end_time)
-- **meal_dish** (meal_id → meal, dish_id → dish, quantity_units)
 - **supplement** (id, owner_id, ingredient_id → ingredient, frequency, meal_id → meal, relative_timing)
 - **supplement_day** (supplement_id → supplement, day_of_week) — solo si la frecuencia es de días fijos (lunes/miércoles/viernes)
 - **dietary_requirement** (id, owner_id, scope_type, scope_ref_id, period, week_reset_day, meal_id nullable → meal, minimum, maximum, unit, tolerance_margin, strictness, description)
@@ -299,35 +282,32 @@ para cada día a planificar:
     - inventario actual (home + office)
     - dietary requirements activos y su acumulado (requirement_log)
     - caducidades de ingredientes abiertos
-    - catálogo de dishes pre-diseñadas, agrupadas por meal
+    - catálogo de dishes fijas, cada una de un meal (dish.meal_id)
 
   para cada uno de los 4 meals del día (en orden horario):
-    candidatos = dishes del catálogo asociadas a ese meal
-    requisitos_aplicables = dietary requirements con meal_id = este meal,
-      más los requisitos globales (meal_id = null) aún abiertos ese periodo
-    para cada candidato:
-      si es fija -> composición ya determinada
-      si es flexible/semiflexible -> resolver huecos:
-        priorizar ingredientes:
-          1. que ya están en inventario (evitar compra impulsiva)
-          2. que ayudan a acercarse a un requisito mandatory no cumplido
-             (de requisitos_aplicables, incluidos los propios de este meal)
-          3. que caducan antes (evitar desperdicio)
-          4. que no se hayan usado recientemente (norma de diversidad)
-    filtrar candidatos que violen algún requisito mandatory (fuera de margen)
-    elegir de entre los candidatos válidos (no determinista: puede haber empate,
-      se puede introducir variación aleatoria controlada entre opciones igual de buenas)
+    candidatas = dishes con meal_id = este meal
+      (cada candidata es ya una propuesta completa: fija y pre-validada
+       contra la ventana nutricional de su meal, ver 3.9 y ADR-0018)
+    filtrar candidatas que romperían un techo mandatory GLOBAL
+      (ej. máximo semanal de atún — las ventanas del propio meal no se
+       filtran aquí: se cumplen por construcción)
+    puntuar cada candidata (media sobre sus ingredientes):
+      1. que ya están en inventario (evitar compra impulsiva)
+      2. que ayudan a acercarse a un requisito global mandatory no cumplido
+      3. que no se hayan usado recientemente (norma de diversidad —
+         la rotación es ENTRE dishes fijas del meal, ver sección 2)
+    elegir la mejor (empates: variación aleatoria con semilla por fecha)
 
   aplicar supplements correspondientes a cada meal, en su relative_timing
 
-  actualizar requirement_log con lo generado (aún no consumido; se confirma
-    después vía "registro de comidas")
+  calcular el residuo del día: para cada requisito global diario,
+    objetivo − suma de las 4 dishes -> "Prepara tu cena" (ADR-0017)
 
-  si algún requisito mandatory diario queda sin combinación válida ->
+  si algún meal queda sin candidata válida ->
     señalar explícitamente al usuario (no fallar en silencio, ver 3.7)
 ```
 
-El resultado por día es una propuesta concreta de las 4 comidas + supplements, ya lista para "abrir la nevera y tener todo lo necesario" (objetivo de "sentirse mágico" de la idea original).
+El resultado por día es una propuesta concreta de las 4 comidas + supplements, ya lista para "abrir la nevera y tener todo lo necesario" (objetivo de "sentirse mágico" de la idea original), más el objetivo nutricional que le queda a la cena.
 
 ---
 
@@ -379,16 +359,18 @@ No entran en el alcance de v1, pero conviene dejarlas anotadas porque encajan de
 - **Supplements en días no diarios**: se gestionan solo como regla de calendario (`supplement_day`), sin generar un `dietary_requirement` asociado — quedan fuera del motor de requisitos.
 - **`tolerance_margin` por defecto**: 10%. Ver 3.5.
 - **Definición de "ración"**: cantidad en gramos (o ml/unidades) independiente del envase de compra. Ver 3.3.
-- **`structure_type` de Dish**: eliminado como columna, se deriva de `dish_ingredient.required`. Ver sección 2.
+- **`structure_type` de Dish**: eliminado como columna, se deriva de `dish_ingredient.required`. Ver sección 2. *(Superado después por ADR-0018: ya no hay dishes flexibles en absoluto.)*
 - **Horario de Meal**: rango (`usual_start_time`/`usual_end_time`) en vez de instante único. Ver sección 2.
-- **Requisitos ligados a un meal concreto**: campo opcional `meal_id` en `dietary_requirement`. Ver 3.9.
+- **Requisitos ligados a un meal concreto**: campo opcional `meal_id` en `dietary_requirement`. Ver 3.9. *(Elevado a mecanismo principal por ADR-0017: cada meal define su ventana nutricional completa.)*
+- **Dishes fijas, un meal por dish** (2026-07-27): toda dish es fija, pertenece a un único meal (`dish.meal_id`) y se valida contra la ventana de su meal al crearla; `meal_dish` y la maquinaria flexible de `dish_ingredient` se eliminaron. Ver ADR-0018.
+- **Vista "Prepara tu cena"** (2026-07-27): los requisitos globales diarios se muestran como residuo para la cena, no como una barra imposible de completar de día. Ver ADR-0017.
 - **Stack de persistencia**: Postgres vía Supabase (en vez de SQLite).
 - **Lista cerrada de micronutrientes a trackear**: macros completos + sodio, vitamina C, hierro, calcio y omega-3. Ver sección 2 y 4.1.
 - **Modelo de acceso**: Supabase Auth + RLS desde el principio (`owner_id` en todas las tablas), aunque hoy solo haya un usuario. Ver 4.1.
 - **Estrategia de IDs**: `uuid` con `gen_random_uuid()` en todas las PKs, no enteros autoincrementales. Ver sección 2 y 4.1.
 - **División de la fase 2**: en sub-fases 2a–2d (proyecto Supabase, DDL, datos semilla, valores nutricionales reales). Ver [Roadmap](#7-roadmap-por-fases).
 - **Vitamina C mínima diaria**: 80mg (NRV UE para adultos). Ver 3.3.
-- **Proteína mínima post-entreno**: 35g, calculado como 0,3–0,4 g/kg de peso corporal del usuario. Ver 3.3.
+- **Proteína del snack post-entreno**: ventana 25–35g (antes mínimo suelto de 35g), dentro del set de requisitos por meal del ADR-0017. Ver 3.3 y 3.9.
 - **Equivalencia ración → gramos** (necesaria para cargar sardinas/atún como datos semilla): 1 ración de pescado en lata = 120g (asunción tomada al escribir la fase 2c, ajustable). Ver `supabase/migrations/20260726130000_seed_initial_catalog.sql`.
 
 ### Aún abiertas

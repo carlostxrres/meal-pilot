@@ -4,6 +4,8 @@ export * from "./engine/random.js";
 export * from "./engine/diversity.js";
 export * from "./engine/shoppingList.js";
 export * from "./engine/nutrition.js";
+export * from "./engine/compliance.js";
+export * from "./engine/dinner.js";
 export * from "./data/fetchDailyContext.js";
 export * from "./data/mealConfirmation.js";
 export * from "./data/inventory.js";

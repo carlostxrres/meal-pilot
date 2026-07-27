@@ -1,24 +1,24 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types.js";
-import type { Dish } from "../engine/types.js";
+import { checkDishCompliance, type DishCompliance } from "../engine/compliance.js";
+import type { Dish, Ingredient } from "../engine/types.js";
 
 export interface DishCatalogComponent {
-  slotGroup: number;
-  required: boolean;
   quantity: number;
-  quantityMax: number | null;
   unit: string | null;
   ingredientName: string | null;
-  categoryName: string | null;
 }
 
 export interface DishCatalogEntry {
   dish: Dish;
   components: DishCatalogComponent[];
-  mealNames: string[];
+  /** Nombre del meal al que pertenece la dish (dish.meal_id, ADR-0018). */
+  mealName: string | null;
+  /** Perfil de la dish contra la ventana nutricional de su meal (ADR-0017). */
+  compliance: DishCompliance;
 }
 
-/** Catálogo completo de dishes con sus componentes resueltos (nombres, no ids) y a qué meals están vinculadas. */
+/** Catálogo completo de dishes con componentes, meal y cumplimiento de su ventana nutricional. */
 export async function fetchDishCatalog(
   supabase: SupabaseClient<Database>,
 ): Promise<DishCatalogEntry[]> {
@@ -26,52 +26,45 @@ export async function fetchDishCatalog(
     { data: dishes, error: dishesError },
     { data: dishIngredients, error: diError },
     { data: ingredients, error: ingredientsError },
-    { data: categories, error: categoriesError },
-    { data: mealDishes, error: mealDishesError },
     { data: meals, error: mealsError },
+    { data: requirements, error: requirementsError },
   ] = await Promise.all([
     supabase.from("dish").select("*"),
     supabase.from("dish_ingredient").select("*"),
-    supabase.from("ingredient").select("id, name, base_unit"),
-    supabase.from("ingredient_category").select("id, name"),
-    supabase.from("meal_dish").select("*"),
+    supabase.from("ingredient").select("*"),
     supabase.from("meal").select("id, name"),
+    supabase.from("dietary_requirement").select("*").not("meal_id", "is", null),
   ]);
-  const error =
-    dishesError ?? diError ?? ingredientsError ?? categoriesError ?? mealDishesError ?? mealsError;
+  const error = dishesError ?? diError ?? ingredientsError ?? mealsError ?? requirementsError;
   if (error) throw new Error(error.message);
 
-  const ingredientById = new Map((ingredients ?? []).map((i) => [i.id, i]));
-  const categoryNameById = new Map((categories ?? []).map((c) => [c.id, c.name]));
+  const ingredientById = new Map<string, Ingredient>((ingredients ?? []).map((i) => [i.id, i]));
   const mealNameById = new Map((meals ?? []).map((m) => [m.id, m.name]));
 
-  const componentsByDish = new Map<string, DishCatalogComponent[]>();
+  const componentsByDish = new Map<string, { ingredient: Ingredient; quantity: number }[]>();
   for (const di of dishIngredients ?? []) {
+    const ingredient = ingredientById.get(di.ingredient_id);
+    if (!ingredient) continue;
     if (!componentsByDish.has(di.dish_id)) componentsByDish.set(di.dish_id, []);
-    const ingredient = di.ingredient_id ? ingredientById.get(di.ingredient_id) : undefined;
-    componentsByDish.get(di.dish_id)!.push({
-      slotGroup: di.slot_group,
-      required: di.required,
-      quantity: di.quantity,
-      quantityMax: di.quantity_max,
-      unit: ingredient?.base_unit ?? null,
-      ingredientName: ingredient?.name ?? null,
-      categoryName: di.category_id ? (categoryNameById.get(di.category_id) ?? null) : null,
-    });
-  }
-
-  const mealNamesByDish = new Map<string, string[]>();
-  for (const md of mealDishes ?? []) {
-    if (!mealNamesByDish.has(md.dish_id)) mealNamesByDish.set(md.dish_id, []);
-    const name = mealNameById.get(md.meal_id);
-    if (name) mealNamesByDish.get(md.dish_id)!.push(name);
+    componentsByDish.get(di.dish_id)!.push({ ingredient, quantity: di.quantity });
   }
 
   return (dishes ?? [])
-    .map((dish) => ({
-      dish,
-      components: (componentsByDish.get(dish.id) ?? []).sort((a, b) => a.slotGroup - b.slotGroup),
-      mealNames: mealNamesByDish.get(dish.id) ?? [],
-    }))
+    .map((dish) => {
+      const resolvedComponents = componentsByDish.get(dish.id) ?? [];
+      return {
+        dish,
+        components: resolvedComponents.map((c) => ({
+          quantity: c.quantity,
+          unit: c.ingredient.base_unit,
+          ingredientName: c.ingredient.name,
+        })),
+        mealName: mealNameById.get(dish.meal_id) ?? null,
+        compliance: checkDishCompliance(
+          { dish, components: resolvedComponents },
+          requirements ?? [],
+        ),
+      };
+    })
     .sort((a, b) => a.dish.name.localeCompare(b.dish.name));
 }

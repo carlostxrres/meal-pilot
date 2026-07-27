@@ -122,62 +122,54 @@ export type Database = {
         Row: {
           dish_type: string
           id: string
+          meal_id: string
           name: string
           owner_id: string
         }
         Insert: {
           dish_type: string
           id?: string
+          meal_id: string
           name: string
           owner_id: string
         }
         Update: {
           dish_type?: string
           id?: string
+          meal_id?: string
           name?: string
           owner_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "dish_meal_id_fkey"
+            columns: ["meal_id"]
+            isOneToOne: false
+            referencedRelation: "meal"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       dish_ingredient: {
         Row: {
-          category_id: string | null
           dish_id: string
           id: string
-          ingredient_id: string | null
+          ingredient_id: string
           quantity: number
-          quantity_max: number | null
-          required: boolean
-          slot_group: number
         }
         Insert: {
-          category_id?: string | null
           dish_id: string
           id?: string
-          ingredient_id?: string | null
+          ingredient_id: string
           quantity: number
-          quantity_max?: number | null
-          required?: boolean
-          slot_group?: number
         }
         Update: {
-          category_id?: string | null
           dish_id?: string
           id?: string
-          ingredient_id?: string | null
+          ingredient_id?: string
           quantity?: number
-          quantity_max?: number | null
-          required?: boolean
-          slot_group?: number
         }
         Relationships: [
-          {
-            foreignKeyName: "dish_ingredient_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "ingredient_category"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "dish_ingredient_dish_id_fkey"
             columns: ["dish_id"]
@@ -337,42 +329,6 @@ export type Database = {
           usual_start_time?: string
         }
         Relationships: []
-      }
-      meal_dish: {
-        Row: {
-          dish_id: string
-          id: string
-          meal_id: string
-          quantity_units: number
-        }
-        Insert: {
-          dish_id: string
-          id?: string
-          meal_id: string
-          quantity_units?: number
-        }
-        Update: {
-          dish_id?: string
-          id?: string
-          meal_id?: string
-          quantity_units?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "meal_dish_dish_id_fkey"
-            columns: ["dish_id"]
-            isOneToOne: false
-            referencedRelation: "dish"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "meal_dish_meal_id_fkey"
-            columns: ["meal_id"]
-            isOneToOne: false
-            referencedRelation: "meal"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       meal_log: {
         Row: {

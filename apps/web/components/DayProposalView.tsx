@@ -1,11 +1,49 @@
-import { computeMealNutrition, type DayProposal } from "@meal-pilot/core";
-import { IconAlertTriangle, IconFlask } from "@tabler/icons-react";
+import {
+  computeDinnerTargets,
+  computeMealNutrition,
+  type DayProposal,
+  type DinnerTarget,
+  type RequirementStatus,
+} from "@meal-pilot/core";
+import { IconAlertTriangle, IconFlask, IconMoon } from "@tabler/icons-react";
 import { CapsuleMeter } from "./CapsuleMeter";
 import { MealConfirmCheckbox } from "./MealConfirmCheckbox";
 import { NutritionPopover } from "./NutritionPopover";
 
 function formatTime(time: string): string {
   return time.slice(0, 5);
+}
+
+function formatAmount(value: number): string {
+  return (Math.round(value * 10) / 10).toString();
+}
+
+/** "≥ 300 kcal", "0–25 g", "≤ 400 mg" o null si el objetivo ya quedó cubierto sin techo. */
+function formatDinnerTarget(target: DinnerTarget): string | null {
+  const unit = target.requirement.unit;
+  const min = target.remainingMinimum;
+  const max = target.remainingMaximum;
+  if (min != null && min > 0 && max != null) return `${formatAmount(min)}–${formatAmount(max)} ${unit}`;
+  if (min != null && min > 0) return `≥ ${formatAmount(min)} ${unit}`;
+  if (max != null && max >= 0) return `≤ ${formatAmount(max)} ${unit}`;
+  if (max != null) return `superado en ${formatAmount(-max)} ${unit}`;
+  return null;
+}
+
+function MealRequirementsDetails({ statuses }: { statuses: RequirementStatus[] }) {
+  if (statuses.length === 0) return null;
+  const allWithin = statuses.every((status) => status.withinRange);
+  return (
+    <details className="meal-reqs">
+      <summary>
+        Ventana nutricional
+        {!allWithin && <IconAlertTriangle size={14} stroke={1.75} className="meal-reqs-flag" />}
+      </summary>
+      {statuses.map((status) => (
+        <CapsuleMeter key={status.requirement.id} status={status} />
+      ))}
+    </details>
+  );
 }
 
 export function DayProposalView({
@@ -17,6 +55,8 @@ export function DayProposalView({
   confirmedMealIds: Set<string>;
   isToday: boolean;
 }) {
+  const dinnerTargets = computeDinnerTargets(proposal.requirementStatuses);
+
   return (
     <div>
       {proposal.meals.map((mealProposal) => (
@@ -60,6 +100,12 @@ export function DayProposalView({
             </p>
           ))}
 
+          <MealRequirementsDetails
+            statuses={proposal.requirementStatuses.filter(
+              (status) => status.requirement.meal_id === mealProposal.meal.id,
+            )}
+          />
+
           {mealProposal.resolved && isToday && (
             <MealConfirmCheckbox
               date={proposal.date}
@@ -71,12 +117,24 @@ export function DayProposalView({
         </section>
       ))}
 
-      <h3 className="section-title">Requisitos diarios</h3>
-      {proposal.requirementStatuses
-        .filter((status) => status.requirement.period === "day")
-        .map((status) => (
-          <CapsuleMeter key={status.requirement.id} status={status} />
-        ))}
+      <h3 className="section-title">
+        <IconMoon size={14} stroke={2} /> Prepara tu cena
+      </h3>
+      <p className="section-note">
+        Lo que queda de los objetivos diarios tras los 4 meals — la cena se cocina fuera de esta app.
+      </p>
+      <ul className="dinner-target-list">
+        {dinnerTargets.map((target) => {
+          const text = formatDinnerTarget(target);
+          const exceeded = target.remainingMaximum != null && target.remainingMaximum < 0;
+          return (
+            <li key={target.requirement.id} data-covered={text === null} data-exceeded={exceeded}>
+              <span>{target.requirement.name}</span>
+              <span className="data-mono">{text ?? "cubierto"}</span>
+            </li>
+          );
+        })}
+      </ul>
 
       <h3 className="section-title">Requisitos semanales</h3>
       {proposal.requirementStatuses

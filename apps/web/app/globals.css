@@ -304,10 +304,95 @@ body {
 }
 
 .dish-meal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
   border: var(--border-width) solid var(--hairline);
   padding: 2px var(--space-8);
   font-size: var(--text-70);
   color: var(--mute);
+}
+
+.dish-meal-chip[data-compliance="ok"] {
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.dish-meal-chip[data-compliance="off"] {
+  color: var(--off);
+  border-color: var(--off);
+}
+
+/* --- Ventana nutricional del meal (plegada por defecto) --- */
+
+.meal-reqs {
+  margin-top: var(--space-12);
+  padding-top: var(--space-8);
+  border-top: var(--border-width) solid var(--hairline-soft);
+}
+
+.meal-reqs summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  cursor: pointer;
+  font-size: var(--text-70);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--mute);
+}
+
+.meal-reqs[open] summary {
+  margin-bottom: var(--space-12);
+}
+
+.meal-reqs .capsule-meter {
+  margin-bottom: var(--space-12);
+}
+
+.meal-reqs-flag {
+  color: var(--off);
+}
+
+/* --- Prepara tu cena --- */
+
+.section-note {
+  font-size: var(--text-75);
+  color: var(--mute);
+  margin: calc(-1 * var(--space-4)) 0 var(--space-8);
+}
+
+.dinner-target-list {
+  list-style: none;
+  margin: 0 0 var(--space-8);
+  padding: 0;
+  font-size: var(--text-90);
+  color: var(--charcoal);
+}
+
+.dinner-target-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-12);
+  padding: var(--space-4) 0;
+  border-bottom: var(--border-width) solid var(--hairline-soft);
+}
+
+.dinner-target-list li:last-child {
+  border-bottom: none;
+}
+
+.dinner-target-list li[data-covered="true"] {
+  color: var(--mute);
+}
+
+.dinner-target-list li[data-covered="true"] .data-mono {
+  color: var(--success);
+}
+
+.dinner-target-list li[data-exceeded="true"] .data-mono {
+  color: var(--off);
 }
 
 .meal-confirm-row {

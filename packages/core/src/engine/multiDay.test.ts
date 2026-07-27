@@ -3,8 +3,7 @@ import { createSeededRandom } from "./random.js";
 import { generateMultiDayPlan } from "./resolve.js";
 import {
   buildTestContext,
-  makeDish,
-  makeDishIngredient,
+  makeCandidate,
   makeIngredient,
   makeMeal,
   makeRequirement,
@@ -16,41 +15,31 @@ function withDate(ctx: DailyContext, date: string): DailyContext {
 }
 
 describe("generateMultiDayPlan", () => {
-  it("no repite un ingrediente flexible elegido el día anterior si hay alternativa igual de válida", () => {
+  it("no repite la dish del día anterior si hay alternativa igual de válida (rotación entre dishes)", () => {
     const a = makeIngredient({ name: "A" });
     const b = makeIngredient({ name: "B" });
     const meal = makeMeal();
-    const dish = makeDish();
-    const slot = makeDishIngredient({ dish_id: dish.id, category_id: "cat", quantity: 50, required: false });
+    const dishA = makeCandidate(meal.id, [{ ingredient: a, quantity: 50 }]);
+    const dishB = makeCandidate(meal.id, [{ ingredient: b, quantity: 50 }]);
 
     const baseCtx = buildTestContext({
       date: "2026-08-01",
       ingredients: [a, b],
-      categoryLinks: [
-        { ingredientId: a.id, categoryId: "cat" },
-        { ingredientId: b.id, categoryId: "cat" },
-      ],
-      meals: [{ meal, dish, components: [slot] }],
+      meals: [{ meal, candidates: [dishA, dishB] }],
     });
 
     const contexts = [withDate(baseCtx, "2026-08-01"), withDate(baseCtx, "2026-08-02")];
     const [day1, day2] = generateMultiDayPlan(contexts, createSeededRandom("plan"));
 
-    const chosen1 = day1!.meals[0]!.resolved!.components[0]!.ingredient.name;
-    const chosen2 = day2!.meals[0]!.resolved!.components[0]!.ingredient.name;
+    const chosen1 = day1!.meals[0]!.resolved!.dish.id;
+    const chosen2 = day2!.meals[0]!.resolved!.dish.id;
     expect(chosen2).not.toBe(chosen1);
   });
 
   it("acumula un requisito semanal a través de varios días sin reiniciarlo", () => {
     const sardinas = makeIngredient({ name: "Sardinas" });
     const meal = makeMeal();
-    const dish = makeDish();
-    const component = makeDishIngredient({
-      dish_id: dish.id,
-      ingredient_id: sardinas.id,
-      quantity: 100,
-      required: true,
-    });
+    const dish = makeCandidate(meal.id, [{ ingredient: sardinas, quantity: 100 }]);
     const requirement = makeRequirement({
       scope_type: "ingredient",
       scope_ingredient_id: sardinas.id,
@@ -63,7 +52,7 @@ describe("generateMultiDayPlan", () => {
     const baseCtx = buildTestContext({
       date: "2026-08-04", // martes
       ingredients: [sardinas],
-      meals: [{ meal, dish, components: [component] }],
+      meals: [{ meal, candidates: [dish] }],
       requirements: [requirement],
     });
 
@@ -80,13 +69,7 @@ describe("generateMultiDayPlan", () => {
   it("reinicia un requisito diario cada día", () => {
     const vitaminaC = makeIngredient({ name: "Rica en vitC", vitamin_c_mg_per_100: 100 });
     const meal = makeMeal();
-    const dish = makeDish();
-    const component = makeDishIngredient({
-      dish_id: dish.id,
-      ingredient_id: vitaminaC.id,
-      quantity: 50,
-      required: true,
-    });
+    const dish = makeCandidate(meal.id, [{ ingredient: vitaminaC, quantity: 50 }]);
     const requirement = makeRequirement({
       scope_type: "nutrient",
       scope_nutrient_column: "vitamin_c_mg_per_100",
@@ -99,7 +82,7 @@ describe("generateMultiDayPlan", () => {
     const baseCtx = buildTestContext({
       date: "2026-08-01",
       ingredients: [vitaminaC],
-      meals: [{ meal, dish, components: [component] }],
+      meals: [{ meal, candidates: [dish] }],
       requirements: [requirement],
     });
 
@@ -114,12 +97,11 @@ describe("generateMultiDayPlan", () => {
   it("con una sola fecha se comporta igual que generateDayProposal", () => {
     const ingrediente = makeIngredient({ name: "Solo" });
     const meal = makeMeal();
-    const dish = makeDish();
-    const component = makeDishIngredient({ dish_id: dish.id, ingredient_id: ingrediente.id, quantity: 10 });
+    const dish = makeCandidate(meal.id, [{ ingredient: ingrediente, quantity: 10 }]);
     const ctx = buildTestContext({
       date: "2026-08-01",
       ingredients: [ingrediente],
-      meals: [{ meal, dish, components: [component] }],
+      meals: [{ meal, candidates: [dish] }],
     });
 
     const [only] = generateMultiDayPlan([ctx], createSeededRandom("2026-08-01"));

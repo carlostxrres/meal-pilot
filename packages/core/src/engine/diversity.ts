@@ -12,13 +12,9 @@ function daysBefore(dateStr: string, days: number): string {
  * Ingredientes "usados recientemente" (norma de diversidad), a partir de
  * meal_log de los `windowDays` anteriores a `referenceDate` (sin incluirlo).
  *
- * Limitación conocida: meal_log solo guarda qué dish se sirvió, no qué
- * ingrediente concreto se eligió en cada hueco flexible de esa dish (el
- * esquema no lo persiste). Por eso aquí solo se puede reconstruir con
- * certeza el aporte de los componentes fijos (`required = true`) de cada
- * dish — los huecos flexibles quedan fuera de este cálculo hasta que exista
- * un registro más detallado. Hoy además `meal_log` está vacío (nada escribe
- * ahí todavía, ver docs/status.md), así que esta función es un no-op real.
+ * Con dishes fijas (ADR-0018), la composición de cada dish servida determina
+ * exactamente qué ingredientes se consumieron — ya no hay huecos flexibles
+ * cuya elección concreta se perdiera al no persistirse.
  */
 export function getRecentlyUsedIngredientIds(
   mealLogs: readonly MealLog[],
@@ -33,9 +29,7 @@ export function getRecentlyUsedIngredientIds(
     if (log.date < windowStart || log.date >= referenceDate) continue;
     const components = dishIngredientsByDishId.get(log.dish_id) ?? [];
     for (const component of components) {
-      if (component.required && component.ingredient_id) {
-        recent.add(component.ingredient_id);
-      }
+      recent.add(component.ingredient_id);
     }
   }
 

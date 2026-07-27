@@ -3,6 +3,7 @@ import type {
   DietaryRequirement,
   Dish,
   DishIngredient,
+  DishWithComponents,
   Ingredient,
   Meal,
   MealLog,
@@ -49,6 +50,7 @@ export function makeDish(overrides: Partial<Dish> = {}): Dish {
     owner_id: "owner-1",
     name: "Dish de prueba",
     dish_type: "Test",
+    meal_id: "",
     ...overrides,
   };
 }
@@ -57,13 +59,24 @@ export function makeDishIngredient(overrides: Partial<DishIngredient> = {}): Dis
   return {
     id: nextId("di"),
     dish_id: "",
-    ingredient_id: null,
-    category_id: null,
-    slot_group: 1,
+    ingredient_id: "",
     quantity: 50,
-    quantity_max: null,
-    required: true,
     ...overrides,
+  };
+}
+
+/** Dish fija completa (dish + componentes) para un meal, en una llamada. */
+export function makeCandidate(
+  mealId: string,
+  ingredients: { ingredient: Ingredient; quantity: number }[],
+  dishOverrides: Partial<Dish> = {},
+): DishWithComponents {
+  const dish = makeDish({ meal_id: mealId, ...dishOverrides });
+  return {
+    dish,
+    components: ingredients.map(({ ingredient, quantity }) =>
+      makeDishIngredient({ dish_id: dish.id, ingredient_id: ingredient.id, quantity }),
+    ),
   };
 }
 
@@ -104,7 +117,7 @@ interface BuildContextInput {
   date: string;
   ingredients: Ingredient[];
   categoryLinks?: { ingredientId: string; categoryId: string }[];
-  meals: { meal: Meal; dish: Dish; components: DishIngredient[]; supplements?: Supplement[] }[];
+  meals: { meal: Meal; candidates: DishWithComponents[]; supplements?: Supplement[] }[];
   requirements?: DietaryRequirement[];
   mealLogs?: MealLog[];
 }
@@ -112,28 +125,18 @@ interface BuildContextInput {
 /** Construye un DailyContext completo a partir de fixtures pequeños, sin pasar por Supabase. */
 export function buildTestContext(input: BuildContextInput): DailyContext {
   const ingredientsById = new Map(input.ingredients.map((i) => [i.id, i]));
-  const ingredientsByCategory = new Map<string, Ingredient[]>();
   const categoryIdsByIngredientId = new Map<string, Set<string>>();
 
   for (const link of input.categoryLinks ?? []) {
-    const ingredient = ingredientsById.get(link.ingredientId);
-    if (!ingredient) continue;
-    if (!ingredientsByCategory.has(link.categoryId)) ingredientsByCategory.set(link.categoryId, []);
-    ingredientsByCategory.get(link.categoryId)!.push(ingredient);
     if (!categoryIdsByIngredientId.has(link.ingredientId)) {
       categoryIdsByIngredientId.set(link.ingredientId, new Set());
     }
     categoryIdsByIngredientId.get(link.ingredientId)!.add(link.categoryId);
   }
 
-  const dishIngredientsByDishId = new Map<string, DishIngredient[]>();
-  for (const m of input.meals) {
-    dishIngredientsByDishId.set(m.dish.id, m.components);
-  }
-
   const meals: MealWithCandidates[] = input.meals.map((m) => ({
     meal: m.meal,
-    candidates: [{ dish: { dish: m.dish, components: m.components }, quantityUnits: 1 }],
+    candidates: m.candidates,
     supplements: m.supplements ?? [],
   }));
 
@@ -142,7 +145,6 @@ export function buildTestContext(input: BuildContextInput): DailyContext {
     meals,
     ingredientsById,
     categoriesById: new Map(),
-    ingredientsByCategory,
     categoryIdsByIngredientId,
     requirements: input.requirements ?? [],
     latestLogByRequirement: new Map(),

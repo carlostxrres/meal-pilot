@@ -6,7 +6,19 @@
 
 ## Fase actual
 
-Fase 4 ampliada: además de login + ver la propuesta del día, ya hay inventario editable (con imagen, gestos swipe), lista de la compra derivada, confirmación de meals (escribe en `meal_log`), catálogo de dishes navegable, y requisitos dietéticos "oficiales" (calorías/macros) según el perfil real del usuario. Sistema de interfaz propio (no genérico) aplicado con Radix UI.
+Rearquitectura ADR-0017/0018 implementada (ver bloque siguiente): requisitos nutricionales por meal + dishes fijas 1:1 + vista "Prepara tu cena". **Pendiente del usuario: rediseñar el catálogo de dishes** (paso 5 del plan) — el catálogo actual es la conversión mecánica del viejo y casi todas las dishes están fuera de la ventana de su meal (marcadas en `/dishes`).
+
+Antes de eso, fase 4 ampliada: login + propuesta del día, inventario editable (con imagen, gestos swipe), lista de la compra derivada, confirmación de meals (escribe en `meal_log`), catálogo de dishes navegable, y requisitos dietéticos "oficiales" (calorías/macros) según el perfil real del usuario. Sistema de interfaz propio (no genérico) aplicado con Radix UI.
+
+## Rearquitectura: requisitos por meal + dishes fijas (2026-07-27)
+
+Diseño validado por secciones con el usuario en [`plans/2026-07-27-requisitos-por-meal-y-dishes-fijas-design.md`](plans/2026-07-27-requisitos-por-meal-y-dishes-fijas-design.md); decisiones en [ADR-0017](adrs/0017-requisitos-dieteticos-por-meal-como-mecanismo-principal.md) (ventanas nutricionales por meal, "Prepara tu cena") y [ADR-0018](adrs/0018-dish-fija-con-meal-unico.md) (toda dish fija y de un solo meal; sustituye a ADR-0008). Implementado y verificado (32 tests, `next build`, CLI contra la base real):
+
+- **Esquema** (`20260727120000_fixed_dishes_with_single_meal.sql`, aplicada en remoto): `dish.meal_id` NOT NULL (backfill desde `meal_dish`; "Fruta (pieza)" estaba en 2 meals y se asignó al Snack de media mañana), `dish_ingredient` reducido a `(dish_id, ingredient_id, quantity)`, `meal_dish` eliminada. Los huecos flexibles se convirtieron al ingrediente de menor id de su categoría (placeholder deliberado hasta el rediseño del catálogo). `ingredient_category` se conserva (requisitos por categoría, alta asistida futura).
+- **Requisitos** (`20260727121000_per_meal_nutritional_requirements.sql`, aplicada en remoto): 32 filas nuevas (8 nutrientes × 4 meals, `meal_id` no nulo, period=day, mandatory), con la sal convertida a sodio (1 g ≈ 400 mg). El viejo "proteína post-entreno ≥ 35 g" se retiró (lo sustituye la ventana 25–35 g). Los 7 oficiales de día completo y los semanales de ingrediente quedan igual.
+- **Motor** (`packages/core`): desaparece la resolución de huecos (`resolveDishSlots`); las candidatas de un meal son sus dishes fijas, puntuadas por inventario / requisitos globales abiertos / diversidad (rotación **entre** dishes), y filtradas solo por techos mandatory globales (atún) — las ventanas del propio meal no se filtran en generación, se cumplen por construcción. Módulos nuevos: `compliance.ts` (`checkDishCompliance`, la garantía del ADR-0018 en tiempo de autoría) y `dinner.ts` (`computeDinnerTargets`, el residuo del día). `generateMultiDayPlan` se conserva tal cual.
+- **Web**: cada meal de "Hoy" tiene un `<details>` plegado "Ventana nutricional" con sus `CapsuleMeter`; la sección "Requisitos diarios" es ahora **"Prepara tu cena"** (residuo por requisito global diario, con estados cubierto/superado); "Requisitos semanales" no cambia; `/dishes` muestra el meal de cada dish y un chip de cumplimiento de ventana (el aviso de dish huérfana ya no puede existir).
+- **Tipos**: `database.types.ts` regenerado del esquema remoto tras el push.
 
 ## Sistema de interfaz (diseño)
 
@@ -28,6 +40,8 @@ Nota: el nombre de cara al usuario de la app es **Meal Pilot** (título, copy de
 
 ## Motor de generación (fase 3)
 
+> Nota histórica: lo descrito aquí es anterior a la rearquitectura ADR-0017/0018 (ver bloque de arriba) — la resolución de huecos flexibles ya no existe.
+
 - Diseño previo en [`plans/2026-07-26-fase3-motor-generacion-design.md`](plans/2026-07-26-fase3-motor-generacion-design.md).
 - `npm test` (vitest): 15 tests en verde sobre `packages/core/src/engine/` con fixtures en memoria — resolución de huecos, priorización (inventario/requisito/diversidad), semilla por fecha, dish descartada por requisito mandatory, meal sin candidata.
 - `npm run generate` ejecutado contra `meal-pilot`: produce la propuesta completa de los 4 meals de hoy + resumen de los 5 `dietary_requirement`, sin errores.
@@ -37,6 +51,8 @@ Nota: el nombre de cara al usuario de la app es **Meal Pilot** (título, copy de
   - El motor no escribe en `requirement_log` ni `meal_log` (decisión explícita del diseño); por tanto el resumen de requisitos que imprime el CLI/la web es solo "lo que aportaría la propuesta de hoy", no un acumulado semanal real todavía.
 
 ## Web (fase 4)
+
+> Nota histórica: escrito antes de la rearquitectura ADR-0017/0018 (ver bloque de arriba) — en particular, la sección "Requisitos diarios" de "Hoy" es ahora "Prepara tu cena", y `/dishes` marca cumplimiento de ventana en vez de dishes huérfanas.
 
 - Diseño previo: plan de la fase 4 (brainstorming + Plan agent), resumido en [ADR-0016](adrs/0016-monorepo-npm-workspaces-para-compartir-engine-y-data.md); IA/diseño de interfaz en la sección de arriba.
 - `apps/web`: Next.js 16 (App Router, Turbopack), `@supabase/ssr` para auth server-side. 4 rutas: `/login`, y dentro de `app/(app)/` (layout con header + tab bar) — `/` (Hoy), `/inventory`, `/shopping`.
@@ -98,11 +114,11 @@ Nota: el nombre de cara al usuario de la app es **Meal Pilot** (título, copy de
 - **Alcance de la fase 5 (IA)**: cuál de las 5 ideas de la sección 8 abordar primero, si alguna. No bloquea nada antes de la fase 5.
 - **Gramos de hidratos en el almuerzo**: nunca se formalizó como fila en 3.3, no bloquea nada — añadir como `dietary_requirement` nuevo cuando se decida.
 - **Precisión de los valores nutricionales**: son estimaciones a mano (ver arriba), no vienen de una fuente validada. No bloquea la fase 3, pero conviene tenerlo presente al interpretar cualquier cálculo de cumplimiento.
-- **Cantidades semilla insuficientes para algunos requisitos** (ver hallazgo de la fase 3 arriba): revisar si el catálogo de dishes necesita ajustes (ej. un topping de aguacate más generoso, o una dish dedicada) para que los requisitos se puedan cumplir de verdad con una combinación real de meals.
+- **Rediseño del catálogo de dishes** (sustituye al punto anterior sobre "cantidades semilla insuficientes"): con ADR-0017/0018, cada meal necesita 4–6 dishes fijas que caigan dentro de su ventana nutricional. El catálogo actual (convertido mecánicamente) está casi todo fuera de ventana — es la tarea del usuario, con `/dishes` marcando el estado de cada una.
 - **Escritura en `requirement_log`**: `meal_log` ya se escribe (confirmar meal en "Hoy"), pero `requirement_log` sigue sin recalcularse a partir de confirmaciones reales — pendiente para una iteración futura.
 - **`npm audit` (3 high, transitivas en `next@16.2.12`)**: no bloquea el desarrollo local, pero revisar de nuevo antes de desplegar públicamente (ver detalle en la sección "Web (fase 4)").
 - **`supabase/config.toml` (`site_url`/`additional_redirect_urls`)**: siguen apuntando a `localhost`, pendiente de revisar antes de desplegar `apps/web` a Vercel.
 
 ## Próximo paso concreto
 
-El usuario está probando la app en su navegador (`npm run dev` local) tras la ronda de feedback de UI. Tras su verificación: elegir entre (a) desplegar `apps/web` a Vercel, o (b) construir el recálculo real de `requirement_log` a partir de `meal_log` confirmado antes de desplegar.
+**Rediseñar el catálogo de dishes** (paso 5 del plan de la rearquitectura, tarea del usuario): crear 4–6 dishes fijas por meal que cumplan la ventana nutricional de su meal, usando `/dishes` (chip de cumplimiento) como verificación. Después, retomar lo aparcado: desplegar a Vercel, o el recálculo real de `requirement_log` desde `meal_log`.

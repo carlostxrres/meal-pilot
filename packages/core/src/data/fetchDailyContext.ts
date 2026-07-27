@@ -2,7 +2,6 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getRecentlyUsedIngredientIds } from "../engine/diversity.js";
 import type {
   DailyContext,
-  Dish,
   DishIngredient,
   DishWithComponents,
   Ingredient,
@@ -37,7 +36,6 @@ export async function fetchDailyContext(
     { data: dishes, error: dishesError },
     { data: dishIngredients, error: dishIngredientsError },
     { data: mealsRaw, error: mealsError },
-    { data: mealDishes, error: mealDishesError },
     { data: supplements, error: supplementsError },
     { data: requirements, error: requirementsError },
     { data: requirementLogs, error: requirementLogsError },
@@ -49,7 +47,6 @@ export async function fetchDailyContext(
     supabase.from("dish").select("*"),
     supabase.from("dish_ingredient").select("*"),
     supabase.from("meal").select("*").order("usual_start_time"),
-    supabase.from("meal_dish").select("*"),
     supabase.from("supplement").select("*"),
     supabase.from("dietary_requirement").select("*"),
     supabase.from("requirement_log").select("*").order("period_start", { ascending: false }),
@@ -63,7 +60,6 @@ export async function fetchDailyContext(
     dishesError,
     dishIngredientsError,
     mealsError,
-    mealDishesError,
     supplementsError,
     requirementsError,
     requirementLogsError,
@@ -77,16 +73,9 @@ export async function fetchDailyContext(
   );
   const categoriesById = new Map((categories ?? []).map((c) => [c.id, c]));
 
-  const ingredientsByCategory = new Map<string, Ingredient[]>();
   const categoryIdsByIngredientId = new Map<string, Set<string>>();
   for (const link of categoryLinks ?? []) {
-    const ingredient = ingredientsById.get(link.ingredient_id);
-    if (!ingredient) continue;
-    if (!ingredientsByCategory.has(link.category_id)) {
-      ingredientsByCategory.set(link.category_id, []);
-    }
-    ingredientsByCategory.get(link.category_id)!.push(ingredient);
-
+    if (!ingredientsById.has(link.ingredient_id)) continue;
     if (!categoryIdsByIngredientId.has(link.ingredient_id)) {
       categoryIdsByIngredientId.set(link.ingredient_id, new Set());
     }
@@ -101,21 +90,10 @@ export async function fetchDailyContext(
     dishIngredientsByDishId.get(di.dish_id)!.push(di);
   }
 
-  const dishesById = new Map<string, Dish>((dishes ?? []).map((d) => [d.id, d]));
-  const dishWithComponents = (dishId: string): DishWithComponents | null => {
-    const dish = dishesById.get(dishId);
-    if (!dish) return null;
-    return { dish, components: dishIngredientsByDishId.get(dishId) ?? [] };
-  };
-
   const meals: MealWithCandidates[] = (mealsRaw ?? []).map((meal) => {
-    const candidates = (mealDishes ?? [])
-      .filter((md) => md.meal_id === meal.id)
-      .map((md) => {
-        const dish = dishWithComponents(md.dish_id);
-        return dish ? { dish, quantityUnits: md.quantity_units } : null;
-      })
-      .filter((c): c is { dish: DishWithComponents; quantityUnits: number } => c !== null);
+    const candidates: DishWithComponents[] = (dishes ?? [])
+      .filter((dish) => dish.meal_id === meal.id)
+      .map((dish) => ({ dish, components: dishIngredientsByDishId.get(dish.id) ?? [] }));
 
     const mealSupplements = (supplements ?? []).filter((s) => s.meal_id === meal.id);
 
@@ -146,7 +124,6 @@ export async function fetchDailyContext(
     meals,
     ingredientsById,
     categoriesById,
-    ingredientsByCategory,
     categoryIdsByIngredientId,
     requirements: requirements ?? [],
     latestLogByRequirement,
