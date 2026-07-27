@@ -11,4 +11,5 @@ export * from "./data/mealConfirmation.js";
 export * from "./data/inventory.js";
 export * from "./data/multiDay.js";
 export * from "./data/dishCatalog.js";
+export * from "./data/createDish.js";
 export type { Database } from "./data/database.types.js";

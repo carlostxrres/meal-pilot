@@ -19,6 +19,7 @@ Diseño validado por secciones con el usuario en [`plans/2026-07-27-requisitos-p
 - **Motor** (`packages/core`): desaparece la resolución de huecos (`resolveDishSlots`); las candidatas de un meal son sus dishes fijas, puntuadas por inventario / requisitos globales abiertos / diversidad (rotación **entre** dishes), y filtradas solo por techos mandatory globales (atún) — las ventanas del propio meal no se filtran en generación, se cumplen por construcción. Módulos nuevos: `compliance.ts` (`checkDishCompliance`, la garantía del ADR-0018 en tiempo de autoría) y `dinner.ts` (`computeDinnerTargets`, el residuo del día). `generateMultiDayPlan` se conserva tal cual.
 - **Web**: cada meal de "Hoy" tiene un `<details>` plegado "Ventana nutricional" con sus `CapsuleMeter`; la sección "Requisitos diarios" es ahora **"Prepara tu cena"** (residuo por requisito global diario, con estados cubierto/superado); "Requisitos semanales" no cambia; `/dishes` muestra el meal de cada dish y un chip de cumplimiento de ventana (el aviso de dish huérfana ya no puede existir).
 - **Tipos**: `database.types.ts` regenerado del esquema remoto tras el push.
+- **Creador de dishes** (`/dishes`, botón "Nueva dish"): diálogo con nombre/tipo/meal (Radix Select) + buscador de ingredientes con cantidades editables, y las cápsulas de la ventana nutricional del meal actualizándose **en vivo** (`checkDishCompliance` en cliente, verde solo dentro del intervalo con tolerancia) — pensado para la tarea de rediseño del catálogo. Alta vía server action `createDishAction` → `createDish` en `@meal-pilot/core` (inserta `dish` + `dish_ingredient` con `owner_id` del usuario autenticado; si fallan los componentes borra la dish para no dejarla a medias). No bloquea crear una dish fuera de ventana: avisa en vivo y `/dishes` la marca.
 
 ## Sistema de interfaz (diseño)
 
@@ -121,4 +122,4 @@ Nota: el nombre de cara al usuario de la app es **Meal Pilot** (título, copy de
 
 ## Próximo paso concreto
 
-**Rediseñar el catálogo de dishes** (paso 5 del plan de la rearquitectura, tarea del usuario): crear 4–6 dishes fijas por meal que cumplan la ventana nutricional de su meal, usando `/dishes` (chip de cumplimiento) como verificación. Después, retomar lo aparcado: desplegar a Vercel, o el recálculo real de `requirement_log` desde `meal_log`.
+**Rediseñar el catálogo de dishes** (paso 5 del plan de la rearquitectura, tarea del usuario): crear 4–6 dishes fijas por meal que cumplan la ventana nutricional de su meal, usando el creador de dishes de `/dishes` (cápsulas en vivo) y el chip de cumplimiento como verificación. Después, retomar lo aparcado: desplegar a Vercel, o el recálculo real de `requirement_log` desde `meal_log`.

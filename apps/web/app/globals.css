@@ -355,6 +355,108 @@ body {
   color: var(--off);
 }
 
+/* --- Dish creator --- */
+
+.dish-creator-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  width: 100%;
+  margin-bottom: var(--space-16);
+  cursor: pointer;
+}
+
+.dish-meal-trigger {
+  justify-content: space-between;
+  padding: var(--space-12);
+}
+
+.creator-component-list {
+  list-style: none;
+  margin: 0 0 var(--space-8);
+  padding: 0;
+}
+
+.creator-component-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-4) 0;
+  border-bottom: var(--border-width) solid var(--hairline-soft);
+  font-size: var(--text-90);
+}
+
+.creator-component-name {
+  flex: 1;
+}
+
+.creator-component-row input {
+  width: 72px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  padding: var(--space-4) var(--space-8);
+  border: var(--border-width) solid var(--hairline);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 0;
+}
+
+.creator-component-unit {
+  color: var(--mute);
+  font-size: var(--text-80);
+  min-width: 2.5ch;
+}
+
+.creator-component-remove {
+  all: unset;
+  display: flex;
+  color: var(--mute);
+  cursor: pointer;
+}
+
+.creator-component-remove:hover {
+  color: var(--off);
+}
+
+.creator-picker-list {
+  list-style: none;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  border: var(--border-width) solid var(--hairline);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.creator-picker-item {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  width: 100%;
+  padding: var(--space-8) var(--space-12);
+  font-size: var(--text-85);
+  cursor: pointer;
+  border-bottom: var(--border-width) solid var(--hairline-soft);
+}
+
+.creator-picker-item:hover,
+.creator-picker-item:focus-visible {
+  background: var(--paper);
+}
+
+.section-note[data-ok="true"] {
+  color: var(--success);
+}
+
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 /* --- Prepara tu cena --- */
 
 .section-note {
