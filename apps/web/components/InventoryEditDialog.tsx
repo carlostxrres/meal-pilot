@@ -1,37 +1,37 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { IconPencil } from "@tabler/icons-react";
 import type { Ingredient } from "@meal-pilot/core";
-import { updateInventoryAction } from "@/app/(app)/actions";
 
 export function InventoryEditDialog({
   ingredient,
   open,
   onOpenChange,
+  onSave,
 }: {
   ingredient: Ingredient;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Optimista: se llama al enviar, antes de que la escritura real termine. */
+  onSave: (values: { office_inventory: number; home_inventory: number }) => void;
 }) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Trigger asChild>
-        <button type="button" className="inventory-edit-btn" aria-label={`Editar ${ingredient.name}`}>
-          <IconPencil size={16} stroke={1.75} />
-        </button>
-      </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <Dialog.Content className="dialog-content">
           <Dialog.Title className="dialog-title">{ingredient.name}</Dialog.Title>
           <form
-            action={async (formData) => {
-              await updateInventoryAction(formData);
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              onSave({
+                office_inventory: Number(formData.get("office_inventory")),
+                home_inventory: Number(formData.get("home_inventory")),
+              });
               onOpenChange(false);
             }}
           >
-            <input type="hidden" name="ingredientId" value={ingredient.id} />
             <div className="field">
               <label htmlFor={`office-${ingredient.id}`}>Oficina ({ingredient.base_unit})</label>
               <input

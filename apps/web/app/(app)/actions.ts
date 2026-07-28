@@ -21,15 +21,15 @@ export async function confirmMealAction(
   revalidatePath("/");
 }
 
-export async function updateInventoryAction(formData: FormData) {
-  const ingredientId = String(formData.get("ingredientId"));
-  const office = Number(formData.get("office_inventory"));
-  const home = Number(formData.get("home_inventory"));
-
+export async function updateInventoryAction(input: {
+  ingredientId: string;
+  office_inventory: number;
+  home_inventory: number;
+}) {
   const supabase = await createClient();
-  await updateIngredientInventory(supabase, ingredientId, {
-    office_inventory: office,
-    home_inventory: home,
+  await updateIngredientInventory(supabase, input.ingredientId, {
+    office_inventory: input.office_inventory,
+    home_inventory: input.home_inventory,
   });
   revalidatePath("/inventory");
   revalidatePath("/shopping");
@@ -43,7 +43,7 @@ export async function createDishAction(
     const supabase = await createClient();
     await createDish(supabase, input);
   } catch (error) {
-    return { error: error instanceof Error ? error.message : "Error desconocido creando la dish" };
+    return { error: error instanceof Error ? error.message : "Error desconocido creando el plato" };
   }
   revalidatePath("/dishes");
   revalidatePath("/");
@@ -56,15 +56,4 @@ export async function markPurchasedAction(ingredientId: string, restockQuantity:
   await addToHomeInventory(supabase, ingredientId, restockQuantity);
   revalidatePath("/shopping");
   revalidatePath("/inventory");
-}
-
-export async function zeroInventoryAction(ingredientId: string) {
-  const supabase = await createClient();
-  await updateIngredientInventory(supabase, ingredientId, {
-    office_inventory: 0,
-    home_inventory: 0,
-  });
-  revalidatePath("/inventory");
-  revalidatePath("/shopping");
-  revalidatePath("/");
 }

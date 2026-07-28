@@ -1,16 +1,18 @@
 "use client";
 
 import * as Select from "@radix-ui/react-select";
-import { IconBox, IconChevronDown, IconCircleOff, IconPencil, IconSearch, IconTrash } from "@tabler/icons-react";
+import { IconBox, IconChevronDown, IconCircleOff, IconPencil, IconTrash } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useOptimistic, useState, useTransition } from "react";
 import type { Ingredient } from "@meal-pilot/core";
-import { zeroInventoryAction } from "@/app/(app)/actions";
-import { IngredientThumb } from "./IngredientThumb";
+import { updateInventoryAction } from "@/app/(app)/actions";
+import { IngredientRow } from "./IngredientRow";
 import { InventoryEditDialog } from "./InventoryEditDialog";
+import { SearchField } from "./SearchField";
 import { SwipeableRow } from "./SwipeableRow";
 
 type SortKey = "qty-desc" | "qty-asc" | "name-asc" | "name-desc";
+type InventoryPatch = { office_inventory: number; home_inventory: number };
 
 const SORTERS: Record<SortKey, (a: Ingredient, b: Ingredient) => number> = {
   "qty-desc": (a, b) => totalStock(b) - totalStock(a),
@@ -23,22 +25,21 @@ function totalStock(i: Ingredient): number {
   return i.office_inventory + i.home_inventory;
 }
 
-function IngredientRow({ ingredient }: { ingredient: Ingredient }) {
+function InventoryRow({
+  ingredient,
+  onUpdate,
+}: {
+  ingredient: Ingredient;
+  onUpdate: (id: string, values: InventoryPatch) => void;
+}) {
   const [editOpen, setEditOpen] = useState(false);
-  const [, startTransition] = useTransition();
-  const router = useRouter();
 
   return (
     <SwipeableRow
       leftAction={{
         label: "Vaciar",
         icon: <IconTrash size={18} stroke={1.75} />,
-        onTrigger: () => {
-          startTransition(async () => {
-            await zeroInventoryAction(ingredient.id);
-            router.refresh();
-          });
-        },
+        onTrigger: () => onUpdate(ingredient.id, { office_inventory: 0, home_inventory: 0 }),
       }}
       rightAction={{
         label: "Editar",
@@ -46,10 +47,9 @@ function IngredientRow({ ingredient }: { ingredient: Ingredient }) {
         onTrigger: () => setEditOpen(true),
       }}
     >
-      <div className="ingredient-row">
-        <IngredientThumb ingredientId={ingredient.id} />
-        <div className="ingredient-row-info">
-          <p className="ingredient-row-name">{ingredient.name}</p>
+      <IngredientRow
+        ingredient={ingredient}
+        meta={
           <p className="inventory-qty">
             <span>
               Oficina <strong>{ingredient.office_inventory}</strong>
@@ -60,9 +60,26 @@ function IngredientRow({ ingredient }: { ingredient: Ingredient }) {
               {ingredient.base_unit}
             </span>
           </p>
-        </div>
-        <InventoryEditDialog ingredient={ingredient} open={editOpen} onOpenChange={setEditOpen} />
-      </div>
+        }
+        trailing={
+          <>
+            <button
+              type="button"
+              className="inventory-edit-btn"
+              aria-label={`Editar ${ingredient.name}`}
+              onClick={() => setEditOpen(true)}
+            >
+              <IconPencil size={16} stroke={1.75} />
+            </button>
+            <InventoryEditDialog
+              ingredient={ingredient}
+              open={editOpen}
+              onOpenChange={setEditOpen}
+              onSave={(values) => onUpdate(ingredient.id, values)}
+            />
+          </>
+        }
+      />
     </SwipeableRow>
   );
 }
@@ -70,10 +87,29 @@ function IngredientRow({ ingredient }: { ingredient: Ingredient }) {
 export function InventoryList({ ingredients }: { ingredients: Ingredient[] }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortKey>("qty-desc");
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+
+  // Optimista (React 19): la fila (y su sección En stock/Agotado) se
+  // actualiza al instante; la escritura real + revalidación van en segundo
+  // plano, sin bloquear la UI mientras tanto.
+  const [optimisticIngredients, applyPatch] = useOptimistic(
+    ingredients,
+    (state, patch: { id: string; values: InventoryPatch }) =>
+      state.map((i) => (i.id === patch.id ? { ...i, ...patch.values } : i)),
+  );
+
+  function updateInventory(ingredientId: string, values: InventoryPatch) {
+    startTransition(async () => {
+      applyPatch({ id: ingredientId, values });
+      await updateInventoryAction({ ingredientId, ...values });
+      router.refresh();
+    });
+  }
 
   const filtered = useMemo(
-    () => ingredients.filter((i) => i.name.toLowerCase().includes(query.trim().toLowerCase())),
-    [ingredients, query],
+    () => optimisticIngredients.filter((i) => i.name.toLowerCase().includes(query.trim().toLowerCase())),
+    [optimisticIngredients, query],
   );
 
   const inStock = useMemo(
@@ -88,15 +124,7 @@ export function InventoryList({ ingredients }: { ingredients: Ingredient[] }) {
   return (
     <div>
       <div className="inventory-controls">
-        <div className="search-field">
-          <IconSearch size={16} stroke={1.75} />
-          <input
-            type="text"
-            placeholder="Buscar ingrediente..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </div>
+        <SearchField value={query} onChange={setQuery} placeholder="Buscar ingrediente..." />
 
         <Select.Root value={sort} onValueChange={(v) => setSort(v as SortKey)}>
           <Select.Trigger className="select-trigger" aria-label="Ordenar por">
@@ -132,7 +160,7 @@ export function InventoryList({ ingredients }: { ingredients: Ingredient[] }) {
       {inStock.length === 0 ? (
         <p className="inventory-empty">Nada en stock con este filtro.</p>
       ) : (
-        inStock.map((i) => <IngredientRow key={i.id} ingredient={i} />)
+        inStock.map((i) => <InventoryRow key={i.id} ingredient={i} onUpdate={updateInventory} />)
       )}
 
       <h2 className="section-title">
@@ -141,7 +169,7 @@ export function InventoryList({ ingredients }: { ingredients: Ingredient[] }) {
       {outOfStock.length === 0 ? (
         <p className="inventory-empty">Nada agotado con este filtro.</p>
       ) : (
-        outOfStock.map((i) => <IngredientRow key={i.id} ingredient={i} />)
+        outOfStock.map((i) => <InventoryRow key={i.id} ingredient={i} onUpdate={updateInventory} />)
       )}
     </div>
   );

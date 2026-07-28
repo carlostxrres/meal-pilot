@@ -2,52 +2,45 @@
 
 import * as Checkbox from "@radix-ui/react-checkbox";
 import { IconCheck } from "@tabler/icons-react";
-import { useRouter } from "next/navigation";
-import { useId, useState, useTransition } from "react";
-import { markPurchasedAction } from "@/app/(app)/actions";
-import { IngredientThumb } from "./IngredientThumb";
+import { useId, useState } from "react";
+import type { Ingredient } from "@meal-pilot/core";
+import { IngredientRow } from "./IngredientRow";
 
 export function PurchaseCheckbox({
-  ingredientId,
-  name,
+  ingredient,
   reasonText,
   restockQuantity,
+  onPurchase,
 }: {
-  ingredientId: string;
-  name: string;
+  ingredient: Ingredient;
   reasonText: string;
   restockQuantity: number;
+  onPurchase: (ingredientId: string, restockQuantity: number) => void;
 }) {
   const [purchased, setPurchased] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
   const id = useId();
 
   return (
-    <div className="ingredient-row">
-      <IngredientThumb ingredientId={ingredientId} />
-      <label htmlFor={id} className="ingredient-row-info shopping-info">
-        <p className="ingredient-row-name">{name}</p>
-        <p className="shopping-reason">{reasonText}</p>
-      </label>
-      <Checkbox.Root
-        id={id}
-        className="checkbox-root"
-        checked={purchased}
-        disabled={isPending}
-        onCheckedChange={(value) => {
-          if (value !== true) return;
-          setPurchased(true);
-          startTransition(async () => {
-            await markPurchasedAction(ingredientId, restockQuantity);
-            router.refresh();
-          });
-        }}
-      >
-        <Checkbox.Indicator className="checkbox-indicator">
-          <IconCheck size={14} stroke={3} />
-        </Checkbox.Indicator>
-      </Checkbox.Root>
-    </div>
+    <IngredientRow
+      ingredient={ingredient}
+      infoHtmlFor={id}
+      meta={<p className="shopping-reason">{reasonText}</p>}
+      trailing={
+        <Checkbox.Root
+          id={id}
+          className="checkbox-root"
+          checked={purchased}
+          onCheckedChange={(value) => {
+            if (value !== true) return;
+            setPurchased(true);
+            onPurchase(ingredient.id, restockQuantity);
+          }}
+        >
+          <Checkbox.Indicator className="checkbox-indicator">
+            <IconCheck size={14} stroke={3} />
+          </Checkbox.Indicator>
+        </Checkbox.Root>
+      }
+    />
   );
 }

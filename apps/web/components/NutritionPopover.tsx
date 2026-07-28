@@ -12,16 +12,28 @@ const ROWS: { key: keyof NutritionTotals; label: string; unit: string }[] = [
   { key: "fiber_g_per_100", label: "Fibra", unit: "g" },
 ];
 
-export function NutritionPopover({ totals }: { totals: NutritionTotals }) {
+export function NutritionPopover({
+  totals,
+  title,
+}: {
+  totals: NutritionTotals;
+  /** Encabezado opcional del popover, ej. "Por 100g" para un ingrediente suelto. */
+  title?: string;
+}) {
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <button type="button" className="nutrition-trigger" aria-label="Ver valores nutricionales">
+        <button
+          type="button"
+          className="nutrition-trigger"
+          aria-label={title ? `Ver valores nutricionales (${title})` : "Ver valores nutricionales"}
+        >
           <IconInfoCircle size={18} stroke={1.75} />
         </button>
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content className="nutrition-popover" sideOffset={6} align="end">
+          {title && <p className="nutrition-popover-title">{title}</p>}
           <ul className="nutrition-list">
             {ROWS.map(({ key, label, unit }) => (
               <li key={key}>

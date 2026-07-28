@@ -6,12 +6,7 @@ import {
   upcomingDates,
 } from "@meal-pilot/core";
 import { createClient } from "@/lib/supabase/server";
-import { PurchaseCheckbox } from "@/components/PurchaseCheckbox";
-
-const REASON_LABELS: Record<string, string> = {
-  upcoming_need: `Para los próximos ${PLANNING_HORIZON_DAYS} días`,
-  requirement: "Para un requisito pendiente",
-};
+import { ShoppingList } from "@/components/ShoppingList";
 
 export default async function ShoppingPage() {
   const supabase = await createClient();
@@ -26,25 +21,5 @@ export default async function ShoppingPage() {
 
   const items = computeShoppingList(ingredients, requirements ?? [], proposals);
 
-  if (items.length === 0) {
-    return (
-      <p className="shopping-empty">
-        Nada pendiente de comprar para los próximos {PLANNING_HORIZON_DAYS} días.
-      </p>
-    );
-  }
-
-  return (
-    <div>
-      {items.map((item) => (
-        <PurchaseCheckbox
-          key={item.ingredient.id}
-          ingredientId={item.ingredient.id}
-          name={item.ingredient.name}
-          reasonText={item.reasons.map((r) => REASON_LABELS[r]).join(" · ")}
-          restockQuantity={item.restockQuantity}
-        />
-      ))}
-    </div>
-  );
+  return <ShoppingList items={items} />;
 }
