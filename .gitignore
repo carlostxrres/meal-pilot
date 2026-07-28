@@ -8,6 +8,9 @@ supabase-access-token
 node_modules/
 dist/
 
+# TypeScript — caché incremental de tsc, se regenera solo
+*.tsbuildinfo
+
 # Next.js
 .next/
 next-env.d.ts
