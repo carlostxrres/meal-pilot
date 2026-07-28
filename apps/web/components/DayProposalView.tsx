@@ -245,11 +245,9 @@ export function DayProposalView({
       </ul>
 
       <h3 className="section-title">Requisitos semanales</h3>
-      {proposal.requirementStatuses
-        .filter((status) => status.requirement.period === "week")
-        .map((status) => (
-          <CapsuleMeter key={status.requirement.id} status={status} />
-        ))}
+      {proposal.requirementStatuses.flatMap((status) =>
+        status.requirement.period === "week" ? [<CapsuleMeter key={status.requirement.id} status={status} />] : [],
+      )}
     </div>
   );
 }
