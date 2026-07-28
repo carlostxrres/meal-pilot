@@ -439,6 +439,40 @@ body {
   padding: 0;
 }
 
+.creator-component-list li[data-dragging="true"] {
+  opacity: 0.4;
+}
+
+.creator-component-list li[data-drag-over="true"] {
+  outline: var(--border-width-thick) solid var(--ink);
+  outline-offset: -1px;
+}
+
+.creator-max-warning {
+  margin: 2px 0 0;
+  font-size: var(--text-70);
+  color: var(--off);
+}
+
+.drag-handle {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  color: var(--mute);
+  cursor: grab;
+  touch-action: none;
+}
+
+.drag-handle:hover,
+.drag-handle:focus-visible {
+  color: var(--ink);
+}
+
 /* Miniatura más pequeña en el modal de contribuciones (fila de gráfico, no
    una fila de ingrediente gestionable — ver ContributionDialog). */
 .contrib-name .ingredient-thumb {

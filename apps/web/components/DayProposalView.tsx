@@ -12,7 +12,7 @@ import {
   type MealTip,
   type RequirementStatus,
 } from "@meal-pilot/core";
-import { IconAlertTriangle, IconBike, IconBulb, IconCurrencyEuro, IconFlask, IconMoon } from "@tabler/icons-react";
+import { IconAlertTriangle, IconBike, IconBulb, IconFlask, IconMoon } from "@tabler/icons-react";
 import { formatEur } from "@/lib/formatPrice";
 import { CapsuleMeter } from "./CapsuleMeter";
 import { MealConfirmCheckbox } from "./MealConfirmCheckbox";
@@ -163,10 +163,7 @@ export function DayProposalView({
                   </span>
                   {mealProposal.resolved && (
                     <>
-                      <span className="dish-price">
-                        <IconCurrencyEuro size={13} stroke={1.75} />{" "}
-                        {formatEur(computeDishPrice(mealProposal.resolved))}
-                      </span>
+                      <span className="dish-price">{formatEur(computeDishPrice(mealProposal.resolved))}</span>
                       <NutritionPopover totals={computeMealNutrition(mealProposal.resolved)} />
                     </>
                   )}

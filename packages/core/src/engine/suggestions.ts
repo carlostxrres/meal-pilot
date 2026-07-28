@@ -108,6 +108,15 @@ export function suggestForNutrient(
         if (d <= 0) return [];
         const quantity = snapUp(((target - value) / d) * 100, ingredient.base_unit);
         if (quantity > (ingredient.base_unit === "unit" ? MAX_ADD_UNITS : MAX_ADD_GRAMS)) return [];
+        // Nunca sugerir pasarse del máximo recomendado del ingrediente en el
+        // plato (ya tenga algo añadido o no, ver ingredient.max_quantity_per_dish).
+        const existingQuantity = components.find((c) => c.ingredient.id === ingredient.id)?.quantity ?? 0;
+        if (
+          ingredient.max_quantity_per_dish != null &&
+          existingQuantity + quantity > ingredient.max_quantity_per_dish
+        ) {
+          return [];
+        }
         const after = value + (d * quantity) / 100;
         // No sugerir arreglar el mínimo pasándose del máximo.
         if (effectiveMaximum != null && after > effectiveMaximum) return [];

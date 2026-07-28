@@ -27,7 +27,7 @@ export async function fetchDishCatalog(
     { data: requirements, error: requirementsError },
   ] = await Promise.all([
     supabase.from("dish").select("*"),
-    supabase.from("dish_ingredient").select("*"),
+    supabase.from("dish_ingredient").select("*").order("position"),
     supabase.from("ingredient").select("*"),
     supabase.from("meal").select("id, name"),
     supabase.from("dietary_requirement").select("*").not("meal_id", "is", null),

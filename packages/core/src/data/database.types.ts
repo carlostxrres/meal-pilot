@@ -158,18 +158,21 @@ export type Database = {
           dish_id: string
           id: string
           ingredient_id: string
+          position: number
           quantity: number
         }
         Insert: {
           dish_id: string
           id?: string
           ingredient_id: string
+          position?: number
           quantity: number
         }
         Update: {
           dish_id?: string
           id?: string
           ingredient_id?: string
+          position?: number
           quantity?: number
         }
         Relationships: [
@@ -200,6 +203,7 @@ export type Database = {
           id: string
           iron_mg_per_100: number | null
           kcal_per_100: number | null
+          max_quantity_per_dish: number | null
           name: string
           office_inventory: number
           omega3_g_per_100: number | null
@@ -224,6 +228,7 @@ export type Database = {
           id?: string
           iron_mg_per_100?: number | null
           kcal_per_100?: number | null
+          max_quantity_per_dish?: number | null
           name: string
           office_inventory?: number
           omega3_g_per_100?: number | null
@@ -248,6 +253,7 @@ export type Database = {
           id?: string
           iron_mg_per_100?: number | null
           kcal_per_100?: number | null
+          max_quantity_per_dish?: number | null
           name?: string
           office_inventory?: number
           omega3_g_per_100?: number | null

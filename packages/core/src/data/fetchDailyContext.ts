@@ -45,7 +45,7 @@ export async function fetchDailyContext(
     supabase.from("ingredient_category").select("*"),
     supabase.from("ingredient_category_link").select("*"),
     supabase.from("dish").select("*"),
-    supabase.from("dish_ingredient").select("*"),
+    supabase.from("dish_ingredient").select("*").order("position"),
     supabase.from("meal").select("*").order("usual_start_time"),
     supabase.from("supplement").select("*"),
     supabase.from("dietary_requirement").select("*"),

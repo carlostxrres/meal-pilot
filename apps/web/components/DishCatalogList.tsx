@@ -1,6 +1,6 @@
 "use client";
 
-import { IconAlertTriangle, IconCircleCheck, IconCurrencyEuro, IconToolsKitchen2 } from "@tabler/icons-react";
+import { IconAlertTriangle, IconCircleCheck, IconToolsKitchen2 } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import type { DietaryRequirement, DishCatalogEntry, Ingredient, Meal } from "@meal-pilot/core";
 import { formatEur } from "@/lib/formatPrice";
@@ -26,9 +26,7 @@ function DishCard({
         <p className="dish-name">{entry.dish.name}</p>
         <div className="meal-row-head-right">
           <span className="meal-time">{entry.dish.dish_type}</span>
-          <span className="dish-price">
-            <IconCurrencyEuro size={13} stroke={1.75} /> {formatEur(entry.price)}
-          </span>
+          <span className="dish-price">{formatEur(entry.price)}</span>
           <DishCreator
             ingredients={ingredients}
             meals={meals}

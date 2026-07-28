@@ -88,10 +88,11 @@ export async function createDish(
   }
 
   const { error: componentsError } = await supabase.from("dish_ingredient").insert(
-    input.components.map((c) => ({
+    input.components.map((c, position) => ({
       dish_id: dish.id,
       ingredient_id: c.ingredientId,
       quantity: c.quantity,
+      position,
     })),
   );
   if (componentsError) {
@@ -134,10 +135,11 @@ export async function updateDish(
   }
 
   const { error: insertError } = await supabase.from("dish_ingredient").insert(
-    input.components.map((c) => ({
+    input.components.map((c, position) => ({
       dish_id: dishId,
       ingredient_id: c.ingredientId,
       quantity: c.quantity,
+      position,
     })),
   );
   if (insertError) {

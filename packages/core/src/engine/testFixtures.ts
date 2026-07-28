@@ -41,6 +41,7 @@ export function makeIngredient(overrides: Partial<Ingredient> = {}): Ingredient 
     calcium_mg_per_100: null,
     omega3_g_per_100: null,
     price_eur_per_100: null,
+    max_quantity_per_dish: null,
     ...overrides,
   };
 }
@@ -63,6 +64,7 @@ export function makeDishIngredient(overrides: Partial<DishIngredient> = {}): Dis
     dish_id: "",
     ingredient_id: "",
     quantity: 50,
+    position: 0,
     ...overrides,
   };
 }

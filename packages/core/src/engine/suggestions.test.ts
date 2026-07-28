@@ -129,6 +129,32 @@ describe("suggestForNutrient", () => {
     expect(salmonSuggestion.quantity).toBe(50); // capado a lo disponible
   });
 
+  it("por debajo: nunca sugiere pasarse del máximo recomendado del ingrediente", () => {
+    const alubias = makeIngredient({ name: "Alubias", protein_g_per_100: 8, max_quantity_per_dish: 150 });
+    const pollo = makeIngredient({ name: "Pollo", protein_g_per_100: 30 });
+    // 25g de proteína con alubias (densidad 8) exigiría ~315g -> supera su
+    // máximo de 150g, así que no debe aparecer; el pollo sí.
+    const requirement = proteinWindow({ maximum: null });
+    const result = suggestForNutrient([], requirement, [requirement], [alubias, pollo]);
+
+    expect(result.suggestions.map((s) => s.ingredient.name)).toEqual(["Pollo"]);
+  });
+
+  it("por debajo: cuenta lo ya añadido de ese ingrediente al comprobar el máximo", () => {
+    const pollo = makeIngredient({ name: "Pollo", protein_g_per_100: 30, max_quantity_per_dish: 100 });
+    // Ya hay 80g de pollo (24g de proteína); llegar a 25g exigiría solo 5g
+    // más (80+5=85, dentro de 100) -> sí debe aparecer.
+    const requirement = proteinWindow({ minimum: 25, maximum: null });
+    const result = suggestForNutrient(
+      [{ ingredient: pollo, quantity: 80 }],
+      requirement,
+      [requirement],
+      [pollo],
+    );
+
+    expect(result.suggestions.map((s) => s.ingredient.name)).toEqual(["Pollo"]);
+  });
+
   it("ingredientes en unidades: cantidades enteras", () => {
     const huevo = makeIngredient({ name: "Huevo", base_unit: "unit", protein_g_per_100: 1300 });
     // protein por 100 unidades = 1300 -> 13 g/unidad

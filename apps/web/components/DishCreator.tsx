@@ -5,14 +5,14 @@ import * as Select from "@radix-ui/react-select";
 import {
   IconBulb,
   IconChevronDown,
-  IconCurrencyEuro,
   IconEye,
+  IconGripVertical,
   IconMinus,
   IconPencil,
   IconPlus,
   IconX,
 } from "@tabler/icons-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   checkDishCompliance,
   computeDishPrice,
@@ -265,6 +265,54 @@ export function DishCreator({
   const [error, setError] = useState<string | null>(null);
   const [inspectingId, setInspectingId] = useState<string | null>(null);
   const [suggestingId, setSuggestingId] = useState<string | null>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const componentListRef = useRef<HTMLUListElement | null>(null);
+
+  // Arrastrar para reordenar los ingredientes añadidos (pointer events, no
+  // HTML5 drag-and-drop: no funciona en touch sin polyfill, y este creador
+  // es de uso móvil). Durante el arrastre solo se resalta la fila objetivo;
+  // el array se reordena de una vez al soltar.
+  useEffect(() => {
+    if (dragIndex === null) return;
+
+    function indexAtPoint(clientY: number): number | null {
+      const list = componentListRef.current;
+      if (!list) return null;
+      const rows = Array.from(list.children) as HTMLElement[];
+      for (let i = 0; i < rows.length; i++) {
+        const rect = rows[i]!.getBoundingClientRect();
+        if (clientY < rect.top + rect.height / 2) return i;
+      }
+      return rows.length - 1;
+    }
+
+    function onMove(e: PointerEvent) {
+      const target = indexAtPoint(e.clientY);
+      if (target !== null) setDragOverIndex(target);
+    }
+
+    function onUp() {
+      setComponents((prev) => {
+        if (dragIndex === null || dragOverIndex === null || dragIndex === dragOverIndex) return prev;
+        const next = [...prev];
+        const [moved] = next.splice(dragIndex, 1);
+        next.splice(dragOverIndex, 0, moved!);
+        return next;
+      });
+      setDragIndex(null);
+      setDragOverIndex(null);
+    }
+
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerup", onUp);
+    document.addEventListener("pointercancel", onUp);
+    return () => {
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", onUp);
+      document.removeEventListener("pointercancel", onUp);
+    };
+  }, [dragIndex, dragOverIndex]);
 
   const pickerResults = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -473,52 +521,80 @@ export function DishCreator({
             <div className="field">
               <label htmlFor="dish-ingredient-search">Ingredientes</label>
               {components.length > 0 && (
-                <ul className="creator-component-list">
-                  {components.map((component) => (
-                    <li key={component.ingredient.id}>
-                      <IngredientRow
-                        ingredient={component.ingredient}
-                        trailing={
-                          <>
-                            <button
-                              type="button"
-                              className="qty-step"
-                              aria-label={`Restar ${stepFor(component.ingredient)}${component.ingredient.base_unit} de ${component.ingredient.name}`}
-                              onClick={() => stepQuantity(component, -1)}
-                            >
-                              <IconMinus size={13} stroke={2} />
-                            </button>
-                            <input
-                              type="number"
-                              className="creator-qty-input"
-                              step="any"
-                              min={0}
-                              value={component.quantity}
-                              onChange={(e) => setQuantity(component.ingredient.id, Number(e.target.value))}
-                              aria-label={`Cantidad de ${component.ingredient.name}`}
-                            />
-                            <button
-                              type="button"
-                              className="qty-step"
-                              aria-label={`Sumar ${stepFor(component.ingredient)}${component.ingredient.base_unit} a ${component.ingredient.name}`}
-                              onClick={() => stepQuantity(component, 1)}
-                            >
-                              <IconPlus size={13} stroke={2} />
-                            </button>
-                            <span className="creator-component-unit">{component.ingredient.base_unit}</span>
-                            <button
-                              type="button"
-                              className="creator-component-remove"
-                              aria-label={`Quitar ${component.ingredient.name}`}
-                              onClick={() => removeIngredient(component.ingredient.id)}
-                            >
-                              <IconX size={16} stroke={1.75} />
-                            </button>
-                          </>
-                        }
-                      />
-                    </li>
-                  ))}
+                <ul className="creator-component-list" ref={componentListRef}>
+                  {components.map((component, index) => {
+                    const overMax =
+                      component.ingredient.max_quantity_per_dish != null &&
+                      component.quantity > component.ingredient.max_quantity_per_dish;
+                    return (
+                      <li
+                        key={component.ingredient.id}
+                        data-dragging={dragIndex === index || undefined}
+                        data-drag-over={(dragOverIndex === index && dragIndex !== index) || undefined}
+                      >
+                        <IngredientRow
+                          ingredient={component.ingredient}
+                          meta={
+                            overMax ? (
+                              <p className="creator-max-warning">
+                                Se ha superado el máximo recomendado de este ingrediente
+                              </p>
+                            ) : undefined
+                          }
+                          trailing={
+                            <>
+                              <button
+                                type="button"
+                                className="drag-handle"
+                                aria-label={`Reordenar ${component.ingredient.name}`}
+                                onPointerDown={(e) => {
+                                  e.preventDefault();
+                                  setDragIndex(index);
+                                  setDragOverIndex(index);
+                                }}
+                              >
+                                <IconGripVertical size={16} stroke={1.75} />
+                              </button>
+                              <button
+                                type="button"
+                                className="qty-step"
+                                aria-label={`Restar ${stepFor(component.ingredient)}${component.ingredient.base_unit} de ${component.ingredient.name}`}
+                                onClick={() => stepQuantity(component, -1)}
+                              >
+                                <IconMinus size={13} stroke={2} />
+                              </button>
+                              <input
+                                type="number"
+                                className="creator-qty-input"
+                                step="any"
+                                min={0}
+                                value={component.quantity}
+                                onChange={(e) => setQuantity(component.ingredient.id, Number(e.target.value))}
+                                aria-label={`Cantidad de ${component.ingredient.name}`}
+                              />
+                              <button
+                                type="button"
+                                className="qty-step"
+                                aria-label={`Sumar ${stepFor(component.ingredient)}${component.ingredient.base_unit} a ${component.ingredient.name}`}
+                                onClick={() => stepQuantity(component, 1)}
+                              >
+                                <IconPlus size={13} stroke={2} />
+                              </button>
+                              <span className="creator-component-unit">{component.ingredient.base_unit}</span>
+                              <button
+                                type="button"
+                                className="creator-component-remove"
+                                aria-label={`Quitar ${component.ingredient.name}`}
+                                onClick={() => removeIngredient(component.ingredient.id)}
+                              >
+                                <IconX size={16} stroke={1.75} />
+                              </button>
+                            </>
+                          }
+                        />
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
               <SearchField
@@ -546,8 +622,7 @@ export function DishCreator({
 
             <div className="creator-meters">
               <p className="creator-price">
-                <IconCurrencyEuro size={15} stroke={1.75} /> Precio aproximado:{" "}
-                <strong className="data-mono">{formatEur(livePrice)}</strong>
+                Precio aproximado: <strong className="data-mono">{formatEur(livePrice)}</strong>
               </p>
               <h3 className="section-title">Ventana nutricional del meal</h3>
               {liveStatuses.length === 0 ? (

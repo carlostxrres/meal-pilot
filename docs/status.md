@@ -2,11 +2,19 @@
 
 > Documento vivo: se actualiza cada sesión conforme avanza el trabajo. Para el diseño estable, ver [`diseno-sistema.md`](diseno-sistema.md); para el porqué de cada decisión, [`adrs/`](adrs/README.md).
 
-**Última actualización**: 2026-07-28
+**Última actualización**: 2026-07-29
 
 ## Fase actual
 
 Rearquitectura ADR-0017/0018 implementada (ver bloques siguientes): requisitos nutricionales por meal + dishes fijas 1:1 + vista "Prepara tu cena", más una ronda de pulido de UI/UX (2026-07-28, ver más abajo). **Pendiente del usuario: rediseñar el catálogo de platos** (paso 5 del plan) — el catálogo actual es la conversión mecánica del viejo y casi todos los platos están fuera de la ventana de su meal (marcados en `/dishes`, ahora pestaña "Platos").
+
+## Reordenar ingredientes, cantidad máxima por ingrediente y limpieza de icono (2026-07-29)
+
+Verificado con 56 tests, `next build`, `tsc --noEmit` limpio, y comprobación en vivo (autenticado, precios reales sin icono duplicado, CSS de arrastre/aviso presente en el bundle).
+
+- **`IconCurrencyEuro` retirado** de los 3 sitios donde se mostraba precio (`DishCreator`, `DishCatalogList`, `DayProposalView`): `formatEur` ya incluye el símbolo `€`, así que el icono lo duplicaba visualmente ("€ 1,29 €").
+- **Reordenar ingredientes arrastrando** en "Nuevo plato": `dish_ingredient.position` (nueva columna, con índice para consultas) persiste el orden; `createDish`/`updateDish` lo escriben a partir del índice del array, `dishCatalog.ts`/`fetchDailyContext.ts` ordenan por él. El arrastre en el creador usa pointer events (no HTML5 drag-and-drop — no funciona en touch sin polyfill, y este creador es de uso móvil): un tirador (`IconGripVertical`) inicia el arrastre, un listener a nivel de `document` sigue el puntero y resalta la fila objetivo, y el array se reordena de una vez al soltar.
+- **Cantidad máxima por ingrediente**: `ingredient.max_quantity_per_dish` (opcional, en `base_unit` del ingrediente), poblada a criterio para los 58 ingredientes actuales (permisiva pero no ilimitada — ej. alubias tope 150g, no 1kg). En "Nuevo plato": una nota en rojo bajo la fila cuando la cantidad añadida la supera; `suggestForNutrient` (`@meal-pilot/core`) nunca sugiere "añadir" una cantidad que, sumada a lo ya presente de ese ingrediente en el plato, superaría su máximo (2 tests nuevos).
 
 ## Precio, descripción y edición de platos (2026-07-28, noche)
 
