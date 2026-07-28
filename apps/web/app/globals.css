@@ -306,23 +306,12 @@ body {
   border-radius: var(--radius-pill);
 }
 
-.ingredient-list {
+/* Lista de componentes de un plato (Hoy, catálogo de Platos): cada fila es
+   un IngredientRow, este selector solo resetea la lista en sí. */
+.dish-component-list {
   list-style: none;
   margin: 0;
   padding: 0;
-  color: var(--charcoal);
-  font-size: var(--text-90);
-}
-
-.ingredient-list li {
-  display: flex;
-  justify-content: space-between;
-  padding: var(--space-4) 0;
-  border-bottom: var(--border-width) solid var(--hairline-soft);
-}
-
-.ingredient-list li:last-child {
-  border-bottom: none;
 }
 
 .supplement-note {

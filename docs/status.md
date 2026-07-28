@@ -8,6 +8,10 @@
 
 Rearquitectura ADR-0017/0018 implementada (ver bloques siguientes): requisitos nutricionales por meal + dishes fijas 1:1 + vista "Prepara tu cena", más una ronda de pulido de UI/UX (2026-07-28, ver más abajo). **Pendiente del usuario: rediseñar el catálogo de platos** (paso 5 del plan) — el catálogo actual es la conversión mecánica del viejo y casi todos los platos están fuera de la ventana de su meal (marcados en `/dishes`, ahora pestaña "Platos").
 
+## IngredientRow también en la lista de componentes de un plato (2026-07-29)
+
+`DayProposalView` (Hoy) y `DishCard` (catálogo de Platos) mostraban los ingredientes de un plato como texto plano ("Nombre — cantidad"). Ahora reutilizan `IngredientRow` (`.dish-component-list` sustituye a la vieja `.ingredient-list`, que queda eliminada por no tener ya usos): cada ingrediente del plato muestra su miniatura y el tooltip de valores "por 100g/ml/unidad", igual que en Inventario/Compra/el creador — verificado en vivo, thumbnails y tooltips renderizando en las 4 comidas de "Hoy" y en las 29 tarjetas de "Platos".
+
 ## Reordenar ingredientes, cantidad máxima por ingrediente y limpieza de icono (2026-07-29)
 
 Verificado con 56 tests, `next build`, `tsc --noEmit` limpio, y comprobación en vivo (autenticado, precios reales sin icono duplicado, CSS de arrastre/aviso presente en el bundle).

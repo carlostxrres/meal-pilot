@@ -15,6 +15,7 @@ import {
 import { IconAlertTriangle, IconBike, IconBulb, IconFlask, IconMoon } from "@tabler/icons-react";
 import { formatEur } from "@/lib/formatPrice";
 import { CapsuleMeter } from "./CapsuleMeter";
+import { IngredientRow } from "./IngredientRow";
 import { MealConfirmCheckbox } from "./MealConfirmCheckbox";
 import { NutritionPopover } from "./NutritionPopover";
 
@@ -180,14 +181,18 @@ export function DayProposalView({
                   {mealProposal.resolved.dish.description && (
                     <p className="dish-description">{mealProposal.resolved.dish.description}</p>
                   )}
-                  <ul className="ingredient-list">
+                  <ul className="dish-component-list">
                     {mealProposal.resolved.components.map((component) => (
                       <li key={component.ingredient.id}>
-                        <span>{component.ingredient.name}</span>
-                        <span className="data-mono">
-                          {component.quantity}
-                          {component.ingredient.base_unit}
-                        </span>
+                        <IngredientRow
+                          ingredient={component.ingredient}
+                          trailing={
+                            <span className="data-mono">
+                              {component.quantity}
+                              {component.ingredient.base_unit}
+                            </span>
+                          }
+                        />
                       </li>
                     ))}
                   </ul>

@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import type { DietaryRequirement, DishCatalogEntry, Ingredient, Meal } from "@meal-pilot/core";
 import { formatEur } from "@/lib/formatPrice";
 import { DishCreator } from "./DishCreator";
+import { IngredientRow } from "./IngredientRow";
 import { SearchField } from "./SearchField";
 
 function DishCard({
@@ -53,14 +54,18 @@ function DishCard({
           ))}
       </div>
 
-      <ul className="ingredient-list">
+      <ul className="dish-component-list">
         {entry.components.map((component) => (
           <li key={component.ingredient.id}>
-            <span>{component.ingredient.name}</span>
-            <span className="data-mono">
-              {component.quantity}
-              {component.ingredient.base_unit}
-            </span>
+            <IngredientRow
+              ingredient={component.ingredient}
+              trailing={
+                <span className="data-mono">
+                  {component.quantity}
+                  {component.ingredient.base_unit}
+                </span>
+              }
+            />
           </li>
         ))}
       </ul>
