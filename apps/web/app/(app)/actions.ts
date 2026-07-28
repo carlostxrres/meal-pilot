@@ -5,8 +5,9 @@ import {
   addToHomeInventory,
   createDish,
   setMealConfirmed,
+  updateDish,
   updateIngredientInventory,
-  type CreateDishInput,
+  type DishInput,
 } from "@meal-pilot/core";
 import { createClient } from "@/lib/supabase/server";
 
@@ -37,13 +38,29 @@ export async function updateInventoryAction(input: {
 }
 
 export async function createDishAction(
-  input: CreateDishInput,
+  input: DishInput,
 ): Promise<{ error: string | null }> {
   try {
     const supabase = await createClient();
     await createDish(supabase, input);
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Error desconocido creando el plato" };
+  }
+  revalidatePath("/dishes");
+  revalidatePath("/");
+  revalidatePath("/shopping");
+  return { error: null };
+}
+
+export async function updateDishAction(
+  dishId: string,
+  input: DishInput,
+): Promise<{ error: string | null }> {
+  try {
+    const supabase = await createClient();
+    await updateDish(supabase, dishId, input);
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Error desconocido guardando el plato" };
   }
   revalidatePath("/dishes");
   revalidatePath("/");

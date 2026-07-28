@@ -5,37 +5,48 @@ import * as Select from "@radix-ui/react-select";
 import {
   IconBulb,
   IconChevronDown,
+  IconCurrencyEuro,
   IconEye,
   IconMinus,
+  IconPencil,
   IconPlus,
   IconX,
 } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import {
   checkDishCompliance,
+  computeDishPrice,
   sortByNutrientDisplayOrder,
   suggestForNutrient,
   type DietaryRequirement,
+  type DishCatalogEntry,
   type DishSuggestion,
   type Ingredient,
   type Meal,
   type RequirementStatus,
 } from "@meal-pilot/core";
-import { createDishAction } from "@/app/(app)/actions";
+import { createDishAction, updateDishAction } from "@/app/(app)/actions";
+import { formatEur } from "@/lib/formatPrice";
 import { CapsuleMeter } from "./CapsuleMeter";
 import { IngredientRow } from "./IngredientRow";
 import { IngredientThumb } from "./IngredientThumb";
 import { SearchField } from "./SearchField";
 
 /*
-Intent: dar de alta un plato fijo viendo EN VIVO si cae dentro de la ventana
-nutricional de su meal (ADR-0017/0018). Layout pensado para minimizar scroll:
-los medidores van en un bloque sticky al fondo del diálogo (siempre visibles
-mientras se editan ingredientes arriba), en su variante compacta de una línea.
-Cada nutriente ofrece inspección (ojo: quién contribuye, barras de magnitud en
-un solo tono de tinta — serie única, valores como texto) y sugerencias
-aplicables (bombilla: añadir/reducir cantidades que llevan el nutriente a su
-ventana, rankeadas por el efecto sobre el resto de nutrientes).
+Intent: dar de alta (o editar) un plato fijo viendo EN VIVO si cae dentro de
+la ventana nutricional de su meal (ADR-0017/0018), y su precio aproximado.
+Layout pensado para minimizar scroll: los medidores + precio van en un
+bloque sticky al fondo del diálogo (siempre visibles mientras se editan
+ingredientes arriba), en su variante compacta de una línea. Cada nutriente
+ofrece inspección (ojo: quién contribuye, barras de magnitud en un solo tono
+de tinta — serie única, valores como texto) y sugerencias aplicables
+(bombilla: añadir/reducir cantidades que llevan el nutriente a su ventana,
+rankeadas por el efecto sobre el resto de nutrientes).
+
+Un único componente sirve para crear y editar: si se pasa `existingDish`,
+arranca precargado con sus datos, cambia el trigger por un lápiz, el título
+y el botón de envío, y guarda con `updateDishAction` en vez de
+`createDishAction`.
 
 Las filas de ingrediente (ya añadidos, resultados de búsqueda) reutilizan el
 componente compartido IngredientRow — misma estructura/tamaño/tooltip de
@@ -61,6 +72,27 @@ function formatQuantity(value: number): string {
 }
 
 const MAX_PICKER_RESULTS = 8;
+
+interface DraftState {
+  name: string;
+  dishType: string;
+  description: string;
+  mealId: string;
+  components: DraftComponent[];
+}
+
+function initialDraft(existingDish: DishCatalogEntry | undefined, meals: Meal[]): DraftState {
+  if (existingDish) {
+    return {
+      name: existingDish.dish.name,
+      dishType: existingDish.dish.dish_type,
+      description: existingDish.dish.description ?? "",
+      mealId: existingDish.dish.meal_id,
+      components: existingDish.components.map((c) => ({ ingredient: c.ingredient, quantity: c.quantity })),
+    };
+  }
+  return { name: "", dishType: "", description: "", mealId: meals[0]?.id ?? "", components: [] };
+}
 
 function ContributionDialog({
   status,
@@ -211,16 +243,23 @@ export function DishCreator({
   ingredients,
   meals,
   mealRequirements,
+  existingDish,
 }: {
   ingredients: Ingredient[];
   meals: Meal[];
   mealRequirements: DietaryRequirement[];
+  /** Si se da, el diálogo edita este plato en vez de crear uno nuevo. */
+  existingDish?: DishCatalogEntry;
 }) {
+  const isEditing = existingDish != null;
+  const initial = initialDraft(existingDish, meals);
+
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [dishType, setDishType] = useState("");
-  const [mealId, setMealId] = useState(meals[0]?.id ?? "");
-  const [components, setComponents] = useState<DraftComponent[]>([]);
+  const [name, setName] = useState(initial.name);
+  const [dishType, setDishType] = useState(initial.dishType);
+  const [description, setDescription] = useState(initial.description);
+  const [mealId, setMealId] = useState(initial.mealId);
+  const [components, setComponents] = useState<DraftComponent[]>(initial.components);
   const [query, setQuery] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -242,7 +281,7 @@ export function DishCreator({
   const liveStatuses: RequirementStatus[] = useMemo(() => {
     if (!mealId) return [];
     const draft = {
-      dish: { id: "draft", owner_id: "", name, dish_type: dishType, meal_id: mealId },
+      dish: { id: "draft", owner_id: "", name, dish_type: dishType, meal_id: mealId, description: null },
       components: components.map((c) => ({ ingredient: c.ingredient, quantity: c.quantity })),
     };
     const statuses = checkDishCompliance(draft, mealRequirements).checks.map((check) => ({
@@ -254,6 +293,8 @@ export function DishCreator({
     }));
     return sortByNutrientDisplayOrder(statuses);
   }, [name, dishType, mealId, components, mealRequirements]);
+
+  const livePrice = useMemo(() => computeDishPrice({ components }), [components]);
 
   const inspecting = liveStatuses.find((s) => s.requirement.id === inspectingId) ?? null;
   const suggesting = liveStatuses.find((s) => s.requirement.id === suggestingId) ?? null;
@@ -267,10 +308,12 @@ export function DishCreator({
     components.every((c) => c.quantity > 0);
 
   function reset() {
-    setName("");
-    setDishType("");
-    setMealId(meals[0]?.id ?? "");
-    setComponents([]);
+    const fresh = initialDraft(existingDish, meals);
+    setName(fresh.name);
+    setDishType(fresh.dishType);
+    setDescription(fresh.description);
+    setMealId(fresh.mealId);
+    setComponents(fresh.components);
     setQuery("");
     setError(null);
     setInspectingId(null);
@@ -322,21 +365,25 @@ export function DishCreator({
     if (!canSubmit) return;
     setSubmitting(true);
     setError(null);
-    const result = await createDishAction({
+    const input = {
       name: name.trim(),
       dishType: dishType.trim() || "Otro",
+      description: description.trim() || undefined,
       mealId,
       components: components.map((c) => ({
         ingredientId: c.ingredient.id,
         quantity: c.quantity,
       })),
-    });
+    };
+    const result = isEditing
+      ? await updateDishAction(existingDish.dish.id, input)
+      : await createDishAction(input);
     setSubmitting(false);
     if (result.error) {
       setError(result.error);
       return;
     }
-    reset();
+    if (!isEditing) reset();
     setOpen(false);
   }
 
@@ -345,18 +392,24 @@ export function DishCreator({
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
-        if (!next) reset();
+        if (!next && !isEditing) reset();
       }}
     >
       <Dialog.Trigger asChild>
-        <button type="button" className="btn-primary dish-creator-trigger">
-          <IconPlus size={16} stroke={2} /> Nuevo plato
-        </button>
+        {isEditing ? (
+          <button type="button" className="dish-edit-btn" aria-label={`Editar ${existingDish.dish.name}`}>
+            <IconPencil size={16} stroke={1.75} />
+          </button>
+        ) : (
+          <button type="button" className="btn-primary dish-creator-trigger">
+            <IconPlus size={16} stroke={2} /> Nuevo plato
+          </button>
+        )}
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <Dialog.Content className="dialog-content dish-creator-content">
-          <Dialog.Title className="dialog-title">Nuevo plato</Dialog.Title>
+          <Dialog.Title className="dialog-title">{isEditing ? "Editar plato" : "Nuevo plato"}</Dialog.Title>
           <form onSubmit={handleSubmit}>
             <div className="creator-grid2">
               <div className="field">
@@ -380,6 +433,18 @@ export function DishCreator({
                   placeholder="Ensalada, Bowl..."
                 />
               </div>
+            </div>
+
+            <div className="field">
+              <label htmlFor="dish-description">Descripción (opcional)</label>
+              <textarea
+                id="dish-description"
+                className="creator-description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Notas de preparación, momento ideal para tomarlo..."
+                rows={2}
+              />
             </div>
 
             <div className="field">
@@ -480,41 +545,47 @@ export function DishCreator({
             {error && <p className="warning">{error}</p>}
 
             <div className="creator-meters">
+              <p className="creator-price">
+                <IconCurrencyEuro size={15} stroke={1.75} /> Precio aproximado:{" "}
+                <strong className="data-mono">{formatEur(livePrice)}</strong>
+              </p>
               <h3 className="section-title">Ventana nutricional del meal</h3>
               {liveStatuses.length === 0 ? (
                 <p className="section-note">Este meal no tiene requisitos nutricionales definidos.</p>
               ) : (
                 <>
-                  {liveStatuses.map((status) => (
-                    <CapsuleMeter
-                      key={status.requirement.id}
-                      status={status}
-                      compact
-                      actions={
-                        <span className="meter-actions">
-                          <button
-                            type="button"
-                            className="meter-action"
-                            aria-label={`Ver contribuciones de ${status.requirement.name}`}
-                            onClick={() => setInspectingId(status.requirement.id)}
-                          >
-                            <IconEye size={15} stroke={1.75} />
-                          </button>
-                          <button
-                            type="button"
-                            className="meter-action"
-                            aria-label={`Sugerencias para ${status.requirement.name}`}
-                            onClick={() => setSuggestingId(status.requirement.id)}
-                          >
-                            <IconBulb size={15} stroke={1.75} />
-                          </button>
-                        </span>
-                      }
-                    />
-                  ))}
+                  <div className="capsule-meter-grid">
+                    {liveStatuses.map((status) => (
+                      <CapsuleMeter
+                        key={status.requirement.id}
+                        status={status}
+                        compact
+                        actions={
+                          <span className="meter-actions">
+                            <button
+                              type="button"
+                              className="meter-action"
+                              aria-label={`Ver contribuciones de ${status.requirement.name}`}
+                              onClick={() => setInspectingId(status.requirement.id)}
+                            >
+                              <IconEye size={15} stroke={1.75} />
+                            </button>
+                            <button
+                              type="button"
+                              className="meter-action"
+                              aria-label={`Sugerencias para ${status.requirement.name}`}
+                              onClick={() => setSuggestingId(status.requirement.id)}
+                            >
+                              <IconBulb size={15} stroke={1.75} />
+                            </button>
+                          </span>
+                        }
+                      />
+                    ))}
+                  </div>
                   {allWithinWindow && (
                     <p className="section-note" data-ok="true">
-                      Dentro de la ventana: listo para crear.
+                      Dentro de la ventana: listo para {isEditing ? "guardar" : "crear"}.
                     </p>
                   )}
                 </>
@@ -526,7 +597,13 @@ export function DishCreator({
                   </button>
                 </Dialog.Close>
                 <button type="submit" className="btn-primary" disabled={!canSubmit}>
-                  {submitting ? "Creando..." : "Crear plato"}
+                  {submitting
+                    ? isEditing
+                      ? "Guardando..."
+                      : "Creando..."
+                    : isEditing
+                      ? "Guardar cambios"
+                      : "Crear plato"}
                 </button>
               </div>
             </div>

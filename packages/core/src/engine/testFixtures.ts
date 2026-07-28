@@ -40,6 +40,7 @@ export function makeIngredient(overrides: Partial<Ingredient> = {}): Ingredient 
     iron_mg_per_100: null,
     calcium_mg_per_100: null,
     omega3_g_per_100: null,
+    price_eur_per_100: null,
     ...overrides,
   };
 }
@@ -51,6 +52,7 @@ export function makeDish(overrides: Partial<Dish> = {}): Dish {
     name: "Dish de prueba",
     dish_type: "Test",
     meal_id: "",
+    description: null,
     ...overrides,
   };
 }

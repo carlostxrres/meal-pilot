@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types.js";
 import type { DietaryRequirement, Ingredient, Meal } from "../engine/types.js";
 
-/** Todo lo que necesita la UI de alta de dishes: catálogo de ingredientes, meals y sus ventanas. */
+/** Todo lo que necesita la UI de alta/edición de dishes: catálogo de ingredientes, meals y sus ventanas. */
 export interface DishAuthoringContext {
   ingredients: Ingredient[];
   meals: Meal[];
@@ -32,11 +32,24 @@ export async function fetchDishAuthoringContext(
   };
 }
 
-export interface CreateDishInput {
+export interface DishInput {
   name: string;
   dishType: string;
   mealId: string;
+  /** Notas opcionales: preparación, momento ideal para tomarlo... */
+  description?: string;
   components: { ingredientId: string; quantity: number }[];
+}
+
+function validateDishInput(input: DishInput): void {
+  if (!input.name.trim()) throw new Error("El plato necesita un nombre");
+  if (!input.mealId) throw new Error("El plato necesita un meal");
+  if (input.components.length === 0) {
+    throw new Error("El plato necesita al menos un ingrediente");
+  }
+  if (input.components.some((c) => !(c.quantity > 0))) {
+    throw new Error("Todas las cantidades deben ser mayores que 0");
+  }
 }
 
 /**
@@ -47,16 +60,9 @@ export interface CreateDishInput {
  */
 export async function createDish(
   supabase: SupabaseClient<Database>,
-  input: CreateDishInput,
+  input: DishInput,
 ): Promise<string> {
-  if (!input.name.trim()) throw new Error("El plato necesita un nombre");
-  if (!input.mealId) throw new Error("El plato necesita un meal");
-  if (input.components.length === 0) {
-    throw new Error("El plato necesita al menos un ingrediente");
-  }
-  if (input.components.some((c) => !(c.quantity > 0))) {
-    throw new Error("Todas las cantidades deben ser mayores que 0");
-  }
+  validateDishInput(input);
 
   const {
     data: { user },
@@ -73,6 +79,7 @@ export async function createDish(
       name: input.name.trim(),
       dish_type: input.dishType.trim() || "Otro",
       meal_id: input.mealId,
+      description: input.description?.trim() || null,
     })
     .select("id")
     .single();
@@ -94,4 +101,46 @@ export async function createDish(
   }
 
   return dish.id;
+}
+
+/**
+ * Edita una dish existente: reemplaza su fila y todos sus `dish_ingredient`
+ * (se borran los anteriores y se insertan los del formulario — más simple
+ * que diffear, aceptable para un catálogo de un único usuario).
+ */
+export async function updateDish(
+  supabase: SupabaseClient<Database>,
+  dishId: string,
+  input: DishInput,
+): Promise<void> {
+  validateDishInput(input);
+
+  const { error: dishError } = await supabase
+    .from("dish")
+    .update({
+      name: input.name.trim(),
+      dish_type: input.dishType.trim() || "Otro",
+      meal_id: input.mealId,
+      description: input.description?.trim() || null,
+    })
+    .eq("id", dishId);
+  if (dishError) {
+    throw new Error(`Fallo guardando el plato: ${dishError.message}`);
+  }
+
+  const { error: deleteError } = await supabase.from("dish_ingredient").delete().eq("dish_id", dishId);
+  if (deleteError) {
+    throw new Error(`Fallo actualizando los ingredientes: ${deleteError.message}`);
+  }
+
+  const { error: insertError } = await supabase.from("dish_ingredient").insert(
+    input.components.map((c) => ({
+      dish_id: dishId,
+      ingredient_id: c.ingredientId,
+      quantity: c.quantity,
+    })),
+  );
+  if (insertError) {
+    throw new Error(`Fallo actualizando los ingredientes: ${insertError.message}`);
+  }
 }

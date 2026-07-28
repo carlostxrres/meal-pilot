@@ -1,5 +1,6 @@
 import {
   computeDinnerTargets,
+  computeDishPrice,
   computeHomeToOfficeCarry,
   computeMealNutrition,
   computeOfficeToStreetGrab,
@@ -11,7 +12,8 @@ import {
   type MealTip,
   type RequirementStatus,
 } from "@meal-pilot/core";
-import { IconAlertTriangle, IconBriefcase, IconBulb, IconDoorExit, IconFlask, IconMoon } from "@tabler/icons-react";
+import { IconAlertTriangle, IconBike, IconBulb, IconCurrencyEuro, IconFlask, IconMoon } from "@tabler/icons-react";
+import { formatEur } from "@/lib/formatPrice";
 import { CapsuleMeter } from "./CapsuleMeter";
 import { MealConfirmCheckbox } from "./MealConfirmCheckbox";
 import { NutritionPopover } from "./NutritionPopover";
@@ -126,7 +128,7 @@ export function DayProposalView({
     <div>
       {proposal.meals.length > 1 && (
         <CommuteSection
-          icon={<IconBriefcase size={14} stroke={2} />}
+          icon={<IconBike size={14} stroke={2} />}
           title="Commute: de casa a la oficina"
           prepBullet={prepMiddleSnackBullet}
           carryLists={homeToOfficeCarry}
@@ -146,7 +148,7 @@ export function DayProposalView({
           <div key={mealProposal.meal.id}>
             {isLast && mealProposal.resolved && (
               <CommuteSection
-                icon={<IconDoorExit size={14} stroke={2} />}
+                icon={<IconBike size={14} stroke={2} />}
                 title="Commute: de la oficina a la calle"
                 carryLists={officeToStreetGrab ? [officeToStreetGrab] : []}
                 emptyText="Ningún ingrediente que llevar de la oficina hoy."
@@ -160,7 +162,13 @@ export function DayProposalView({
                     {formatTime(mealProposal.meal.usual_start_time)}–{formatTime(mealProposal.meal.usual_end_time)}
                   </span>
                   {mealProposal.resolved && (
-                    <NutritionPopover totals={computeMealNutrition(mealProposal.resolved)} />
+                    <>
+                      <span className="dish-price">
+                        <IconCurrencyEuro size={13} stroke={1.75} />{" "}
+                        {formatEur(computeDishPrice(mealProposal.resolved))}
+                      </span>
+                      <NutritionPopover totals={computeMealNutrition(mealProposal.resolved)} />
+                    </>
                   )}
                 </div>
               </div>
@@ -172,6 +180,9 @@ export function DayProposalView({
               ) : (
                 <>
                   <p className="dish-name">{mealProposal.resolved.dish.name}</p>
+                  {mealProposal.resolved.dish.description && (
+                    <p className="dish-description">{mealProposal.resolved.dish.description}</p>
+                  )}
                   <ul className="ingredient-list">
                     {mealProposal.resolved.components.map((component, i) => (
                       <li key={i}>

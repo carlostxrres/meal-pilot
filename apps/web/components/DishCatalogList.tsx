@@ -1,19 +1,44 @@
 "use client";
 
-import { IconAlertTriangle, IconCircleCheck, IconToolsKitchen2 } from "@tabler/icons-react";
+import { IconAlertTriangle, IconCircleCheck, IconCurrencyEuro, IconToolsKitchen2 } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
-import type { DishCatalogEntry } from "@meal-pilot/core";
+import type { DietaryRequirement, DishCatalogEntry, Ingredient, Meal } from "@meal-pilot/core";
+import { formatEur } from "@/lib/formatPrice";
+import { DishCreator } from "./DishCreator";
 import { SearchField } from "./SearchField";
 
-function DishCard({ entry }: { entry: DishCatalogEntry }) {
+function DishCard({
+  entry,
+  ingredients,
+  meals,
+  mealRequirements,
+}: {
+  entry: DishCatalogEntry;
+  ingredients: Ingredient[];
+  meals: Meal[];
+  mealRequirements: DietaryRequirement[];
+}) {
   const failing = entry.compliance.checks.filter((check) => !check.withinWindow);
 
   return (
     <div className="meal-row">
       <div className="meal-row-head">
         <p className="dish-name">{entry.dish.name}</p>
-        <span className="meal-time">{entry.dish.dish_type}</span>
+        <div className="meal-row-head-right">
+          <span className="meal-time">{entry.dish.dish_type}</span>
+          <span className="dish-price">
+            <IconCurrencyEuro size={13} stroke={1.75} /> {formatEur(entry.price)}
+          </span>
+          <DishCreator
+            ingredients={ingredients}
+            meals={meals}
+            mealRequirements={mealRequirements}
+            existingDish={entry}
+          />
+        </div>
       </div>
+
+      {entry.dish.description && <p className="dish-description">{entry.dish.description}</p>}
 
       <div className="dish-meal-chips">
         {entry.mealName && <span className="dish-meal-chip">{entry.mealName}</span>}
@@ -33,10 +58,10 @@ function DishCard({ entry }: { entry: DishCatalogEntry }) {
       <ul className="ingredient-list">
         {entry.components.map((component, i) => (
           <li key={i}>
-            <span>{component.ingredientName}</span>
+            <span>{component.ingredient.name}</span>
             <span className="data-mono">
               {component.quantity}
-              {component.unit ?? ""}
+              {component.ingredient.base_unit}
             </span>
           </li>
         ))}
@@ -45,7 +70,17 @@ function DishCard({ entry }: { entry: DishCatalogEntry }) {
   );
 }
 
-export function DishCatalogList({ dishes }: { dishes: DishCatalogEntry[] }) {
+export function DishCatalogList({
+  dishes,
+  ingredients,
+  meals,
+  mealRequirements,
+}: {
+  dishes: DishCatalogEntry[];
+  ingredients: Ingredient[];
+  meals: Meal[];
+  mealRequirements: DietaryRequirement[];
+}) {
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(
@@ -66,7 +101,15 @@ export function DishCatalogList({ dishes }: { dishes: DishCatalogEntry[] }) {
       {filtered.length === 0 ? (
         <p className="inventory-empty">Ningún plato coincide con este filtro.</p>
       ) : (
-        filtered.map((entry) => <DishCard key={entry.dish.id} entry={entry} />)
+        filtered.map((entry) => (
+          <DishCard
+            key={entry.dish.id}
+            entry={entry}
+            ingredients={ingredients}
+            meals={meals}
+            mealRequirements={mealRequirements}
+          />
+        ))
       )}
     </div>
   );

@@ -120,6 +120,7 @@ export type Database = {
       }
       dish: {
         Row: {
+          description: string | null
           dish_type: string
           id: string
           meal_id: string
@@ -127,6 +128,7 @@ export type Database = {
           owner_id: string
         }
         Insert: {
+          description?: string | null
           dish_type: string
           id?: string
           meal_id: string
@@ -134,6 +136,7 @@ export type Database = {
           owner_id: string
         }
         Update: {
+          description?: string | null
           dish_type?: string
           id?: string
           meal_id?: string
@@ -202,6 +205,7 @@ export type Database = {
           omega3_g_per_100: number | null
           opened_shelf_life_days: number | null
           owner_id: string
+          price_eur_per_100: number | null
           protein_g_per_100: number | null
           recommended_time: Database["public"]["Enums"]["time_of_day"]
           saturated_fat_g_per_100: number | null
@@ -225,6 +229,7 @@ export type Database = {
           omega3_g_per_100?: number | null
           opened_shelf_life_days?: number | null
           owner_id: string
+          price_eur_per_100?: number | null
           protein_g_per_100?: number | null
           recommended_time?: Database["public"]["Enums"]["time_of_day"]
           saturated_fat_g_per_100?: number | null
@@ -248,6 +253,7 @@ export type Database = {
           omega3_g_per_100?: number | null
           opened_shelf_life_days?: number | null
           owner_id?: string
+          price_eur_per_100?: number | null
           protein_g_per_100?: number | null
           recommended_time?: Database["public"]["Enums"]["time_of_day"]
           saturated_fat_g_per_100?: number | null

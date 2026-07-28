@@ -1,24 +1,21 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types.js";
 import { checkDishCompliance, type DishCompliance } from "../engine/compliance.js";
-import type { Dish, Ingredient } from "../engine/types.js";
-
-export interface DishCatalogComponent {
-  quantity: number;
-  unit: string | null;
-  ingredientName: string | null;
-}
+import { computeDishPrice } from "../engine/price.js";
+import type { Dish, Ingredient, ResolvedComponent } from "../engine/types.js";
 
 export interface DishCatalogEntry {
   dish: Dish;
-  components: DishCatalogComponent[];
+  components: ResolvedComponent[];
   /** Nombre del meal al que pertenece la dish (dish.meal_id, ADR-0018). */
   mealName: string | null;
   /** Perfil de la dish contra la ventana nutricional de su meal (ADR-0017). */
   compliance: DishCompliance;
+  /** Precio aproximado (EUR), suma de sus componentes — ver engine/price.ts. */
+  price: number;
 }
 
-/** Catálogo completo de dishes con componentes, meal y cumplimiento de su ventana nutricional. */
+/** Catálogo completo de dishes con componentes, meal, cumplimiento de su ventana nutricional y precio. */
 export async function fetchDishCatalog(
   supabase: SupabaseClient<Database>,
 ): Promise<DishCatalogEntry[]> {
@@ -41,7 +38,7 @@ export async function fetchDishCatalog(
   const ingredientById = new Map<string, Ingredient>((ingredients ?? []).map((i) => [i.id, i]));
   const mealNameById = new Map((meals ?? []).map((m) => [m.id, m.name]));
 
-  const componentsByDish = new Map<string, { ingredient: Ingredient; quantity: number }[]>();
+  const componentsByDish = new Map<string, ResolvedComponent[]>();
   for (const di of dishIngredients ?? []) {
     const ingredient = ingredientById.get(di.ingredient_id);
     if (!ingredient) continue;
@@ -51,19 +48,13 @@ export async function fetchDishCatalog(
 
   return (dishes ?? [])
     .map((dish) => {
-      const resolvedComponents = componentsByDish.get(dish.id) ?? [];
+      const components = componentsByDish.get(dish.id) ?? [];
       return {
         dish,
-        components: resolvedComponents.map((c) => ({
-          quantity: c.quantity,
-          unit: c.ingredient.base_unit,
-          ingredientName: c.ingredient.name,
-        })),
+        components,
         mealName: mealNameById.get(dish.meal_id) ?? null,
-        compliance: checkDishCompliance(
-          { dish, components: resolvedComponents },
-          requirements ?? [],
-        ),
+        compliance: checkDishCompliance({ dish, components }, requirements ?? []),
+        price: computeDishPrice({ components }),
       };
     })
     .sort((a, b) => a.dish.name.localeCompare(b.dish.name));

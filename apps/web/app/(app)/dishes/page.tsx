@@ -17,7 +17,12 @@ export default async function DishesPage() {
         meals={authoring.meals}
         mealRequirements={authoring.mealRequirements}
       />
-      <DishCatalogList dishes={dishes} />
+      <DishCatalogList
+        dishes={dishes}
+        ingredients={authoring.ingredients}
+        meals={authoring.meals}
+        mealRequirements={authoring.mealRequirements}
+      />
     </div>
   );
 }

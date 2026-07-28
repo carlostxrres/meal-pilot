@@ -269,6 +269,43 @@ body {
   margin: var(--space-8) 0 var(--space-4);
 }
 
+.dish-description {
+  font-size: var(--text-85);
+  font-style: italic;
+  color: var(--mute);
+  margin: 0 0 var(--space-8);
+}
+
+.dish-price {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--text-75);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--mute);
+  white-space: nowrap;
+}
+
+.creator-price {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: 0 0 var(--space-8);
+  font-size: var(--text-85);
+  color: var(--charcoal);
+}
+
+.dish-edit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--border-width) solid var(--hairline);
+  background: transparent;
+  color: var(--ink);
+  padding: var(--space-8);
+  border-radius: var(--radius-pill);
+}
+
 .ingredient-list {
   list-style: none;
   margin: 0;
@@ -510,24 +547,33 @@ body {
   margin-top: var(--space-8);
 }
 
-/* CapsuleMeter compacto: una línea por nutriente. */
-.capsule-meter-compact {
-  display: flex;
+/* CapsuleMeter compacto: una línea por nutriente. El contenedor
+   (.capsule-meter-grid) es un grid real compartido por todas las filas, así
+   que cada .capsule-meter-track cae en la misma columna con el mismo ancho
+   en todas — no cada fila calculando el suyo por separado. Cada fila usa
+   `display: contents` para que sus 4 hijos (nombre/track/valor/acciones)
+   pasen a ser celdas directas de ese grid compartido. */
+.capsule-meter-grid {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
   align-items: center;
-  gap: var(--space-8);
-  padding: 3px 0;
+  column-gap: var(--space-8);
+  row-gap: var(--space-4);
   font-size: var(--text-75);
 }
 
+.capsule-meter-compact {
+  display: contents;
+}
+
 .capsule-meter-compact .capsule-meter-name {
-  flex: 0 0 6.5rem;
+  max-width: 6.5rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .capsule-meter-compact .capsule-meter-track {
-  flex: 1;
   height: var(--space-8);
 }
 
@@ -811,7 +857,9 @@ body {
   font-style: italic;
 }
 
-.capsule-meter-compact[data-sub="true"] {
+/* .capsule-meter-compact usa display:contents (ver .capsule-meter-grid) —
+   no genera caja propia, así que el indent va en su celda de nombre. */
+.capsule-meter-compact[data-sub="true"] .capsule-meter-name {
   padding-left: var(--space-16);
 }
 
@@ -1141,6 +1189,16 @@ label.ingredient-row-info {
   background: var(--paper);
   color: var(--ink);
   border-radius: 0;
+}
+
+.creator-description {
+  font: inherit;
+  padding: var(--space-12);
+  border: var(--border-width) solid var(--hairline);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 0;
+  resize: vertical;
 }
 
 .dialog-actions {

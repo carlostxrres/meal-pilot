@@ -10,6 +10,7 @@ export * from "./engine/suggestions.js";
 export * from "./engine/commute.js";
 export * from "./engine/mealTips.js";
 export * from "./engine/nutrientOrder.js";
+export * from "./engine/price.js";
 export * from "./data/fetchDailyContext.js";
 export * from "./data/mealConfirmation.js";
 export * from "./data/inventory.js";
