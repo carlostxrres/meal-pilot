@@ -8,7 +8,8 @@
     "prebuild": "npm run build -w @meal-pilot/core",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
     "@meal-pilot/core": "*",
@@ -20,7 +21,6 @@
     "@radix-ui/react-progress": "^1.1.16",
     "@radix-ui/react-select": "^2.3.7",
     "@radix-ui/react-tabs": "^1.1.21",
-    "@radix-ui/react-tooltip": "^1.2.16",
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.45.4",
     "@tabler/icons-react": "^3.45.0",
