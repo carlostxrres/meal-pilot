@@ -6,6 +6,7 @@ export * from "./engine/shoppingList.js";
 export * from "./engine/nutrition.js";
 export * from "./engine/compliance.js";
 export * from "./engine/dinner.js";
+export * from "./engine/suggestions.js";
 export * from "./data/fetchDailyContext.js";
 export * from "./data/mealConfirmation.js";
 export * from "./data/inventory.js";

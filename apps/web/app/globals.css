@@ -387,12 +387,38 @@ body {
   font-size: var(--text-90);
 }
 
+/* Miniaturas más pequeñas en las filas compactas del creador y sus modales. */
+.creator-component-row .ingredient-thumb,
+.contrib-name .ingredient-thumb {
+  width: 24px;
+  height: 24px;
+}
+
+.qty-step {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border: var(--border-width) solid var(--hairline);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.qty-step:hover,
+.qty-step:focus-visible {
+  background: var(--paper);
+}
+
 .creator-component-name {
   flex: 1;
 }
 
 .creator-component-row input {
-  width: 72px;
+  width: 56px;
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -450,6 +476,139 @@ body {
 
 .section-note[data-ok="true"] {
   color: var(--success);
+}
+
+.creator-grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-8);
+}
+
+.creator-grid2 .field,
+.dish-creator-content .field {
+  margin-bottom: var(--space-12);
+}
+
+/* Medidores en vivo: bloque pegado al fondo del diálogo, siempre visible
+   mientras se editan ingredientes arriba (mínimo scroll, ver DishCreator). */
+.creator-meters {
+  position: sticky;
+  bottom: calc(-1 * (var(--space-24) + env(safe-area-inset-bottom, 0px)));
+  margin: var(--space-16) calc(-1 * var(--space-24))
+    calc(-1 * (var(--space-24) + env(safe-area-inset-bottom, 0px)));
+  padding: var(--space-8) var(--space-24)
+    calc(var(--space-16) + env(safe-area-inset-bottom, 0px));
+  background: var(--canvas);
+  border-top: var(--border-width) solid var(--hairline);
+}
+
+.creator-meters .section-title {
+  margin-top: 0;
+  margin-bottom: var(--space-4);
+}
+
+.creator-meters .dialog-actions {
+  margin-top: var(--space-8);
+}
+
+/* CapsuleMeter compacto: una línea por nutriente. */
+.capsule-meter-compact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: 3px 0;
+  font-size: var(--text-75);
+}
+
+.capsule-meter-compact .capsule-meter-name {
+  flex: 0 0 6.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.capsule-meter-compact .capsule-meter-track {
+  flex: 1;
+  height: var(--space-8);
+}
+
+.capsule-meter-compact .capsule-meter-value {
+  white-space: nowrap;
+  font-size: var(--text-70);
+}
+
+.meter-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.meter-action {
+  all: unset;
+  display: flex;
+  padding: 2px;
+  color: var(--mute);
+  cursor: pointer;
+}
+
+.meter-action:hover,
+.meter-action:focus-visible {
+  color: var(--ink);
+}
+
+/* Modal de contribuciones: barras de magnitud, serie única en tinta. */
+.contrib-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.contrib-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-4) 0;
+  font-size: var(--text-85);
+}
+
+.contrib-name {
+  flex: 0 0 45%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-width: 0;
+}
+
+.contrib-name > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.contrib-track {
+  flex: 1;
+  height: var(--space-8);
+  background: var(--hairline-soft);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.contrib-fill {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  border-radius: var(--radius-pill);
+}
+
+.contrib-value {
+  white-space: nowrap;
+  color: var(--mute);
+  font-size: var(--text-75);
+}
+
+.suggestion-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: var(--border-width) solid var(--hairline);
 }
 
 .btn-primary:disabled {
