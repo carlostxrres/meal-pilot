@@ -5,6 +5,10 @@ import { useRef, useState } from "react";
 const THRESHOLD = 88;
 const MAX_DRAG = 132;
 
+function clamp(delta: number): number {
+  return Math.sign(delta) * Math.min(Math.abs(delta), MAX_DRAG);
+}
+
 export interface SwipeAction {
   label: string;
   icon: React.ReactNode;
@@ -31,10 +35,6 @@ export function SwipeableRow({
   const [dragging, setDragging] = useState(false);
   const startX = useRef(0);
   const activePointerId = useRef<number | null>(null);
-
-  function clamp(delta: number): number {
-    return Math.sign(delta) * Math.min(Math.abs(delta), MAX_DRAG);
-  }
 
   function onPointerDown(e: React.PointerEvent) {
     startX.current = e.clientX;

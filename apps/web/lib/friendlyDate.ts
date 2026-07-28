@@ -1,5 +1,7 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+const LONG_DATE_FORMAT = new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "long", timeZone: "UTC" });
+
 function daysBetween(dateStr: string, referenceStr: string): number {
   const date = Date.parse(`${dateStr}T00:00:00Z`);
   const reference = Date.parse(`${referenceStr}T00:00:00Z`);
@@ -16,8 +18,6 @@ export function formatFriendlyDate(dateStr: string, referenceStr: string): strin
     case 2:
       return "Pasado mañana";
     default:
-      return new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "long", timeZone: "UTC" }).format(
-        new Date(`${dateStr}T00:00:00Z`),
-      );
+      return LONG_DATE_FORMAT.format(new Date(`${dateStr}T00:00:00Z`));
   }
 }
