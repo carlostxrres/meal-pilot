@@ -1,7 +1,26 @@
 const path = require("path");
 
+// next/image solo optimiza hosts permitidos explícitamente; las fotos de
+// ingredientes viven en el Storage de Supabase (ver lib/ingredientImage.ts).
+// Next carga los .env antes de evaluar este archivo, así que la URL ya existe.
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL)
+  : null;
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  images: {
+    remotePatterns: supabaseUrl
+      ? [
+          {
+            protocol: supabaseUrl.protocol.replace(":", ""),
+            hostname: supabaseUrl.hostname,
+            port: supabaseUrl.port,
+            pathname: "/storage/v1/object/public/ingredient-images/**",
+          },
+        ]
+      : [],
+  },
   // Monorepo: raíz explícita para que Turbopack no tenga que inferirla.
   // Nota: esto NO fue lo que arregló el panic "Next.js package not found" de
   // 2026-07-27 en /dishes — aquello era un node_modules dañado (un `npm i`

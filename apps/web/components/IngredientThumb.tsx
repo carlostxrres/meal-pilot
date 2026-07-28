@@ -1,6 +1,7 @@
 "use client";
 
 import { IconPhoto } from "@tabler/icons-react";
+import Image from "next/image";
 import { useState } from "react";
 import { ingredientImageUrl } from "@/lib/ingredientImage";
 
@@ -16,10 +17,11 @@ export function IngredientThumb({ ingredientId }: { ingredientId: string }) {
   }
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <Image
       src={ingredientImageUrl(ingredientId)}
       alt=""
+      width={40}
+      height={40}
       className="ingredient-thumb"
       onError={() => setFailed(true)}
     />
