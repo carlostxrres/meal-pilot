@@ -22,9 +22,7 @@ export function InventoryEditDialog({
         <Dialog.Content className="dialog-content">
           <Dialog.Title className="dialog-title">{ingredient.name}</Dialog.Title>
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
+            action={(formData) => {
               onSave({
                 office_inventory: Number(formData.get("office_inventory")),
                 home_inventory: Number(formData.get("home_inventory")),
