@@ -8,6 +8,16 @@
 
 Rearquitectura ADR-0017/0018 implementada (ver bloques siguientes): requisitos nutricionales por meal + dishes fijas 1:1 + vista "Prepara tu cena", más una ronda de pulido de UI/UX (2026-07-28, ver más abajo). **Pendiente del usuario: rediseñar el catálogo de platos** (paso 5 del plan) — el catálogo actual es la conversión mecánica del viejo y casi todos los platos están fuera de la ventana de su meal (marcados en `/dishes`, ahora pestaña "Platos").
 
+## Precio, descripción y edición de platos (2026-07-28, noche)
+
+Verificado con 54 tests, `next build`, `tsc --noEmit` limpio, y comprobación en vivo (autenticado, precios y descripciones reales visibles en `/` y `/dishes`).
+
+- **Precio aproximado**: `ingredient.price_eur_per_100` (misma convención "por 100 base_unit" que los nutrientes, así `price = price_eur_per_100 * quantity / 100` sirve para g/ml/unidades sin casos especiales), sembrado a mano para los 58 ingredientes actuales con precios de mercado español aproximados — no vienen de ninguna API, ajustables después. `computeDishPrice` (`engine/price.ts`) suma el precio de los componentes de un plato; visible en vivo en el creador, en cada tarjeta de `/dishes` y en cada meal de "Hoy".
+- **Descripción de plato**: `dish.description`, opcional — notas de preparación o momento ideal para tomarlo. Editable en el creador, visible en el catálogo y en "Hoy".
+- **Editar platos**: `DishCreator` pasa a servir para crear y editar (prop `existingDish`); cada plato del catálogo tiene su botón de lápiz. `updateDish` (nuevo en `@meal-pilot/core`) reemplaza la fila y todos sus `dish_ingredient` (borra + reinserta, más simple que diffear para un catálogo de un solo usuario). `dishCatalog.ts` expone `components` como `ResolvedComponent[]` (antes un DTO reducido sin `ingredientId`) para poder precargar el editor y reutilizar `computeDishPrice`/`checkDishCompliance` directamente.
+- **Iconos de commute**: ambos títulos ("de casa a la oficina" / "de la oficina a la calle") usan `IconBike`.
+- **`.capsule-meter-compact` en grid real**: antes cada fila calculaba el ancho de su barra por separado (podía variar entre filas si el texto del valor cambiaba de longitud); ahora `.capsule-meter-grid` es un grid compartido y cada fila usa `display: contents` para que sus celdas (nombre/barra/valor/acciones) se alineen en las mismas columnas que el resto.
+
 ## Pulido de UI/UX (2026-07-28)
 
 Ronda de siete peticiones puntuales del usuario sobre la web, implementadas juntas. Verificado con 51 tests (`packages/core`), `next build`, `tsc --noEmit` limpio, y comprobación en vivo contra `npm run dev` (autenticado, 4 rutas + HMR sin panics, contenido real inspeccionado por HTML).
