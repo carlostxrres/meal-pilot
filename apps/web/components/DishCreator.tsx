@@ -541,7 +541,10 @@ export function DishCreator({
             components={components}
             mealRequirements={mealRequirements}
             catalog={ingredients}
-            onApply={applySuggestion}
+            onApply={(suggestion) => {
+              applySuggestion(suggestion);
+              setSuggestingId(null);
+            }}
             onOpenChange={(o) => !o && setSuggestingId(null)}
           />
         </Dialog.Content>
