@@ -197,6 +197,10 @@ body {
   display: block;
 }
 
+.section {
+  margin-bottom: var(--space-32);
+}
+
 .meal-row {
   background: var(--canvas);
   border: var(--border-width) solid var(--hairline);
@@ -738,11 +742,6 @@ body {
 }
 
 /* --- Commute (qué llevar antes de salir, ver commute.ts) --- */
-
-.commute-block {
-  margin-bottom: var(--space-12);
-}
-
 .commute-list {
   list-style: none;
   margin: 0;
@@ -765,8 +764,6 @@ body {
   align-items: center;
   gap: var(--space-8);
   margin-top: var(--space-12);
-  padding-top: var(--space-12);
-  border-top: var(--border-width) solid var(--hairline-soft);
 }
 
 .meal-confirm-label {

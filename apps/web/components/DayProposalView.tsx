@@ -91,7 +91,7 @@ function CommuteSection({
   const bullets = [...(prepBullet ? [prepBullet] : []), ...(carryBullets.length > 0 ? carryBullets : [emptyText])];
 
   return (
-    <section className="commute-block">
+    <section className="section">
       <h3 className="section-title">
         {icon} {title}
       </h3>
@@ -141,33 +141,12 @@ export function DayProposalView({
         const tip = pickDailyTip(tipsByMeal, mealProposal.meal.id, proposal.date);
         const isLast = index === proposal.meals.length - 1;
 
-        // Suplementos y consejo del meal: no dependen de que haya una
-        // propuesta válida (un meal sin dish resuelta igualmente tiene
-        // suplementos que tomar), así que se colocan según el caso — dentro
-        // de la tarjeta del plato cuando existe, sueltos junto al aviso
-        // cuando no.
-        const extraContent = (
-          <>
-            {mealProposal.supplements.map((supplement) => (
-              <p key={supplement.id} className="supplement-note">
-                <IconFlask size={14} stroke={1.75} /> {supplement.name} ({supplement.relative_timing})
-              </p>
-            ))}
-
-            {tip && (
-              <p className="meal-tip">
-                <IconBulb size={14} stroke={1.75} /> {tip.text}
-              </p>
-            )}
-          </>
-        );
-
         // El bloque se muestra en cuanto el último meal tiene propuesta (aunque
         // no haya nada que recoger en la oficina — ahí se ve el texto de
         // respaldo, igual que en el bloque casa→oficina); solo se omite si el
         // meal ni siquiera se resolvió ese día.
         return (
-          <div key={mealProposal.meal.id}>
+          <div className="section" key={mealProposal.meal.id}>
             {isLast && mealProposal.resolved && (
               <CommuteSection
                 icon={<IconBike size={14} stroke={2} />}
@@ -177,18 +156,23 @@ export function DayProposalView({
               />
             )}
             <h2 className="section-title">
-              <IconToolsKitchen2 size={14} stroke={2} /> {mealProposal.meal.name}
+              <IconToolsKitchen2 size={14} stroke={2} />
+              {" "}
+              {mealProposal.meal.name}
+              {" "}
+              ({formatTime(mealProposal.meal.usual_start_time)} - {formatTime(mealProposal.meal.usual_end_time)})
             </h2>
-            <small className="meal-time">
-              {formatTime(mealProposal.meal.usual_start_time)}–{formatTime(mealProposal.meal.usual_end_time)}
-            </small>
 
+            {mealProposal.supplements.map((supplement) => (
+              <p key={supplement.id} className="supplement-note">
+                <IconFlask size={14} stroke={1.75} /> {supplement.name} ({supplement.relative_timing})
+              </p>
+            ))}
             {!mealProposal.resolved ? (
               <>
                 <p className="warning">
                   <IconAlertTriangle size={16} stroke={1.75} /> Sin propuesta válida: {mealProposal.unresolvedReason}
                 </p>
-                {extraContent}
               </>
             ) : (
               <DishCard
@@ -197,7 +181,6 @@ export function DayProposalView({
                 price={computeDishPrice(mealProposal.resolved)}
                 headerActions={<NutritionPopover totals={computeMealNutrition(mealProposal.resolved)} />}
               >
-                {extraContent}
                 {isToday && (
                   <MealConfirmCheckbox
                     date={proposal.date}
@@ -208,6 +191,13 @@ export function DayProposalView({
                 )}
               </DishCard>
             )}
+
+            {tip && (
+              <p className="meal-tip">
+                <IconBulb size={14} stroke={1.75} /> {tip.text}
+              </p>
+            )}
+
           </div>
         );
       })}
