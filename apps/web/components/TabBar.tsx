@@ -8,7 +8,7 @@ const TABS = [
   { href: "/", label: "Hoy", Icon: IconReceipt2 },
   { href: "/inventory", label: "Inventario", Icon: IconFridge },
   { href: "/shopping", label: "Compra", Icon: IconShoppingCart },
-  { href: "/dishes", label: "Dishes", Icon: IconToolsKitchen2 },
+  { href: "/dishes", label: "Platos", Icon: IconToolsKitchen2 },
 ];
 
 export function TabBar() {

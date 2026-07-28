@@ -49,13 +49,13 @@ export async function createDish(
   supabase: SupabaseClient<Database>,
   input: CreateDishInput,
 ): Promise<string> {
-  if (!input.name.trim()) throw new Error("createDish: la dish necesita un nombre");
-  if (!input.mealId) throw new Error("createDish: la dish necesita un meal");
+  if (!input.name.trim()) throw new Error("El plato necesita un nombre");
+  if (!input.mealId) throw new Error("El plato necesita un meal");
   if (input.components.length === 0) {
-    throw new Error("createDish: la dish necesita al menos un ingrediente");
+    throw new Error("El plato necesita al menos un ingrediente");
   }
   if (input.components.some((c) => !(c.quantity > 0))) {
-    throw new Error("createDish: todas las cantidades deben ser mayores que 0");
+    throw new Error("Todas las cantidades deben ser mayores que 0");
   }
 
   const {
@@ -63,7 +63,7 @@ export async function createDish(
     error: userError,
   } = await supabase.auth.getUser();
   if (userError || !user) {
-    throw new Error("createDish: no hay usuario autenticado");
+    throw new Error("No hay usuario autenticado");
   }
 
   const { data: dish, error: dishError } = await supabase
@@ -77,7 +77,7 @@ export async function createDish(
     .select("id")
     .single();
   if (dishError || !dish) {
-    throw new Error(`createDish: fallo insertando dish: ${dishError?.message ?? "sin fila"}`);
+    throw new Error(`Fallo creando el plato: ${dishError?.message ?? "sin fila"}`);
   }
 
   const { error: componentsError } = await supabase.from("dish_ingredient").insert(
@@ -88,9 +88,9 @@ export async function createDish(
     })),
   );
   if (componentsError) {
-    // No dejar una dish a medias: sin componentes no es una dish válida.
+    // No dejar un plato a medias: sin componentes no es un plato válido.
     await supabase.from("dish").delete().eq("id", dish.id);
-    throw new Error(`createDish: fallo insertando componentes: ${componentsError.message}`);
+    throw new Error(`Fallo añadiendo los ingredientes: ${componentsError.message}`);
   }
 
   return dish.id;

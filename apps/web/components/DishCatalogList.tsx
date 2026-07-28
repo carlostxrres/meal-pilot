@@ -1,8 +1,9 @@
 "use client";
 
-import { IconAlertTriangle, IconCircleCheck, IconSearch, IconToolsKitchen2 } from "@tabler/icons-react";
+import { IconAlertTriangle, IconCircleCheck, IconToolsKitchen2 } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import type { DishCatalogEntry } from "@meal-pilot/core";
+import { SearchField } from "./SearchField";
 
 function DishCard({ entry }: { entry: DishCatalogEntry }) {
   const failing = entry.compliance.checks.filter((check) => !check.withinWindow);
@@ -55,23 +56,15 @@ export function DishCatalogList({ dishes }: { dishes: DishCatalogEntry[] }) {
   return (
     <div>
       <div className="inventory-controls">
-        <div className="search-field">
-          <IconSearch size={16} stroke={1.75} />
-          <input
-            type="text"
-            placeholder="Buscar dish..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </div>
+        <SearchField value={query} onChange={setQuery} placeholder="Buscar plato..." />
       </div>
 
       <h2 className="section-title">
-        <IconToolsKitchen2 size={14} stroke={2} /> Dishes del catálogo ({filtered.length})
+        <IconToolsKitchen2 size={14} stroke={2} /> Platos del catálogo ({filtered.length})
       </h2>
 
       {filtered.length === 0 ? (
-        <p className="inventory-empty">Ningún dish coincide con este filtro.</p>
+        <p className="inventory-empty">Ningún plato coincide con este filtro.</p>
       ) : (
         filtered.map((entry) => <DishCard key={entry.dish.id} entry={entry} />)
       )}

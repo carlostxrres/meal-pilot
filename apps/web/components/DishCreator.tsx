@@ -8,12 +8,12 @@ import {
   IconEye,
   IconMinus,
   IconPlus,
-  IconSearch,
   IconX,
 } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import {
   checkDishCompliance,
+  sortByNutrientDisplayOrder,
   suggestForNutrient,
   type DietaryRequirement,
   type DishSuggestion,
@@ -23,10 +23,12 @@ import {
 } from "@meal-pilot/core";
 import { createDishAction } from "@/app/(app)/actions";
 import { CapsuleMeter } from "./CapsuleMeter";
+import { IngredientRow } from "./IngredientRow";
 import { IngredientThumb } from "./IngredientThumb";
+import { SearchField } from "./SearchField";
 
 /*
-Intent: dar de alta una dish fija viendo EN VIVO si cae dentro de la ventana
+Intent: dar de alta un plato fijo viendo EN VIVO si cae dentro de la ventana
 nutricional de su meal (ADR-0017/0018). Layout pensado para minimizar scroll:
 los medidores van en un bloque sticky al fondo del diálogo (siempre visibles
 mientras se editan ingredientes arriba), en su variante compacta de una línea.
@@ -34,6 +36,10 @@ Cada nutriente ofrece inspección (ojo: quién contribuye, barras de magnitud en
 un solo tono de tinta — serie única, valores como texto) y sugerencias
 aplicables (bombilla: añadir/reducir cantidades que llevan el nutriente a su
 ventana, rankeadas por el efecto sobre el resto de nutrientes).
+
+Las filas de ingrediente (ya añadidos, resultados de búsqueda) reutilizan el
+componente compartido IngredientRow — misma estructura/tamaño/tooltip de
+nutrición que Inventario y Compra, ver ese componente.
 */
 
 interface DraftComponent {
@@ -88,7 +94,7 @@ function ContributionDialog({
         <Dialog.Content className="dialog-content">
           <Dialog.Title className="dialog-title">{requirement?.name ?? ""} — contribuciones</Dialog.Title>
           {rows.length === 0 ? (
-            <p className="section-note">Ningún ingrediente de la dish aporta este nutriente todavía.</p>
+            <p className="section-note">Ningún ingrediente del plato aporta este nutriente todavía.</p>
           ) : (
             <ul className="contrib-list">
               {rows.map(({ component, value }) => (
@@ -164,28 +170,26 @@ function SuggestionDialog({
             <ul className="suggestion-list">
               {result.suggestions.map((suggestion) => (
                 <li key={`${suggestion.kind}-${suggestion.ingredient.id}`}>
-                  <button
-                    type="button"
-                    className="creator-picker-item"
+                  <IngredientRow
+                    ingredient={suggestion.ingredient}
                     onClick={() => onApply(suggestion)}
-                  >
-                    <span className="contrib-name">
-                      <IngredientThumb ingredientId={suggestion.ingredient.id} />
-                      <span>
-                        {suggestion.kind === "add" ? "Añade" : "Reduce"}{" "}
-                        <strong className="data-mono">
-                          {formatQuantity(suggestion.quantity)}
-                          {suggestion.ingredient.base_unit}
-                        </strong>{" "}
-                        de {suggestion.ingredient.name}
+                    meta={
+                      <p className="suggestion-detail">
+                        {suggestion.kind === "add" ? "Añadir" : "Reducir"}
+                      </p>
+                    }
+                    trailing={
+                      <span className="suggestion-qty data-mono">
+                        {suggestion.kind === "add" ? (
+                          <IconPlus size={13} stroke={2} />
+                        ) : (
+                          <IconMinus size={13} stroke={2} />
+                        )}
+                        {formatQuantity(suggestion.quantity)}
+                        {suggestion.ingredient.base_unit}
                       </span>
-                    </span>
-                    {suggestion.kind === "add" ? (
-                      <IconPlus size={14} stroke={2} />
-                    ) : (
-                      <IconMinus size={14} stroke={2} />
-                    )}
-                  </button>
+                    }
+                  />
                 </li>
               ))}
             </ul>
@@ -241,13 +245,14 @@ export function DishCreator({
       dish: { id: "draft", owner_id: "", name, dish_type: dishType, meal_id: mealId },
       components: components.map((c) => ({ ingredient: c.ingredient, quantity: c.quantity })),
     };
-    return checkDishCompliance(draft, mealRequirements).checks.map((check) => ({
+    const statuses = checkDishCompliance(draft, mealRequirements).checks.map((check) => ({
       requirement: check.requirement,
       accumulated: check.value,
       effectiveMinimum: check.effectiveMinimum,
       effectiveMaximum: check.effectiveMaximum,
       withinRange: check.withinWindow,
     }));
+    return sortByNutrientDisplayOrder(statuses);
   }, [name, dishType, mealId, components, mealRequirements]);
 
   const inspecting = liveStatuses.find((s) => s.requirement.id === inspectingId) ?? null;
@@ -345,13 +350,13 @@ export function DishCreator({
     >
       <Dialog.Trigger asChild>
         <button type="button" className="btn-primary dish-creator-trigger">
-          <IconPlus size={16} stroke={2} /> Nueva dish
+          <IconPlus size={16} stroke={2} /> Nuevo plato
         </button>
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <Dialog.Content className="dialog-content dish-creator-content">
-          <Dialog.Title className="dialog-title">Nueva dish</Dialog.Title>
+          <Dialog.Title className="dialog-title">Nuevo plato</Dialog.Title>
           <form onSubmit={handleSubmit}>
             <div className="creator-grid2">
               <div className="field">
@@ -405,71 +410,67 @@ export function DishCreator({
               {components.length > 0 && (
                 <ul className="creator-component-list">
                   {components.map((component) => (
-                    <li key={component.ingredient.id} className="creator-component-row">
-                      <IngredientThumb ingredientId={component.ingredient.id} />
-                      <span className="creator-component-name">{component.ingredient.name}</span>
-                      <button
-                        type="button"
-                        className="qty-step"
-                        aria-label={`Restar ${stepFor(component.ingredient)}${component.ingredient.base_unit} de ${component.ingredient.name}`}
-                        onClick={() => stepQuantity(component, -1)}
-                      >
-                        <IconMinus size={13} stroke={2} />
-                      </button>
-                      <input
-                        type="number"
-                        step="any"
-                        min={0}
-                        value={component.quantity}
-                        onChange={(e) => setQuantity(component.ingredient.id, Number(e.target.value))}
-                        aria-label={`Cantidad de ${component.ingredient.name}`}
+                    <li key={component.ingredient.id}>
+                      <IngredientRow
+                        ingredient={component.ingredient}
+                        trailing={
+                          <>
+                            <button
+                              type="button"
+                              className="qty-step"
+                              aria-label={`Restar ${stepFor(component.ingredient)}${component.ingredient.base_unit} de ${component.ingredient.name}`}
+                              onClick={() => stepQuantity(component, -1)}
+                            >
+                              <IconMinus size={13} stroke={2} />
+                            </button>
+                            <input
+                              type="number"
+                              className="creator-qty-input"
+                              step="any"
+                              min={0}
+                              value={component.quantity}
+                              onChange={(e) => setQuantity(component.ingredient.id, Number(e.target.value))}
+                              aria-label={`Cantidad de ${component.ingredient.name}`}
+                            />
+                            <button
+                              type="button"
+                              className="qty-step"
+                              aria-label={`Sumar ${stepFor(component.ingredient)}${component.ingredient.base_unit} a ${component.ingredient.name}`}
+                              onClick={() => stepQuantity(component, 1)}
+                            >
+                              <IconPlus size={13} stroke={2} />
+                            </button>
+                            <span className="creator-component-unit">{component.ingredient.base_unit}</span>
+                            <button
+                              type="button"
+                              className="creator-component-remove"
+                              aria-label={`Quitar ${component.ingredient.name}`}
+                              onClick={() => removeIngredient(component.ingredient.id)}
+                            >
+                              <IconX size={16} stroke={1.75} />
+                            </button>
+                          </>
+                        }
                       />
-                      <button
-                        type="button"
-                        className="qty-step"
-                        aria-label={`Sumar ${stepFor(component.ingredient)}${component.ingredient.base_unit} a ${component.ingredient.name}`}
-                        onClick={() => stepQuantity(component, 1)}
-                      >
-                        <IconPlus size={13} stroke={2} />
-                      </button>
-                      <span className="creator-component-unit">{component.ingredient.base_unit}</span>
-                      <button
-                        type="button"
-                        className="creator-component-remove"
-                        aria-label={`Quitar ${component.ingredient.name}`}
-                        onClick={() => removeIngredient(component.ingredient.id)}
-                      >
-                        <IconX size={16} stroke={1.75} />
-                      </button>
                     </li>
                   ))}
                 </ul>
               )}
-              <div className="search-field">
-                <IconSearch size={16} stroke={1.75} />
-                <input
-                  id="dish-ingredient-search"
-                  type="text"
-                  placeholder="Buscar ingrediente para añadir..."
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                />
-              </div>
+              <SearchField
+                id="dish-ingredient-search"
+                value={query}
+                onChange={setQuery}
+                placeholder="Buscar ingrediente para añadir..."
+              />
               {pickerResults.length > 0 && (
                 <ul className="creator-picker-list">
                   {pickerResults.map((ingredient) => (
                     <li key={ingredient.id}>
-                      <button
-                        type="button"
-                        className="creator-picker-item"
+                      <IngredientRow
+                        ingredient={ingredient}
                         onClick={() => addIngredient(ingredient)}
-                      >
-                        <span className="contrib-name">
-                          <IngredientThumb ingredientId={ingredient.id} />
-                          <span>{ingredient.name}</span>
-                        </span>
-                        <IconPlus size={14} stroke={2} />
-                      </button>
+                        trailing={<IconPlus size={16} stroke={2} className="creator-add-icon" />}
+                      />
                     </li>
                   ))}
                 </ul>
@@ -513,7 +514,7 @@ export function DishCreator({
                   ))}
                   {allWithinWindow && (
                     <p className="section-note" data-ok="true">
-                      Dentro de la ventana: lista para crear.
+                      Dentro de la ventana: listo para crear.
                     </p>
                   )}
                 </>
@@ -525,7 +526,7 @@ export function DishCreator({
                   </button>
                 </Dialog.Close>
                 <button type="submit" className="btn-primary" disabled={!canSubmit}>
-                  {submitting ? "Creando..." : "Crear dish"}
+                  {submitting ? "Creando..." : "Crear plato"}
                 </button>
               </div>
             </div>
