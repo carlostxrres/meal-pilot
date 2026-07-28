@@ -12,10 +12,9 @@ import {
   type MealTip,
   type RequirementStatus,
 } from "@meal-pilot/core";
-import { IconAlertTriangle, IconBike, IconBulb, IconFlask, IconMoon } from "@tabler/icons-react";
-import { formatEur } from "@/lib/formatPrice";
+import { IconAlertTriangle, IconBike, IconBulb, IconFlask, IconMoon, IconToolsKitchen2 } from "@tabler/icons-react";
 import { CapsuleMeter } from "./CapsuleMeter";
-import { IngredientRow } from "./IngredientRow";
+import DishCard from "./DishCard";
 import { MealConfirmCheckbox } from "./MealConfirmCheckbox";
 import { NutritionPopover } from "./NutritionPopover";
 
@@ -53,6 +52,7 @@ function formatDinnerTarget(target: DinnerTarget): string | null {
   return null;
 }
 
+/** De momento sin uso en "Hoy" (ver DayProposalView) — se deja lista para retomarla. */
 function MealRequirementsDetails({ statuses }: { statuses: RequirementStatus[] }) {
   if (statuses.length === 0) return null;
   const allWithin = statuses.every((status) => status.withinRange);
@@ -141,6 +141,27 @@ export function DayProposalView({
         const tip = pickDailyTip(tipsByMeal, mealProposal.meal.id, proposal.date);
         const isLast = index === proposal.meals.length - 1;
 
+        // Suplementos y consejo del meal: no dependen de que haya una
+        // propuesta válida (un meal sin dish resuelta igualmente tiene
+        // suplementos que tomar), así que se colocan según el caso — dentro
+        // de la tarjeta del plato cuando existe, sueltos junto al aviso
+        // cuando no.
+        const extraContent = (
+          <>
+            {mealProposal.supplements.map((supplement) => (
+              <p key={supplement.id} className="supplement-note">
+                <IconFlask size={14} stroke={1.75} /> {supplement.name} ({supplement.relative_timing})
+              </p>
+            ))}
+
+            {tip && (
+              <p className="meal-tip">
+                <IconBulb size={14} stroke={1.75} /> {tip.text}
+              </p>
+            )}
+          </>
+        );
+
         // El bloque se muestra en cuanto el último meal tiene propuesta (aunque
         // no haya nada que recoger en la oficina — ahí se ve el texto de
         // respaldo, igual que en el bloque casa→oficina); solo se omite si el
@@ -155,77 +176,38 @@ export function DayProposalView({
                 emptyText="Ningún ingrediente que llevar de la oficina hoy."
               />
             )}
-            <section className="meal-row">
-              <div className="meal-row-head">
-                <h2 className="ticket-header">{mealProposal.meal.name}</h2>
-                <div className="meal-row-head-right">
-                  <span className="meal-time">
-                    {formatTime(mealProposal.meal.usual_start_time)}–{formatTime(mealProposal.meal.usual_end_time)}
-                  </span>
-                  {mealProposal.resolved && (
-                    <>
-                      <span className="dish-price">{formatEur(computeDishPrice(mealProposal.resolved))}</span>
-                      <NutritionPopover totals={computeMealNutrition(mealProposal.resolved)} />
-                    </>
-                  )}
-                </div>
-              </div>
+            <h2 className="section-title">
+              <IconToolsKitchen2 size={14} stroke={2} /> {mealProposal.meal.name}
+            </h2>
+            <small className="meal-time">
+              {formatTime(mealProposal.meal.usual_start_time)}–{formatTime(mealProposal.meal.usual_end_time)}
+            </small>
 
-              {!mealProposal.resolved ? (
+            {!mealProposal.resolved ? (
+              <>
                 <p className="warning">
                   <IconAlertTriangle size={16} stroke={1.75} /> Sin propuesta válida: {mealProposal.unresolvedReason}
                 </p>
-              ) : (
-                <>
-                  <p className="dish-name">{mealProposal.resolved.dish.name}</p>
-                  {mealProposal.resolved.dish.description && (
-                    <p className="dish-description">{mealProposal.resolved.dish.description}</p>
-                  )}
-                  <ul className="dish-component-list">
-                    {mealProposal.resolved.components.map((component) => (
-                      <li key={component.ingredient.id}>
-                        <IngredientRow
-                          ingredient={component.ingredient}
-                          trailing={
-                            <span className="data-mono">
-                              {component.quantity}
-                              {component.ingredient.base_unit}
-                            </span>
-                          }
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-
-              {mealProposal.supplements.map((supplement) => (
-                <p key={supplement.id} className="supplement-note">
-                  <IconFlask size={14} stroke={1.75} /> {supplement.name} ({supplement.relative_timing})
-                </p>
-              ))}
-
-              {tip && (
-                <p className="meal-tip">
-                  <IconBulb size={14} stroke={1.75} /> {tip.text}
-                </p>
-              )}
-
-              <MealRequirementsDetails
-                statuses={proposal.requirementStatuses.filter(
-                  (status) => status.requirement.meal_id === mealProposal.meal.id,
+                {extraContent}
+              </>
+            ) : (
+              <DishCard
+                dish={mealProposal.resolved.dish}
+                components={mealProposal.resolved.components}
+                price={computeDishPrice(mealProposal.resolved)}
+                headerActions={<NutritionPopover totals={computeMealNutrition(mealProposal.resolved)} />}
+              >
+                {extraContent}
+                {isToday && (
+                  <MealConfirmCheckbox
+                    date={proposal.date}
+                    mealId={mealProposal.meal.id}
+                    dishId={mealProposal.resolved.dish.id}
+                    initialConfirmed={confirmedMealIds.has(mealProposal.meal.id)}
+                  />
                 )}
-              />
-
-              {mealProposal.resolved && isToday && (
-                <MealConfirmCheckbox
-                  date={proposal.date}
-                  mealId={mealProposal.meal.id}
-                  dishId={mealProposal.resolved.dish.id}
-                  initialConfirmed={confirmedMealIds.has(mealProposal.meal.id)}
-                />
-              )}
-            </section>
+              </DishCard>
+            )}
           </div>
         );
       })}

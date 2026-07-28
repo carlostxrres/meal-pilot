@@ -8,6 +8,10 @@
 
 Rearquitectura ADR-0017/0018 implementada (ver bloques siguientes): requisitos nutricionales por meal + dishes fijas 1:1 + vista "Prepara tu cena", más una ronda de pulido de UI/UX (2026-07-28, ver más abajo). **Pendiente del usuario: rediseñar el catálogo de platos** (paso 5 del plan) — el catálogo actual es la conversión mecánica del viejo y casi todos los platos están fuera de la ventana de su meal (marcados en `/dishes`, ahora pestaña "Platos").
 
+## DishCard flexible, usada también en "Hoy" (2026-07-29)
+
+`DishCard` (extraída del catálogo de Platos en el commit anterior) recibió tres puntos de extensión para poder reutilizarse en `DayProposalView`: `headerActions` (control extra en la esquina superior derecha — el botón de editar en el catálogo, `NutritionPopover` en Hoy), `meta` (bloque bajo la descripción — los chips de meal/cumplimiento, solo en el catálogo) y `children` (contenido tras la lista de ingredientes — en Hoy, suplementos + consejo del meal + el checkbox de confirmar, dentro de la misma tarjeta). La ventana nutricional del meal (`MealRequirementsDetails`) queda sin usarse en "Hoy" por ahora, a petición explícita — la función se conserva definida para retomarla. Verificado en vivo: en "Hoy" no aparecen ni el botón de editar ni los chips (0 de cada), sí suplementos/consejo/confirmar (3-4 según el día); en "Platos" el catálogo conserva ambos (29 botones, 87 chips).
+
 ## IngredientRow también en la lista de componentes de un plato (2026-07-29)
 
 `DayProposalView` (Hoy) y `DishCard` (catálogo de Platos) mostraban los ingredientes de un plato como texto plano ("Nombre — cantidad"). Ahora reutilizan `IngredientRow` (`.dish-component-list` sustituye a la vieja `.ingredient-list`, que queda eliminada por no tener ya usos): cada ingrediente del plato muestra su miniatura y el tooltip de valores "por 100g/ml/unidad", igual que en Inventario/Compra/el creador — verificado en vivo, thumbnails y tooltips renderizando en las 4 comidas de "Hoy" y en las 29 tarjetas de "Platos".
