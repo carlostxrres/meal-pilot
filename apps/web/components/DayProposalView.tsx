@@ -96,8 +96,8 @@ function CommuteSection({
       </h3>
       <p className="section-note">Antes de salir, prepara lo siguiente:</p>
       <ul className="commute-list">
-        {bullets.map((bullet, i) => (
-          <li key={i}>{bullet}</li>
+        {bullets.map((bullet) => (
+          <li key={bullet}>{bullet}</li>
         ))}
       </ul>
     </section>
@@ -181,8 +181,8 @@ export function DayProposalView({
                     <p className="dish-description">{mealProposal.resolved.dish.description}</p>
                   )}
                   <ul className="ingredient-list">
-                    {mealProposal.resolved.components.map((component, i) => (
-                      <li key={i}>
+                    {mealProposal.resolved.components.map((component) => (
+                      <li key={component.ingredient.id}>
                         <span>{component.ingredient.name}</span>
                         <span className="data-mono">
                           {component.quantity}

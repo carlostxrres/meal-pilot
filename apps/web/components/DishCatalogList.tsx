@@ -54,8 +54,8 @@ function DishCard({
       </div>
 
       <ul className="ingredient-list">
-        {entry.components.map((component, i) => (
-          <li key={i}>
+        {entry.components.map((component) => (
+          <li key={component.ingredient.id}>
             <span>{component.ingredient.name}</span>
             <span className="data-mono">
               {component.quantity}
