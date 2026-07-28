@@ -1,6 +1,7 @@
 import {
   createSeededRandom,
   fetchContextsForDates,
+  fetchMealTips,
   generateMultiDayPlan,
   PLANNING_HORIZON_DAYS,
   upcomingDates,
@@ -13,7 +14,10 @@ export default async function HomePage() {
   const supabase = await createClient();
   const dates = upcomingDates(PLANNING_HORIZON_DAYS);
 
-  const contexts = await fetchContextsForDates(supabase, dates);
+  const [contexts, tipsByMeal] = await Promise.all([
+    fetchContextsForDates(supabase, dates),
+    fetchMealTips(supabase),
+  ]);
   const proposals = generateMultiDayPlan(contexts, createSeededRandom(dates[0] ?? ""));
 
   const days: DayTabData[] = contexts.map((ctx, i) => ({
@@ -24,5 +28,5 @@ export default async function HomePage() {
     isToday: i === 0,
   }));
 
-  return <DayTabs days={days} />;
+  return <DayTabs days={days} tipsByMeal={tipsByMeal} />;
 }

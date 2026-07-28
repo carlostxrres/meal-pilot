@@ -241,6 +241,15 @@ body {
   fill: var(--canvas);
 }
 
+.nutrition-popover-title {
+  margin: 0 0 var(--space-8);
+  font-size: var(--text-70);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--mute);
+}
+
 .nutrition-list {
   list-style: none;
   margin: 0;
@@ -286,6 +295,21 @@ body {
   margin-top: var(--space-8);
   font-size: var(--text-85);
   color: var(--turmeric);
+}
+
+.meal-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+  font-size: var(--text-85);
+  font-style: italic;
+  color: var(--mute);
+}
+
+.meal-tip svg {
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .warning {
@@ -378,17 +402,8 @@ body {
   padding: 0;
 }
 
-.creator-component-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  padding: var(--space-4) 0;
-  border-bottom: var(--border-width) solid var(--hairline-soft);
-  font-size: var(--text-90);
-}
-
-/* Miniaturas más pequeñas en las filas compactas del creador y sus modales. */
-.creator-component-row .ingredient-thumb,
+/* Miniatura más pequeña en el modal de contribuciones (fila de gráfico, no
+   una fila de ingrediente gestionable — ver ContributionDialog). */
 .contrib-name .ingredient-thumb {
   width: 24px;
   height: 24px;
@@ -413,11 +428,7 @@ body {
   background: var(--paper);
 }
 
-.creator-component-name {
-  flex: 1;
-}
-
-.creator-component-row input {
+.creator-qty-input {
   width: 56px;
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
@@ -450,28 +461,16 @@ body {
   list-style: none;
   margin: var(--space-4) 0 0;
   padding: 0;
-  border: var(--border-width) solid var(--hairline);
   max-height: 200px;
   overflow-y: auto;
 }
 
-.creator-picker-item {
-  all: unset;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-8);
-  width: 100%;
-  padding: var(--space-8) var(--space-12);
-  font-size: var(--text-85);
-  cursor: pointer;
-  border-bottom: var(--border-width) solid var(--hairline-soft);
-}
-
-.creator-picker-item:hover,
-.creator-picker-item:focus-visible {
-  background: var(--paper);
+/* Icono decorativo de "+" en los resultados de búsqueda: la fila entera ya
+   es el control clicable (ver IngredientRow onClick), este icono es solo
+   la pista visual — nunca debe capturar el click él mismo. */
+.creator-add-icon {
+  color: var(--mute);
+  pointer-events: none;
 }
 
 .section-note[data-ok="true"] {
@@ -608,7 +607,20 @@ body {
   list-style: none;
   margin: 0;
   padding: 0;
-  border: var(--border-width) solid var(--hairline);
+}
+
+.suggestion-detail {
+  margin: 0;
+  font-size: var(--text-75);
+  color: var(--mute);
+}
+
+.suggestion-qty {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+  color: var(--ink);
 }
 
 .btn-primary:disabled {
@@ -654,6 +666,29 @@ body {
 
 .dinner-target-list li[data-exceeded="true"] .data-mono {
   color: var(--off);
+}
+
+/* --- Commute (qué llevar antes de salir, ver commute.ts) --- */
+
+.commute-block {
+  margin-bottom: var(--space-12);
+}
+
+.commute-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--text-90);
+  color: var(--charcoal);
+}
+
+.commute-list li {
+  padding: var(--space-4) 0;
+  border-bottom: var(--border-width) solid var(--hairline-soft);
+}
+
+.commute-list li:last-child {
+  border-bottom: none;
 }
 
 .meal-confirm-row {
@@ -762,6 +797,24 @@ body {
   background: var(--off);
 }
 
+/* Sub-nutriente estilo etiqueta europea ("Grasas" > "de las cuales
+   saturadas"): ligera sangría + nombre sin negrita, para leerse como
+   desglose de la línea anterior, no como un nutriente independiente. */
+.capsule-meter[data-sub="true"] {
+  margin-left: var(--space-16);
+  margin-top: calc(-1 * var(--space-16));
+}
+
+.capsule-meter[data-sub="true"] .capsule-meter-name,
+.capsule-meter-compact[data-sub="true"] .capsule-meter-name {
+  font-weight: 400;
+  font-style: italic;
+}
+
+.capsule-meter-compact[data-sub="true"] {
+  padding-left: var(--space-16);
+}
+
 /* --- Sections --- */
 
 .section-title {
@@ -808,6 +861,20 @@ body {
 
 .search-field input:focus {
   outline: none;
+}
+
+.search-field-clear {
+  all: unset;
+  display: flex;
+  flex-shrink: 0;
+  padding: var(--space-4);
+  color: var(--mute);
+  cursor: pointer;
+}
+
+.search-field-clear:hover,
+.search-field-clear:focus-visible {
+  color: var(--ink);
 }
 
 .select-trigger {
@@ -933,7 +1000,9 @@ body {
   margin-bottom: 0;
 }
 
-/* --- Ingredient row (compartida entre Inventario y Compra) --- */
+/* --- Ingredient row (compartida entre Inventario, Compra y el creador de
+   platos: misma estructura, tamaño, espaciados y estilo de nombre en los
+   tres — ver components/IngredientRow.tsx) --- */
 
 .ingredient-row {
   display: flex;
@@ -943,6 +1012,16 @@ body {
   border: var(--border-width) solid var(--hairline);
   margin-bottom: -1px;
   padding: var(--space-12) var(--space-16);
+}
+
+.ingredient-row[data-clickable="true"] {
+  cursor: pointer;
+}
+
+.ingredient-row[data-clickable="true"]:hover,
+.ingredient-row[data-clickable="true"]:focus-visible {
+  background: var(--paper);
+  outline: none;
 }
 
 .ingredient-thumb {
@@ -969,7 +1048,8 @@ body {
   font-weight: 500;
 }
 
-.shopping-info {
+/* Compra envuelve nombre+motivo en un <label>: tocar el texto marca el checkbox. */
+label.ingredient-row-info {
   cursor: pointer;
 }
 
@@ -1138,4 +1218,33 @@ input {
 .login-form .error {
   color: var(--off);
   font-size: var(--text-90);
+}
+
+/* --- Skeletons (Next loading.tsx, ver components/Skeleton.tsx) --- */
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.skeleton-row {
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.skeleton-bar {
+  height: 12px;
+  margin: 4px 0;
+  background: var(--hairline-soft);
+}
+
+.skeleton-thumb {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  background: var(--hairline-soft);
 }

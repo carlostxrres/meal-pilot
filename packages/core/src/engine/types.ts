@@ -11,6 +11,7 @@ export type Supplement = Tables["supplement"]["Row"];
 export type DietaryRequirement = Tables["dietary_requirement"]["Row"];
 export type RequirementLog = Tables["requirement_log"]["Row"];
 export type MealLog = Tables["meal_log"]["Row"];
+export type MealTip = Tables["meal_tip"]["Row"];
 
 export const NUTRIENT_COLUMNS = [
   "kcal_per_100",

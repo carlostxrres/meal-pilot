@@ -1,7 +1,7 @@
 "use client";
 
 import * as Tabs from "@radix-ui/react-tabs";
-import type { DayProposal } from "@meal-pilot/core";
+import type { DayProposal, MealTip } from "@meal-pilot/core";
 import { DayProposalView } from "./DayProposalView";
 
 export interface DayTabData {
@@ -12,13 +12,20 @@ export interface DayTabData {
   isToday: boolean;
 }
 
-export function DayTabs({ days }: { days: DayTabData[] }) {
+export function DayTabs({
+  days,
+  tipsByMeal,
+}: {
+  days: DayTabData[];
+  tipsByMeal: ReadonlyMap<string, MealTip[]>;
+}) {
   if (days.length === 1) {
     const only = days[0]!;
     return (
       <DayProposalView
         proposal={only.proposal}
         confirmedMealIds={only.confirmedMealIds}
+        tipsByMeal={tipsByMeal}
         isToday={only.isToday}
       />
     );
@@ -38,6 +45,7 @@ export function DayTabs({ days }: { days: DayTabData[] }) {
           <DayProposalView
             proposal={day.proposal}
             confirmedMealIds={day.confirmedMealIds}
+            tipsByMeal={tipsByMeal}
             isToday={day.isToday}
           />
         </Tabs.Content>

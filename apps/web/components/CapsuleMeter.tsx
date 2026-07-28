@@ -26,6 +26,11 @@ function formatTarget(requirement: DietaryRequirement): string | null {
   return null;
 }
 
+/** "Grasas" > "de las cuales saturadas" — estilo etiqueta nutricional (ver migración 20260728100000). */
+function isSubNutrient(requirement: DietaryRequirement): boolean {
+  return requirement.name.startsWith("de las cuales") || requirement.name.startsWith("de los cuales");
+}
+
 function MeterTrack({ status }: { status: RequirementStatus }) {
   const { accumulated, effectiveMinimum, effectiveMaximum, withinRange } = status;
   const scaleMax = Math.max(effectiveMaximum ?? 0, effectiveMinimum ?? 0, accumulated, 1) * 1.15;
@@ -61,10 +66,11 @@ export function CapsuleMeter({
 }) {
   const { requirement, accumulated } = status;
   const target = formatTarget(requirement);
+  const isSub = isSubNutrient(requirement);
 
   if (compact) {
     return (
-      <div className="capsule-meter-compact">
+      <div className="capsule-meter-compact" data-sub={isSub || undefined}>
         <span className="capsule-meter-name">{requirement.name}</span>
         <MeterTrack status={status} />
         <span className="capsule-meter-value">
@@ -77,7 +83,7 @@ export function CapsuleMeter({
   }
 
   return (
-    <div className="capsule-meter">
+    <div className="capsule-meter" data-sub={isSub || undefined}>
       <div className="capsule-meter-label">
         <span className="capsule-meter-name">{requirement.name}</span>
         <span className="capsule-meter-value">

@@ -372,6 +372,35 @@ export type Database = {
           },
         ]
       }
+      meal_tip: {
+        Row: {
+          id: string
+          meal_id: string
+          owner_id: string
+          text: string
+        }
+        Insert: {
+          id?: string
+          meal_id: string
+          owner_id: string
+          text: string
+        }
+        Update: {
+          id?: string
+          meal_id?: string
+          owner_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_tip_meal_id_fkey"
+            columns: ["meal_id"]
+            isOneToOne: false
+            referencedRelation: "meal"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       requirement_log: {
         Row: {
           accumulated: number
