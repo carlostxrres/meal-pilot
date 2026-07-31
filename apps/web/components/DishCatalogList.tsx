@@ -1,10 +1,10 @@
 "use client";
 
-import { IconAlertTriangle, IconCircleCheck, IconToolsKitchen2 } from "@tabler/icons-react";
+import { IconToolsKitchen2 } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import type { DietaryRequirement, DishCatalogEntry, Ingredient, Meal } from "@meal-pilot/core";
 import DishCard from "./DishCard";
-import { DishCreator } from "./DishCreator";
+import { DishCardMenu } from "./DishCardMenu";
 import { SearchField } from "./SearchField";
 
 function DishCatalogCard({
@@ -18,36 +18,21 @@ function DishCatalogCard({
   meals: Meal[];
   mealRequirements: DietaryRequirement[];
 }) {
-  const failing = entry.compliance.checks.filter((check) => !check.withinWindow);
-
   return (
     <DishCard
       dish={entry.dish}
       components={entry.components}
       price={entry.price}
+      mealName={entry.mealName}
+      complianceChecks={entry.compliance.checks}
+      status={entry.dish.active ? "active" : "inactive"}
       headerActions={
-        <DishCreator
+        <DishCardMenu
+          entry={entry}
           ingredients={ingredients}
           meals={meals}
           mealRequirements={mealRequirements}
-          existingDish={entry}
         />
-      }
-      meta={
-        <div className="dish-meal-chips">
-          {entry.mealName && <span className="dish-meal-chip">{entry.mealName}</span>}
-          {entry.compliance.checks.length > 0 &&
-            (entry.compliance.compliant ? (
-              <span className="dish-meal-chip" data-compliance="ok">
-                <IconCircleCheck size={12} stroke={2} /> Dentro de la ventana del meal
-              </span>
-            ) : (
-              <span className="dish-meal-chip" data-compliance="off">
-                <IconAlertTriangle size={12} stroke={2} /> Fuera de ventana:{" "}
-                {failing.map((check) => check.requirement.name).join(", ")}
-              </span>
-            ))}
-        </div>
       }
     />
   );

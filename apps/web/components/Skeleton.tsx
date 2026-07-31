@@ -24,8 +24,8 @@ export function IngredientRowSkeleton() {
 
 export function MealRowSkeleton() {
   return (
-    <div className="meal-row skeleton-row">
-      <div className="meal-row-head">
+    <div className="dish-row skeleton-row">
+      <div className="dish-row-head">
         <SkeletonBar width="45%" />
         <SkeletonBar width="20%" />
       </div>

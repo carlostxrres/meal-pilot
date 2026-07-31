@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import {
   addToHomeInventory,
   createDish,
+  setDishActive,
   setMealConfirmed,
   updateDish,
   updateIngredientInventory,
@@ -66,6 +67,13 @@ export async function updateDishAction(
   revalidatePath("/");
   revalidatePath("/shopping");
   return { error: null };
+}
+
+export async function setDishActiveAction(dishId: string, active: boolean) {
+  const supabase = await createClient();
+  await setDishActive(supabase, dishId, active);
+  revalidatePath("/dishes");
+  revalidatePath("/");
 }
 
 export async function markPurchasedAction(ingredientId: string, restockQuantity: number) {

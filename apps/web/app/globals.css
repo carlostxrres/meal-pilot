@@ -201,27 +201,27 @@ body {
   margin-bottom: var(--space-32);
 }
 
-.meal-row {
+.dish-row {
   background: var(--canvas);
   border: var(--border-width) solid var(--hairline);
   padding: var(--space-16) var(--space-16);
   margin-bottom: var(--space-12);
 }
 
-.meal-row-head {
+.dish-row-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-8);
 }
 
-.meal-row-head-right {
+.dish-row-head-right {
   display: flex;
   align-items: center;
   gap: var(--space-8);
 }
 
-.meal-time {
+.dish-type-label {
   font-size: var(--text-75);
   color: var(--mute);
   white-space: nowrap;
@@ -288,6 +288,22 @@ body {
   font-variant-numeric: tabular-nums;
   color: var(--mute);
   white-space: nowrap;
+}
+
+.dish-row[data-inactive] {
+  opacity: 0.55;
+}
+
+.dish-status-badge {
+  font-size: var(--text-70);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--mute);
+  white-space: nowrap;
+}
+
+.dish-status-badge[data-status="inactive"] {
+  color: var(--off);
 }
 
 .creator-price {
@@ -360,53 +376,40 @@ body {
 .dish-meal-chip {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-8);
   border: var(--border-width) solid var(--hairline);
   padding: 2px var(--space-8);
   font-size: var(--text-70);
   color: var(--mute);
 }
 
-.dish-meal-chip[data-compliance="ok"] {
-  color: var(--success);
-  border-color: var(--success);
+.dish-compliance-chip {
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  color: var(--mute);
+  border-color: var(--hairline);
 }
 
-.dish-meal-chip[data-compliance="off"] {
+.dish-compliance-chip svg {
+  flex-shrink: 0;
+}
+
+.dish-compliance-chip[data-compliance="off"] {
   color: var(--off);
   border-color: var(--off);
 }
 
-/* --- Ventana nutricional del meal (plegada por defecto) --- */
-
-.meal-reqs {
-  margin-top: var(--space-12);
-  padding-top: var(--space-8);
-  border-top: var(--border-width) solid var(--hairline-soft);
-}
-
-.meal-reqs summary {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  cursor: pointer;
-  font-size: var(--text-70);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--mute);
-}
-
-.meal-reqs[open] summary {
-  margin-bottom: var(--space-12);
-}
-
-.meal-reqs .capsule-meter {
-  margin-bottom: var(--space-12);
-}
-
-.meal-reqs-flag {
-  color: var(--off);
+.dish-compliance-popover {
+  background: var(--canvas);
+  border: var(--border-width) solid var(--hairline);
+  padding: var(--space-12) var(--space-16);
+  /* Ancho fijo (no solo máximo): .capsule-meter-grid reparte su columna
+     de la barra (1fr) con lo que sobre tras nombre/valor — si el popover
+     se encoge a su contenido, esa columna se queda sin espacio real y la
+     barra deja de verse. Mismo ancho que tiene de sobra en el creador
+     (--shell-width), acotado al viewport. */
+  width: min(var(--shell-width), calc(100vw - var(--space-32)));
 }
 
 /* --- Dish creator --- */
@@ -473,35 +476,64 @@ body {
   height: 24px;
 }
 
-.qty-step {
+/* Stepper numérico (InputNumber): un único borde compartido, sin bordes
+   internos entre botones y campo — ver InputNumber.tsx. */
+.input-number {
+  display: inline-flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  border: var(--border-width) solid var(--hairline);
+  background: var(--paper);
+}
+
+.input-number[data-disabled] {
+  opacity: 0.5;
+}
+
+.input-number-btn {
   all: unset;
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 26px;
-  height: 26px;
   flex-shrink: 0;
-  border: var(--border-width) solid var(--hairline);
   color: var(--ink);
   cursor: pointer;
 }
 
-.qty-step:hover,
-.qty-step:focus-visible {
-  background: var(--paper);
+.input-number-btn:hover,
+.input-number-btn:focus-visible {
+  background: var(--canvas);
 }
 
-.creator-qty-input {
-  width: 56px;
+.input-number-btn:disabled {
+  color: var(--mute);
+  cursor: not-allowed;
+}
+
+.input-number-field,
+.field .input-number-field {
+  width: 48px;
+  border: none;
+  border-left: var(--border-width) solid var(--hairline);
+  border-right: var(--border-width) solid var(--hairline);
+  background: transparent;
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  text-align: right;
-  padding: var(--space-4) var(--space-8);
-  border: var(--border-width) solid var(--hairline);
-  background: var(--paper);
+  text-align: center;
+  padding: var(--space-4) 0;
   color: var(--ink);
   border-radius: 0;
+  /* Los botones +/- propios sustituyen a las flechas nativas del navegador. */
+  appearance: none;
+  -moz-appearance: textfield;
+}
+
+.input-number-field::-webkit-outer-spin-button,
+.input-number-field::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
 }
 
 .creator-component-unit {
@@ -955,6 +987,13 @@ body {
   padding: 0 var(--space-12);
   font-size: var(--text-80);
   white-space: nowrap;
+  cursor: pointer;
+}
+
+.select-trigger:hover,
+.select-trigger:focus-visible,
+.select-trigger[data-state="open"] {
+  border-color: var(--ink);
 }
 
 .select-content {
@@ -974,6 +1013,27 @@ body {
 
 .select-item[data-highlighted] {
   background: var(--paper);
+}
+
+/* Solo los Select.Item de verdad (no los DropdownMenu.Item, que comparten
+   .select-item pero no tienen ItemIndicator): sitio reservado a la
+   izquierda para el check de la opción seleccionada. */
+.select-item-with-check {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-left: var(--space-32);
+}
+
+.select-item-with-check[data-state="checked"] {
+  font-weight: 600;
+}
+
+.select-item-indicator {
+  position: absolute;
+  left: var(--space-12);
+  display: flex;
+  align-items: center;
 }
 
 .dropdown-content {
@@ -1172,7 +1232,7 @@ label.ingredient-row-info {
   left: 0;
   right: 0;
   max-width: var(--shell-width);
-  max-height: 80vh;
+  max-height: 90vh;
   overflow-y: auto;
   margin: 0 auto;
   background: var(--canvas);

@@ -19,6 +19,7 @@ export default async function HomePage() {
     fetchMealTips(supabase),
   ]);
   const proposals = generateMultiDayPlan(contexts, createSeededRandom(dates[0] ?? ""));
+  const mealRequirements = (contexts[0]?.requirements ?? []).filter((r) => r.meal_id != null);
 
   const days: DayTabData[] = contexts.map((ctx, i) => ({
     date: ctx.date,
@@ -28,5 +29,5 @@ export default async function HomePage() {
     isToday: i === 0,
   }));
 
-  return <DayTabs days={days} tipsByMeal={tipsByMeal} />;
+  return <DayTabs days={days} tipsByMeal={tipsByMeal} mealRequirements={mealRequirements} />;
 }

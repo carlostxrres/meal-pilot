@@ -4,6 +4,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import * as Select from "@radix-ui/react-select";
 import {
   IconBulb,
+  IconCheck,
   IconChevronDown,
   IconEye,
   IconGripVertical,
@@ -27,14 +28,15 @@ import {
 } from "@meal-pilot/core";
 import { createDishAction, updateDishAction } from "@/app/(app)/actions";
 import { formatEur } from "@/lib/formatPrice";
-import { CapsuleMeter } from "./CapsuleMeter";
 import { IngredientRow } from "./IngredientRow";
 import { IngredientThumb } from "./IngredientThumb";
+import { InputNumber } from "./InputNumber";
+import { NutritionalThresholds } from "./NutritionalThresholds";
 import { SearchField } from "./SearchField";
 
 /*
 Intent: dar de alta (o editar) un plato fijo viendo EN VIVO si cae dentro de
-la ventana nutricional de su meal (ADR-0017/0018), y su precio aproximado.
+la ventana nutricional de su comida (ADR-0017/0018), y su precio aproximado.
 Layout pensado para minimizar scroll: los medidores + precio van en un
 bloque sticky al fondo del diálogo (siempre visibles mientras se editan
 ingredientes arriba), en su variante compacta de una línea. Cada nutriente
@@ -91,16 +93,17 @@ interface CreatorState {
   suggestingId: string | null;
 }
 
-function initialCreatorState(existingDish: DishCatalogEntry | undefined, meals: Meal[]): CreatorState {
+/** `prefillDish` precarga el borrador tanto para editar como para "nuevo plato similar". */
+function initialCreatorState(prefillDish: DishCatalogEntry | undefined, meals: Meal[]): CreatorState {
   const ui = { query: "", error: null, inspectingId: null, suggestingId: null };
-  if (existingDish) {
+  if (prefillDish) {
     return {
       ...ui,
-      name: existingDish.dish.name,
-      dishType: existingDish.dish.dish_type,
-      description: existingDish.dish.description ?? "",
-      mealId: existingDish.dish.meal_id,
-      components: existingDish.components.map((c) => ({ ingredient: c.ingredient, quantity: c.quantity })),
+      name: prefillDish.dish.name,
+      dishType: prefillDish.dish.dish_type,
+      description: prefillDish.dish.description ?? "",
+      mealId: prefillDish.dish.meal_id,
+      components: prefillDish.components.map((c) => ({ ingredient: c.ingredient, quantity: c.quantity })),
     };
   }
   return { ...ui, name: "", dishType: "", description: "", mealId: meals[0]?.id ?? "", components: [] };
@@ -328,7 +331,7 @@ function SuggestionDialog({
   );
 }
 
-/** Campos escalares del plato: nombre, tipo, descripción y meal. */
+/** Campos escalares del plato: nombre, tipo, descripción y comida. */
 function DishDetailsFields({
   state,
   meals,
@@ -340,6 +343,35 @@ function DishDetailsFields({
 }) {
   return (
     <>
+      <div className="field">
+        <label htmlFor="dish-meal-trigger">Comida</label>
+        <Select.Root
+          value={state.mealId}
+          onValueChange={(value) => dispatch({ type: "set-field", field: "mealId", value })}
+        >
+          <Select.Trigger id="dish-meal-trigger" className="select-trigger dish-meal-trigger">
+            <Select.Value />
+            <Select.Icon>
+              <IconChevronDown size={14} stroke={1.75} />
+            </Select.Icon>
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Content className="select-content" position="popper" sideOffset={4}>
+              <Select.Viewport>
+                {meals.map((meal) => (
+                  <Select.Item key={meal.id} value={meal.id} className="select-item select-item-with-check">
+                    <Select.ItemIndicator className="select-item-indicator">
+                      <IconCheck size={14} stroke={2} />
+                    </Select.ItemIndicator>
+                    <Select.ItemText>{meal.name}</Select.ItemText>
+                  </Select.Item>
+                ))}
+              </Select.Viewport>
+            </Select.Content>
+          </Select.Portal>
+        </Select.Root>
+      </div>
+
       <div className="creator-grid2">
         <div className="field">
           <label htmlFor="dish-name">Nombre</label>
@@ -375,32 +407,6 @@ function DishDetailsFields({
           rows={2}
         />
       </div>
-
-      <div className="field">
-        <label htmlFor="dish-meal-trigger">Meal</label>
-        <Select.Root
-          value={state.mealId}
-          onValueChange={(value) => dispatch({ type: "set-field", field: "mealId", value })}
-        >
-          <Select.Trigger id="dish-meal-trigger" className="select-trigger dish-meal-trigger">
-            <Select.Value />
-            <Select.Icon>
-              <IconChevronDown size={14} stroke={1.75} />
-            </Select.Icon>
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Content className="select-content" position="popper" sideOffset={4}>
-              <Select.Viewport>
-                {meals.map((meal) => (
-                  <Select.Item key={meal.id} value={meal.id} className="select-item">
-                    <Select.ItemText>{meal.name}</Select.ItemText>
-                  </Select.Item>
-                ))}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
-        </Select.Root>
-      </div>
     </>
   );
 }
@@ -421,14 +427,6 @@ function DraftComponentList({
   onDragStart: (index: number) => void;
   dispatch: Dispatch<CreatorAction>;
 }) {
-  function step(component: DraftComponent, direction: 1 | -1) {
-    dispatch({
-      type: "set-quantity",
-      ingredientId: component.ingredient.id,
-      quantity: Math.max(0, component.quantity + direction * stepFor(component.ingredient)),
-    });
-  }
-
   return (
     <ul className="creator-component-list" ref={listRef}>
       {components.map((component, index) => {
@@ -463,41 +461,15 @@ function DraftComponentList({
                   >
                     <IconGripVertical size={16} stroke={1.75} />
                   </button>
-                  <button
-                    type="button"
-                    className="qty-step"
-                    aria-label={`Restar ${stepFor(component.ingredient)}${component.ingredient.base_unit} de ${component.ingredient.name}`}
-                    onClick={() => step(component, -1)}
-                  >
-                    <IconMinus size={13} stroke={2} />
-                  </button>
-                  <input
-                    type="number"
-                    className="creator-qty-input"
-                    step="any"
-                    min={0}
+                  <InputNumber
                     value={component.quantity}
-                    onChange={(e) => {
-                      // valueAsNumber es NaN con el campo vacío o a medio
-                      // teclear; se guarda 0 (bloquea el envío: canSubmit
-                      // exige cantidades > 0) en vez de propagar NaN.
-                      const parsed = e.target.valueAsNumber;
-                      dispatch({
-                        type: "set-quantity",
-                        ingredientId: component.ingredient.id,
-                        quantity: Number.isFinite(parsed) ? parsed : 0,
-                      });
-                    }}
-                    aria-label={`Cantidad de ${component.ingredient.name}`}
+                    step={stepFor(component.ingredient)}
+                    min={0}
+                    ariaLabel={component.ingredient.name}
+                    onChange={(quantity) =>
+                      dispatch({ type: "set-quantity", ingredientId: component.ingredient.id, quantity })
+                    }
                   />
-                  <button
-                    type="button"
-                    className="qty-step"
-                    aria-label={`Sumar ${stepFor(component.ingredient)}${component.ingredient.base_unit} a ${component.ingredient.name}`}
-                    onClick={() => step(component, 1)}
-                  >
-                    <IconPlus size={13} stroke={2} />
-                  </button>
                   <span className="creator-component-unit">{component.ingredient.base_unit}</span>
                   <button
                     type="button"
@@ -542,46 +514,35 @@ function CreatorMeters({
       <p className="creator-price">
         Precio aproximado: <strong className="data-mono">{formatEur(livePrice)}</strong>
       </p>
-      <h3 className="section-title">Ventana nutricional del meal</h3>
-      {liveStatuses.length === 0 ? (
-        <p className="section-note">Este meal no tiene requisitos nutricionales definidos.</p>
-      ) : (
-        <>
-          <div className="capsule-meter-grid">
-            {liveStatuses.map((status) => (
-              <CapsuleMeter
-                key={status.requirement.id}
-                status={status}
-                compact
-                actions={
-                  <span className="meter-actions">
-                    <button
-                      type="button"
-                      className="meter-action"
-                      aria-label={`Ver contribuciones de ${status.requirement.name}`}
-                      onClick={() => dispatch({ type: "inspect", requirementId: status.requirement.id })}
-                    >
-                      <IconEye size={15} stroke={1.75} />
-                    </button>
-                    <button
-                      type="button"
-                      className="meter-action"
-                      aria-label={`Sugerencias para ${status.requirement.name}`}
-                      onClick={() => dispatch({ type: "suggest", requirementId: status.requirement.id })}
-                    >
-                      <IconBulb size={15} stroke={1.75} />
-                    </button>
-                  </span>
-                }
-              />
-            ))}
-          </div>
-          {allWithinWindow && (
-            <p className="section-note" data-ok="true">
-              Dentro de la ventana: listo para {isEditing ? "guardar" : "crear"}.
-            </p>
-          )}
-        </>
+      <h3 className="section-title">Ventana nutricional</h3>
+      <NutritionalThresholds
+        statuses={liveStatuses}
+        emptyMessage="Esta comida no tiene requisitos nutricionales definidos."
+        renderActions={(status) => (
+          <span className="meter-actions">
+            <button
+              type="button"
+              className="meter-action"
+              aria-label={`Ver contribuciones de ${status.requirement.name}`}
+              onClick={() => dispatch({ type: "inspect", requirementId: status.requirement.id })}
+            >
+              <IconEye size={15} stroke={1.75} />
+            </button>
+            <button
+              type="button"
+              className="meter-action"
+              aria-label={`Sugerencias para ${status.requirement.name}`}
+              onClick={() => dispatch({ type: "suggest", requirementId: status.requirement.id })}
+            >
+              <IconBulb size={15} stroke={1.75} />
+            </button>
+          </span>
+        )}
+      />
+      {allWithinWindow && (
+        <p className="section-note" data-ok="true">
+          Dentro de la ventana: listo para {isEditing ? "guardar" : "crear"}.
+        </p>
       )}
       {children}
     </div>
@@ -593,19 +554,34 @@ export function DishCreator({
   meals,
   mealRequirements,
   existingDish,
+  duplicateFrom,
+  trigger,
+  open: controlledOpen,
+  onOpenChange: setControlledOpen,
 }: {
   ingredients: Ingredient[];
   meals: Meal[];
   mealRequirements: DietaryRequirement[];
   /** Si se da, el diálogo edita este plato en vez de crear uno nuevo. */
   existingDish?: DishCatalogEntry;
+  /** Si se da (y no hay existingDish), precarga un plato nuevo con esta base ("Nuevo plato similar"). */
+  duplicateFrom?: DishCatalogEntry;
+  /** Trigger propio (ej. un item de un dropdown menu); si se omite, usa el botón por defecto. */
+  trigger?: React.ReactNode;
+  /** Apertura controlada desde fuera (ej. un dropdown menu); si se omite, el diálogo gestiona su propio estado. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const isEditing = existingDish != null;
+  const prefillDish = existingDish ?? duplicateFrom;
 
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? setControlledOpen! : setInternalOpen;
   const [submitting, setSubmitting] = useState(false);
   const [state, dispatch] = useReducer(creatorReducer, undefined, () =>
-    initialCreatorState(existingDish, meals),
+    initialCreatorState(prefillDish, meals),
   );
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -659,7 +635,7 @@ export function DishCreator({
       .slice(0, MAX_PICKER_RESULTS);
   }, [ingredients, state.components, state.query]);
 
-  // Cumplimiento en vivo del borrador contra la ventana del meal elegido,
+  // Cumplimiento en vivo del borrador contra la ventana de la comida elegida,
   // presentado con la misma forma que un RequirementStatus para reutilizar
   // CapsuleMeter tal cual.
   const liveStatuses: RequirementStatus[] = useMemo(() => {
@@ -672,6 +648,9 @@ export function DishCreator({
         dish_type: state.dishType,
         meal_id: state.mealId,
         description: null,
+        active: true,
+        created_at: "",
+        updated_at: "",
       },
       components: state.components.map((c) => ({ ingredient: c.ingredient, quantity: c.quantity })),
     };
@@ -698,7 +677,7 @@ export function DishCreator({
     state.components.every((c) => c.quantity > 0);
 
   function reset() {
-    dispatch({ type: "reset", state: initialCreatorState(existingDish, meals) });
+    dispatch({ type: "reset", state: initialCreatorState(prefillDish, meals) });
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -739,17 +718,21 @@ export function DishCreator({
         if (!next && !isEditing) reset();
       }}
     >
-      <Dialog.Trigger asChild>
-        {isEditing ? (
-          <button type="button" className="dish-edit-btn" aria-label={`Editar ${existingDish.dish.name}`}>
-            <IconPencil size={16} stroke={1.75} />
-          </button>
-        ) : (
-          <button type="button" className="btn-primary dish-creator-trigger">
-            <IconPlus size={16} stroke={2} /> Nuevo plato
-          </button>
-        )}
-      </Dialog.Trigger>
+      {trigger ? (
+        <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>
+      ) : !isControlled ? (
+        <Dialog.Trigger asChild>
+          {isEditing ? (
+            <button type="button" className="dish-edit-btn" aria-label={`Editar ${existingDish.dish.name}`}>
+              <IconPencil size={16} stroke={1.75} />
+            </button>
+          ) : (
+            <button type="button" className="btn-primary dish-creator-trigger">
+              <IconPlus size={16} stroke={2} /> Nuevo plato
+            </button>
+          )}
+        </Dialog.Trigger>
+      ) : null}
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <Dialog.Content className="dialog-content dish-creator-content">

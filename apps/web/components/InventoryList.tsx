@@ -1,7 +1,7 @@
 "use client";
 
 import * as Select from "@radix-ui/react-select";
-import { IconBox, IconChevronDown, IconCircleOff, IconPencil, IconTrash } from "@tabler/icons-react";
+import { IconBox, IconCheck, IconChevronDown, IconCircleOff, IconPencil, IconTrash } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useOptimistic, useState, useTransition } from "react";
 import type { Ingredient } from "@meal-pilot/core";
@@ -136,18 +136,21 @@ export function InventoryList({ ingredients }: { ingredients: Ingredient[] }) {
           <Select.Portal>
             <Select.Content className="select-content" position="popper" sideOffset={4}>
               <Select.Viewport>
-                <Select.Item value="qty-desc" className="select-item">
-                  <Select.ItemText>Cantidad (mayor a menor)</Select.ItemText>
-                </Select.Item>
-                <Select.Item value="qty-asc" className="select-item">
-                  <Select.ItemText>Cantidad (menor a mayor)</Select.ItemText>
-                </Select.Item>
-                <Select.Item value="name-asc" className="select-item">
-                  <Select.ItemText>Nombre (A-Z)</Select.ItemText>
-                </Select.Item>
-                <Select.Item value="name-desc" className="select-item">
-                  <Select.ItemText>Nombre (Z-A)</Select.ItemText>
-                </Select.Item>
+                {(
+                  [
+                    ["qty-desc", "Cantidad (mayor a menor)"],
+                    ["qty-asc", "Cantidad (menor a mayor)"],
+                    ["name-asc", "Nombre (A-Z)"],
+                    ["name-desc", "Nombre (Z-A)"],
+                  ] as const
+                ).map(([value, label]) => (
+                  <Select.Item key={value} value={value} className="select-item select-item-with-check">
+                    <Select.ItemIndicator className="select-item-indicator">
+                      <IconCheck size={14} stroke={2} />
+                    </Select.ItemIndicator>
+                    <Select.ItemText>{label}</Select.ItemText>
+                  </Select.Item>
+                ))}
               </Select.Viewport>
             </Select.Content>
           </Select.Portal>

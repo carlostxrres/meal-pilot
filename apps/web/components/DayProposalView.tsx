@@ -1,16 +1,16 @@
 import {
+  checkDishCompliance,
   computeDinnerTargets,
   computeDishPrice,
   computeHomeToOfficeCarry,
   computeMealNutrition,
   computeOfficeToStreetGrab,
   pickDailyTip,
-  sortByNutrientDisplayOrder,
   type DayProposal,
+  type DietaryRequirement,
   type DinnerTarget,
   type MealCarryList,
   type MealTip,
-  type RequirementStatus,
 } from "@meal-pilot/core";
 import { IconAlertTriangle, IconBike, IconBulb, IconFlask, IconMoon, IconToolsKitchen2 } from "@tabler/icons-react";
 import { CapsuleMeter } from "./CapsuleMeter";
@@ -50,23 +50,6 @@ function formatDinnerTarget(target: DinnerTarget): string | null {
   if (max != null && max >= 0) return `≤ ${formatAmount(max)} ${unit}`;
   if (max != null) return `superado en ${formatAmount(-max)} ${unit}`;
   return null;
-}
-
-/** De momento sin uso en "Hoy" (ver DayProposalView) — se deja lista para retomarla. */
-function MealRequirementsDetails({ statuses }: { statuses: RequirementStatus[] }) {
-  if (statuses.length === 0) return null;
-  const allWithin = statuses.every((status) => status.withinRange);
-  return (
-    <details className="meal-reqs">
-      <summary>
-        Ventana nutricional
-        {!allWithin && <IconAlertTriangle size={14} stroke={1.75} className="meal-reqs-flag" />}
-      </summary>
-      {sortByNutrientDisplayOrder(statuses).map((status) => (
-        <CapsuleMeter key={status.requirement.id} status={status} />
-      ))}
-    </details>
-  );
 }
 
 /**
@@ -109,11 +92,14 @@ export function DayProposalView({
   proposal,
   confirmedMealIds,
   tipsByMeal,
+  mealRequirements,
   isToday,
 }: {
   proposal: DayProposal;
   confirmedMealIds: Set<string>;
   tipsByMeal: ReadonlyMap<string, MealTip[]>;
+  /** Ventanas nutricionales por meal (ADR-0017) — para el chip de cumplimiento del plato del día. */
+  mealRequirements: DietaryRequirement[];
   isToday: boolean;
 }) {
   const dinnerTargets = computeDinnerTargets(proposal.requirementStatuses);
@@ -164,6 +150,11 @@ export function DayProposalView({
             </h2>
 
             {mealProposal.supplements.map((supplement) => (
+              /*
+                * to do: aquí irían solo los suplementos que se toman antes del meal
+                * (ver supplement.relative_timing). Los que se toman después, irían
+                * después del plato.
+                */
               <p key={supplement.id} className="supplement-note">
                 <IconFlask size={14} stroke={1.75} /> {supplement.name} ({supplement.relative_timing})
               </p>
@@ -179,6 +170,8 @@ export function DayProposalView({
                 dish={mealProposal.resolved.dish}
                 components={mealProposal.resolved.components}
                 price={computeDishPrice(mealProposal.resolved)}
+                mealName={mealProposal.meal.name}
+                complianceChecks={checkDishCompliance(mealProposal.resolved, mealRequirements).checks}
                 headerActions={<NutritionPopover totals={computeMealNutrition(mealProposal.resolved)} />}
               >
                 {isToday && (

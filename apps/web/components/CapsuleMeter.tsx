@@ -77,7 +77,10 @@ export function CapsuleMeter({
           {accumulated.toFixed(1)}
           {target && ` / ${target}`} {requirement.unit}
         </span>
-        {actions}
+        {/* Celda del grid siempre presente (aunque vacía): sin ella, una fila
+            sin `actions` aporta solo 3 hijos y desalinea el resto de filas
+            del grid compartido (ver .capsule-meter-grid). */}
+        <span className="capsule-meter-actions-cell">{actions}</span>
       </div>
     );
   }
