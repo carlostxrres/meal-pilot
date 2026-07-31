@@ -3,40 +3,8 @@
 import { IconToolsKitchen2 } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import type { DietaryRequirement, DishCatalogEntry, Ingredient, Meal } from "@meal-pilot/core";
-import DishCard from "./DishCard";
-import { DishCardMenu } from "./DishCardMenu";
+import { DishCatalogCard } from "./DishCatalogCard";
 import { SearchField } from "./SearchField";
-
-function DishCatalogCard({
-  entry,
-  ingredients,
-  meals,
-  mealRequirements,
-}: {
-  entry: DishCatalogEntry;
-  ingredients: Ingredient[];
-  meals: Meal[];
-  mealRequirements: DietaryRequirement[];
-}) {
-  return (
-    <DishCard
-      dish={entry.dish}
-      components={entry.components}
-      price={entry.price}
-      mealName={entry.mealName}
-      complianceChecks={entry.compliance.checks}
-      status={entry.dish.active ? "active" : "inactive"}
-      headerActions={
-        <DishCardMenu
-          entry={entry}
-          ingredients={ingredients}
-          meals={meals}
-          mealRequirements={mealRequirements}
-        />
-      }
-    />
-  );
-}
 
 export function DishCatalogList({
   dishes,
