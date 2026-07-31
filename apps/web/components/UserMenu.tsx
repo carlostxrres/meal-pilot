@@ -2,7 +2,8 @@
 
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { IconLogout, IconMenu2 } from "@tabler/icons-react";
+import { IconLogout, IconMenu2, IconSettings } from "@tabler/icons-react";
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { signOut } from "@/app/login/actions";
 
@@ -21,6 +22,11 @@ export function UserMenu() {
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
           <DropdownMenu.Content className="select-content dropdown-content" align="end" sideOffset={4}>
+            <DropdownMenu.Item className="select-item dropdown-item" asChild>
+              <Link href="/settings">
+                <IconSettings size={16} stroke={1.75} /> Configuración
+              </Link>
+            </DropdownMenu.Item>
             <DropdownMenu.Item
               className="select-item dropdown-item dropdown-item-destructive"
               onSelect={(e) => {
