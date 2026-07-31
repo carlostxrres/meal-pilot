@@ -2,11 +2,29 @@
 
 > Documento vivo: se actualiza cada sesión conforme avanza el trabajo. Para el diseño estable, ver [`diseno-sistema.md`](diseno-sistema.md); para el porqué de cada decisión, [`adrs/`](adrs/README.md).
 
-**Última actualización**: 2026-07-29
+**Última actualización**: 2026-08-01
 
 ## Fase actual
 
-Rearquitectura ADR-0017/0018 implementada (ver bloques siguientes): requisitos nutricionales por meal + dishes fijas 1:1 + vista "Prepara tu cena", más una ronda de pulido de UI/UX (2026-07-28, ver más abajo). **Pendiente del usuario: rediseñar el catálogo de platos** (paso 5 del plan) — el catálogo actual es la conversión mecánica del viejo y casi todos los platos están fuera de la ventana de su meal (marcados en `/dishes`, ahora pestaña "Platos").
+Rearquitectura ADR-0017/0018 implementada (ver bloques siguientes): requisitos nutricionales por meal + dishes fijas 1:1 + vista "Prepara tu cena", más dos rondas de pulido de UI/UX (2026-07-28 y 2026-08-01, ver más abajo). **Pendiente del usuario: rediseñar el catálogo de platos** (paso 5 del plan) — el catálogo actual es la conversión mecánica del viejo y casi todos los platos están fuera de la ventana de su meal (marcados en `/dishes`, ahora pestaña "Platos").
+
+## Ronda de pulido de UI/UX, parte 2 (2026-08-01)
+
+Lista larga de peticiones puntuales sobre `/dishes` y el resto de la web, implementadas en commits atómicos (uno por tarea). Verificado con 56 tests, `next build`, `tsc --noEmit` limpio y navegación en vivo con Playwright (login real, capturas de las vistas y flujos tocados) en cada bloque.
+
+- **Esquema**: `dish.active` (activar/desactivar sin borrar; los desactivados quedan fuera de la generación de "Hoy") y `dish.created_at`/`updated_at` (`timestamptz`, con trigger para el segundo) — migración `20260731100000_dish_active_and_timestamps.sql`.
+- **Chip de meal/cumplimiento reutilizable**: `NutritionalThresholds` (el grid de `CapsuleMeter` del creador, extraído) y `DishComplianceChip` (icono de métricas, gris sin texto si cae dentro de la ventana, rojo con el detalle si no; tooltip con click y hover que reutiliza `NutritionalThresholds` de solo lectura). Vive dentro de `DishCard`, así que aparece igual en Platos y en Hoy sin duplicar código — antes la ventana nutricional estaba deliberadamente apagada en Hoy (ver entrada del 29-07), ahora se retoma vía este chip.
+- **Menú del card de plato**: botón "..." (solo en el catálogo) con Editar plato / Nuevo plato similar / Activar-Desactivar plato, sustituyendo el lápiz suelto. `DishCreator` admite apertura controlada desde fuera y precarga por duplicado (`duplicateFrom`), evitando el problema conocido de anidar un `Dialog.Trigger` dentro de un `DropdownMenu.Item`.
+- **"meal" → "comida"**: clases CSS heredadas que describían un plato con nombres de meal (`.meal-row` → `.dish-row`, `.meal-time` → `.dish-type-label`) y los textos visibles sueltos en inglés del creador (`"Meal"` → `"Comida"`, `"Ventana nutricional del meal"` → `"Ventana nutricional"`).
+- **`InputNumber`**: stepper +/- de borde único (sustituye a `.qty-step` + `.creator-qty-input`), usado en el creador de platos y en el editor de inventario (que pasó de formulario no controlado a estado controlado).
+- **Select de Radix**: checkmark de la opción seleccionada (`Select.ItemIndicator`), sin adoptar el look redondeado/con sombra de la referencia de radix-ui.com (decisión explícita: mantener la estética plana del sistema de interfaz).
+- **Vista de plato individual** (`/dishes/:dishId`): botón de volver + la misma ficha de `/dishes` (con su menú), solo para poder enlazar un plato concreto. `DishCatalogCard` extraído como componente propio, reutilizado ahí y en el catálogo.
+- **Ordenar el catálogo de Platos**: nombre A-Z/Z-A, más recientes/antiguos primero, modificados hace menos/más (usa `created_at`/`updated_at`).
+- **`/settings`**: shell vacío + enlace desde `UserMenu` — qué configuraciones concretas van ahí queda pendiente de decidir.
+- **Colisiones parciales al crear un plato**: si ya existe uno con el mismo nombre o exactamente los mismos ingredientes (cantidad/orden aparte), un modal muestra el plato existente (misma ficha, sin menú) con "Seguir editando plato" / "Crear igualmente". Solo al crear (o duplicar), no al editar uno ya existente.
+- **Espaciado horizontal en rem**: `--space-*` pasa de px a rem (misma escala numérica) — ya cubría todo el espaciado horizontal de la app.
+- **Ritmo vertical de rejilla**: nueva `--grid` (1.5rem = line-height 1.5 × 1rem, la línea de texto real del body) aplicada en múltiplos enteros al espaciado macro entre bloques grandes (shell, cabecera, secciones, cards de plato, diálogos, campos de formulario) — deliberadamente **no** aplicada a componentes compactos/densos (filas de ingrediente, chips, popovers, tab bar), donde forzar 24px habría roto la densidad. `--space-*` sigue siendo la escala fina ahí.
+- **Colores**: auditados, ninguna fuga de color suelto fuera de los 14 tokens semánticos ya existentes (claro + oscuro) — no hizo falta ningún cambio.
 
 ## DishCard flexible, usada también en "Hoy" (2026-07-29)
 
