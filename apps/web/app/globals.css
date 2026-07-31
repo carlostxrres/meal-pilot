@@ -25,14 +25,26 @@
   --off: #b3453c;
   --off-soft: #f6dedc;
 
-  /* Spacing — escala base 8px (ver .interface-design/system.md) */
-  --space-4: 4px;
-  --space-8: 8px;
-  --space-12: 12px;
-  --space-16: 16px;
-  --space-24: 24px;
-  --space-32: 32px;
-  --space-48: 48px;
+  /* Spacing — escala base 8px, en rem (ver .interface-design/system.md).
+     Uso horizontal (gaps, padding/margin izq-der) y también vertical fino
+     dentro de componentes compactos (chips, filas de lista densas, popovers)
+     — para el ritmo vertical de bloques grandes, ver --grid más abajo. */
+  --space-4: 0.25rem;
+  --space-8: 0.5rem;
+  --space-12: 0.75rem;
+  --space-16: 1rem;
+  --space-24: 1.5rem;
+  --space-32: 2rem;
+  --space-48: 3rem;
+
+  /* Ritmo vertical — 1 unidad = 1 línea real de texto (line-height: 1.5 ×
+     font-size 1rem = 24px), como una cuadrícula invisible. Se aplica solo
+     al espaciado macro entre bloques grandes que se apilan verticalmente
+     (shell, cabecera, secciones, cards de plato, diálogos, campos de
+     formulario) — no a componentes compactos/densos (filas de ingrediente,
+     chips, popovers, tab bar), donde --space-* sigue siendo la escala fina
+     para no perder densidad de información. Siempre múltiplos enteros. */
+  --grid: 1.5rem;
 
   /* Typography */
   --text-70: 0.7rem;
@@ -91,7 +103,8 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  line-height: 1.4;
+  /* 1.5 × el font-size base (1rem) = 24px = --grid (ver :root). */
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -123,14 +136,14 @@ body {
   max-width: var(--shell-width);
   margin: 0 auto;
   min-height: 100dvh;
-  padding: var(--space-16) var(--space-16) var(--tabbar-clearance);
+  padding: var(--grid) var(--space-16) var(--tabbar-clearance);
 }
 
 .app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-16);
+  margin-bottom: var(--grid);
 }
 
 .app-brand {
@@ -198,14 +211,14 @@ body {
 }
 
 .section {
-  margin-bottom: var(--space-32);
+  margin-bottom: var(--grid);
 }
 
 .dish-row {
   background: var(--canvas);
   border: var(--border-width) solid var(--hairline);
-  padding: var(--space-16) var(--space-16);
-  margin-bottom: var(--space-12);
+  padding: var(--grid) var(--space-16);
+  margin-bottom: var(--grid);
 }
 
 .dish-row-head {
@@ -581,7 +594,7 @@ body {
 
 .creator-grid2 .field,
 .dish-creator-content .field {
-  margin-bottom: var(--space-12);
+  margin-bottom: var(--grid);
 }
 
 /* Medidores en vivo: bloque pegado al fondo del diálogo, siempre visible
@@ -1260,14 +1273,14 @@ label.ingredient-row-info {
   font-size: var(--text-100);
   font-weight: 700;
   text-transform: uppercase;
-  margin: 0 0 var(--space-16);
+  margin: 0 0 var(--grid);
 }
 
 .field {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  margin-bottom: var(--space-16);
+  margin-bottom: var(--grid);
 }
 
 .field label {
@@ -1339,8 +1352,8 @@ input {
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-16);
-  margin-top: var(--space-32);
+  gap: var(--grid);
+  margin-top: var(--grid);
 }
 
 .login-form label {
@@ -1390,7 +1403,7 @@ input {
 
 .skeleton-bar {
   height: 12px;
-  margin: 4px 0;
+  margin: var(--space-4) 0;
   background: var(--hairline-soft);
 }
 
