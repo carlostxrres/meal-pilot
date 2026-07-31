@@ -28,6 +28,7 @@ import {
 } from "@meal-pilot/core";
 import { createDishAction, updateDishAction } from "@/app/(app)/actions";
 import { formatEur } from "@/lib/formatPrice";
+import DishCard from "./DishCard";
 import { IngredientRow } from "./IngredientRow";
 import { IngredientThumb } from "./IngredientThumb";
 import { InputNumber } from "./InputNumber";
@@ -331,6 +332,50 @@ function SuggestionDialog({
   );
 }
 
+/** Aviso de colisión parcial (mismo nombre o mismos ingredientes que un plato ya existente) — la ficha es de solo lectura, sin su menú "...". */
+function CollisionDialog({
+  collision,
+  onKeepEditing,
+  onCreateAnyway,
+}: {
+  collision: CollisionState | null;
+  onKeepEditing: () => void;
+  onCreateAnyway: () => void;
+}) {
+  return (
+    <Dialog.Root open={collision !== null} onOpenChange={(o) => !o && onKeepEditing()}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="dialog-overlay" />
+        <Dialog.Content className="dialog-content">
+          <Dialog.Title className="dialog-title">
+            {collision?.type === "name"
+              ? "Ya existe un plato con este nombre"
+              : "Ya existe un plato con estos mismos ingredientes"}
+          </Dialog.Title>
+          {collision && (
+            <DishCard
+              dish={collision.match.dish}
+              components={collision.match.components}
+              price={collision.match.price}
+              mealName={collision.match.mealName}
+              complianceChecks={collision.match.compliance.checks}
+              status={collision.match.dish.active ? "active" : "inactive"}
+            />
+          )}
+          <div className="dialog-actions">
+            <button type="button" className="btn-secondary" onClick={onKeepEditing}>
+              Seguir editando plato
+            </button>
+            <button type="button" className="btn-primary" onClick={onCreateAnyway}>
+              Crear igualmente
+            </button>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+}
+
 /** Campos escalares del plato: nombre, tipo, descripción y comida. */
 function DishDetailsFields({
   state,
@@ -549,10 +594,17 @@ function CreatorMeters({
   );
 }
 
+type CollisionType = "name" | "ingredients";
+interface CollisionState {
+  type: CollisionType;
+  match: DishCatalogEntry;
+}
+
 export function DishCreator({
   ingredients,
   meals,
   mealRequirements,
+  dishes,
   existingDish,
   duplicateFrom,
   trigger,
@@ -562,6 +614,8 @@ export function DishCreator({
   ingredients: Ingredient[];
   meals: Meal[];
   mealRequirements: DietaryRequirement[];
+  /** Catálogo completo, para detectar colisiones parciales al crear (mismo nombre / mismos ingredientes). */
+  dishes: DishCatalogEntry[];
   /** Si se da, el diálogo edita este plato en vez de crear uno nuevo. */
   existingDish?: DishCatalogEntry;
   /** Si se da (y no hay existingDish), precarga un plato nuevo con esta base ("Nuevo plato similar"). */
@@ -580,6 +634,7 @@ export function DishCreator({
   const open = isControlled ? controlledOpen : internalOpen;
   const setOpen = isControlled ? setControlledOpen! : setInternalOpen;
   const [submitting, setSubmitting] = useState(false);
+  const [collision, setCollision] = useState<CollisionState | null>(null);
   const [state, dispatch] = useReducer(creatorReducer, undefined, () =>
     initialCreatorState(prefillDish, meals),
   );
@@ -680,9 +735,31 @@ export function DishCreator({
     dispatch({ type: "reset", state: initialCreatorState(prefillDish, meals) });
   }
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    if (!canSubmit) return;
+  // Colisiones parciales al crear un plato (no al editar uno existente: ahí
+  // el propio plato "colisionaría" consigo mismo sin que sea un aviso útil).
+  // Nombre y mismos ingredientes se comprueban por separado — "Crear
+  // igualmente" reintenta solo con el tipo ya reconocido de por medio, así
+  // que si hay colisión de los dos tipos a la vez, se avisa de ambas.
+  function findCollision(skip: Set<CollisionType>): CollisionState | null {
+    if (isEditing) return null;
+    const candidates = dishes;
+    if (!skip.has("name")) {
+      const name = state.name.trim().toLowerCase();
+      const match = candidates.find((d) => d.dish.name.trim().toLowerCase() === name);
+      if (match) return { type: "name", match };
+    }
+    if (!skip.has("ingredients")) {
+      const draftIds = new Set(state.components.map((c) => c.ingredient.id));
+      const match = candidates.find((d) => {
+        const ids = new Set(d.components.map((c) => c.ingredient.id));
+        return ids.size === draftIds.size && [...draftIds].every((id) => ids.has(id));
+      });
+      if (match) return { type: "ingredients", match };
+    }
+    return null;
+  }
+
+  async function submitDish() {
     setSubmitting(true);
     dispatch({ type: "submit-start" });
     const input = {
@@ -708,6 +785,29 @@ export function DishCreator({
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!canSubmit) return;
+    const found = findCollision(new Set());
+    if (found) {
+      setCollision(found);
+      return;
+    }
+    void submitDish();
+  }
+
+  function handleCreateAnyway() {
+    if (!collision) return;
+    const acknowledged = collision.type;
+    setCollision(null);
+    const stillFound = findCollision(new Set([acknowledged]));
+    if (stillFound) {
+      setCollision(stillFound);
+      return;
+    }
+    void submitDish();
   }
 
   return (
@@ -815,6 +915,11 @@ export function DishCreator({
             catalog={ingredients}
             onApply={(suggestion) => dispatch({ type: "apply-suggestion", suggestion })}
             onOpenChange={(o) => !o && dispatch({ type: "suggest", requirementId: null })}
+          />
+          <CollisionDialog
+            collision={collision}
+            onKeepEditing={() => setCollision(null)}
+            onCreateAnyway={handleCreateAnyway}
           />
         </Dialog.Content>
       </Dialog.Portal>

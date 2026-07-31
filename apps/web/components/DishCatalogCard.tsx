@@ -2,24 +2,20 @@ import type { DietaryRequirement, DishCatalogEntry, Ingredient, Meal } from "@me
 import DishCard from "./DishCard";
 import { DishCardMenu } from "./DishCardMenu";
 
-/**
- * Ficha de un plato del catálogo: la misma tarjeta en /dishes (con su menú
- * "...") y en /dishes/:dishId (vista de un plato suelto). `readonly` la
- * deja sin menú — para el futuro modal de colisiones al crear un plato, que
- * solo necesita mostrarla, no editarla.
- */
+/** Ficha de un plato del catálogo, con su menú "...": la misma tarjeta en /dishes y en /dishes/:dishId. */
 export function DishCatalogCard({
   entry,
+  dishes,
   ingredients,
   meals,
   mealRequirements,
-  readonly = false,
 }: {
   entry: DishCatalogEntry;
+  /** Catálogo completo — lo necesita DishCreator (vía el menú) para detectar colisiones al duplicar. */
+  dishes: DishCatalogEntry[];
   ingredients: Ingredient[];
   meals: Meal[];
   mealRequirements: DietaryRequirement[];
-  readonly?: boolean;
 }) {
   return (
     <DishCard
@@ -30,14 +26,13 @@ export function DishCatalogCard({
       complianceChecks={entry.compliance.checks}
       status={entry.dish.active ? "active" : "inactive"}
       headerActions={
-        readonly ? undefined : (
-          <DishCardMenu
-            entry={entry}
-            ingredients={ingredients}
-            meals={meals}
-            mealRequirements={mealRequirements}
-          />
-        )
+        <DishCardMenu
+          entry={entry}
+          dishes={dishes}
+          ingredients={ingredients}
+          meals={meals}
+          mealRequirements={mealRequirements}
+        />
       }
     />
   );

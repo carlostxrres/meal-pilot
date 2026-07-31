@@ -24,6 +24,7 @@ export default async function DishPage({ params }: { params: Promise<{ dishId: s
       </Link>
       <DishCatalogCard
         entry={entry}
+        dishes={dishes}
         ingredients={authoring.ingredients}
         meals={authoring.meals}
         mealRequirements={authoring.mealRequirements}

@@ -16,6 +16,7 @@ export default async function DishesPage() {
         ingredients={authoring.ingredients}
         meals={authoring.meals}
         mealRequirements={authoring.mealRequirements}
+        dishes={dishes}
       />
       <DishCatalogList
         dishes={dishes}

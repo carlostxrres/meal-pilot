@@ -24,11 +24,13 @@ abre el diálogo por estado, igual que UserMenu hace con su AlertDialog.
 */
 export function DishCardMenu({
   entry,
+  dishes,
   ingredients,
   meals,
   mealRequirements,
 }: {
   entry: DishCatalogEntry;
+  dishes: DishCatalogEntry[];
   ingredients: Ingredient[];
   meals: Meal[];
   mealRequirements: DietaryRequirement[];
@@ -95,6 +97,7 @@ export function DishCardMenu({
         ingredients={ingredients}
         meals={meals}
         mealRequirements={mealRequirements}
+        dishes={dishes}
         existingDish={entry}
         open={editOpen}
         onOpenChange={setEditOpen}
@@ -103,6 +106,7 @@ export function DishCardMenu({
         ingredients={ingredients}
         meals={meals}
         mealRequirements={mealRequirements}
+        dishes={dishes}
         duplicateFrom={entry}
         open={duplicateOpen}
         onOpenChange={setDuplicateOpen}

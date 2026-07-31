@@ -89,6 +89,7 @@ export function DishCatalogList({
           <DishCatalogCard
             key={entry.dish.id}
             entry={entry}
+            dishes={dishes}
             ingredients={ingredients}
             meals={meals}
             mealRequirements={mealRequirements}
