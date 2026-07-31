@@ -146,3 +146,15 @@ export async function updateDish(
     throw new Error(`Fallo actualizando los ingredientes: ${insertError.message}`);
   }
 }
+
+/** Activa o desactiva un plato (no lo borra, solo lo oculta del catálogo activo). */
+export async function setDishActive(
+  supabase: SupabaseClient<Database>,
+  dishId: string,
+  active: boolean,
+): Promise<void> {
+  const { error } = await supabase.from("dish").update({ active }).eq("id", dishId);
+  if (error) {
+    throw new Error(`Fallo cambiando el estado del plato: ${error.message}`);
+  }
+}
