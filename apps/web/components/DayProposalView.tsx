@@ -113,18 +113,9 @@ export function DayProposalView({
 
   return (
     <div>
-      {proposal.meals.length > 1 && (
-        <CommuteSection
-          icon={<IconBike size={14} stroke={2} />}
-          title="Commute: de casa a la oficina"
-          prepBullet={prepMiddleSnackBullet}
-          carryLists={homeToOfficeCarry}
-          emptyText="Ningún ingrediente que llevar de casa hoy."
-        />
-      )}
-
       {proposal.meals.map((mealProposal, index) => {
         const tip = pickDailyTip(tipsByMeal, mealProposal.meal.id, proposal.date);
+        const isSecond = index === 1;
         const isLast = index === proposal.meals.length - 1;
 
         // El bloque se muestra en cuanto el último meal tiene propuesta (aunque
@@ -133,6 +124,16 @@ export function DayProposalView({
         // meal ni siquiera se resolvió ese día.
         return (
           <div className="section" key={mealProposal.meal.id}>
+            {/* Después de "Desayuno en casa" (el primer meal), no antes. */}
+            {isSecond && (
+              <CommuteSection
+                icon={<IconBike size={14} stroke={2} />}
+                title="Commute: de casa a la oficina"
+                prepBullet={prepMiddleSnackBullet}
+                carryLists={homeToOfficeCarry}
+                emptyText="Ningún ingrediente que llevar de casa hoy."
+              />
+            )}
             {isLast && mealProposal.resolved && (
               <CommuteSection
                 icon={<IconBike size={14} stroke={2} />}
