@@ -17,10 +17,12 @@ export interface SwipeAction {
 
 /**
  * Fila con gestos de pulgar estilo iOS/Android: arrastrar desde la
- * izquierda hacia la derecha revela `leftAction` (ej. vaciar), arrastrar
- * desde la derecha hacia la izquierda revela `rightAction` (ej. editar).
- * Un tap normal (sin desplazamiento horizontal significativo) no dispara
- * nada y deja pasar el click a los controles internos de `children`.
+ * izquierda hacia la derecha revela `leftAction` (ej. vaciar, eliminar),
+ * arrastrar desde la derecha hacia la izquierda revela `rightAction` (ej.
+ * editar). Cualquiera de las dos es opcional — si falta una, el arrastre
+ * hacia ese lado simplemente no hace nada (fila de un solo gesto). Un tap
+ * normal (sin desplazamiento horizontal significativo) no dispara nada y
+ * deja pasar el click a los controles internos de `children`.
  */
 export function SwipeableRow({
   children,
@@ -28,8 +30,8 @@ export function SwipeableRow({
   rightAction,
 }: {
   children: React.ReactNode;
-  leftAction: SwipeAction;
-  rightAction: SwipeAction;
+  leftAction?: SwipeAction;
+  rightAction?: SwipeAction;
 }) {
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
@@ -44,15 +46,18 @@ export function SwipeableRow({
 
   function onPointerMove(e: React.PointerEvent) {
     if (activePointerId.current !== e.pointerId) return;
-    setDragX(clamp(e.clientX - startX.current));
+    let delta = clamp(e.clientX - startX.current);
+    if (delta > 0 && !leftAction) delta = 0;
+    if (delta < 0 && !rightAction) delta = 0;
+    setDragX(delta);
   }
 
   function endDrag(e: React.PointerEvent) {
     if (activePointerId.current !== e.pointerId) return;
     activePointerId.current = null;
     setDragging(false);
-    if (dragX > THRESHOLD) leftAction.onTrigger();
-    else if (dragX < -THRESHOLD) rightAction.onTrigger();
+    if (dragX > THRESHOLD) leftAction?.onTrigger();
+    else if (dragX < -THRESHOLD) rightAction?.onTrigger();
     setDragX(0);
   }
 
@@ -60,22 +65,26 @@ export function SwipeableRow({
 
   return (
     <div className="swipe-row">
-      <div
-        className="swipe-row-action swipe-row-action-left"
-        style={{ opacity: Math.max(0, progress) }}
-        data-armed={progress >= 1}
-      >
-        {leftAction.icon}
-        <span>{leftAction.label}</span>
-      </div>
-      <div
-        className="swipe-row-action swipe-row-action-right"
-        style={{ opacity: Math.max(0, -progress) }}
-        data-armed={progress <= -1}
-      >
-        {rightAction.icon}
-        <span>{rightAction.label}</span>
-      </div>
+      {leftAction && (
+        <div
+          className="swipe-row-action swipe-row-action-left"
+          style={{ opacity: Math.max(0, progress) }}
+          data-armed={progress >= 1}
+        >
+          {leftAction.icon}
+          <span>{leftAction.label}</span>
+        </div>
+      )}
+      {rightAction && (
+        <div
+          className="swipe-row-action swipe-row-action-right"
+          style={{ opacity: Math.max(0, -progress) }}
+          data-armed={progress <= -1}
+        >
+          {rightAction.icon}
+          <span>{rightAction.label}</span>
+        </div>
+      )}
       <div
         className="swipe-row-content"
         style={{

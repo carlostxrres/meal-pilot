@@ -11,6 +11,7 @@ import {
   IconMinus,
   IconPencil,
   IconPlus,
+  IconTrash,
   IconX,
 } from "@tabler/icons-react";
 import { useEffect, useMemo, useReducer, useRef, useState, type Dispatch } from "react";
@@ -34,6 +35,7 @@ import { IngredientThumb } from "./IngredientThumb";
 import { InputNumber } from "./InputNumber";
 import { NutritionalThresholds } from "./NutritionalThresholds";
 import { SearchField } from "./SearchField";
+import { SwipeableRow } from "./SwipeableRow";
 
 /*
 Intent: dar de alta (o editar) un plato fijo viendo EN VIVO si cae dentro de
@@ -484,49 +486,58 @@ function DraftComponentList({
             data-dragging={dragIndex === index || undefined}
             data-drag-over={(dragOverIndex === index && dragIndex !== index) || undefined}
           >
-            <IngredientRow
-              ingredient={component.ingredient}
-              meta={
-                overMax ? (
-                  <p className="creator-max-warning">
-                    Se ha superado el máximo recomendado de este ingrediente
-                  </p>
-                ) : undefined
-              }
-              trailing={
-                <>
-                  <button
-                    type="button"
-                    className="drag-handle"
-                    aria-label={`Reordenar ${component.ingredient.name}`}
-                    onPointerDown={(e) => {
-                      e.preventDefault();
-                      onDragStart(index);
-                    }}
-                  >
-                    <IconGripVertical size={16} stroke={1.75} />
-                  </button>
-                  <InputNumber
-                    value={component.quantity}
-                    step={stepFor(component.ingredient)}
-                    min={0}
-                    ariaLabel={component.ingredient.name}
-                    onChange={(quantity) =>
-                      dispatch({ type: "set-quantity", ingredientId: component.ingredient.id, quantity })
-                    }
-                  />
-                  <span className="creator-component-unit">{component.ingredient.base_unit}</span>
-                  <button
-                    type="button"
-                    className="creator-component-remove"
-                    aria-label={`Quitar ${component.ingredient.name}`}
-                    onClick={() => dispatch({ type: "remove-ingredient", ingredientId: component.ingredient.id })}
-                  >
-                    <IconX size={16} stroke={1.75} />
-                  </button>
-                </>
-              }
-            />
+            <SwipeableRow
+              leftAction={{
+                label: "Eliminar",
+                icon: <IconTrash size={18} stroke={1.75} />,
+                onTrigger: () => dispatch({ type: "remove-ingredient", ingredientId: component.ingredient.id }),
+              }}
+            >
+              <IngredientRow
+                ingredient={component.ingredient}
+                meta={
+                  overMax ? (
+                    <p className="creator-max-warning">
+                      Se ha superado el máximo recomendado de este ingrediente
+                    </p>
+                  ) : undefined
+                }
+                trailing={
+                  <>
+                    <button
+                      type="button"
+                      className="drag-handle"
+                      aria-label={`Reordenar ${component.ingredient.name}`}
+                      onPointerDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onDragStart(index);
+                      }}
+                    >
+                      <IconGripVertical size={16} stroke={1.75} />
+                    </button>
+                    <InputNumber
+                      value={component.quantity}
+                      step={stepFor(component.ingredient)}
+                      min={0}
+                      ariaLabel={component.ingredient.name}
+                      onChange={(quantity) =>
+                        dispatch({ type: "set-quantity", ingredientId: component.ingredient.id, quantity })
+                      }
+                    />
+                    <span className="creator-component-unit">{component.ingredient.base_unit}</span>
+                    <button
+                      type="button"
+                      className="creator-component-remove"
+                      aria-label={`Quitar ${component.ingredient.name}`}
+                      onClick={() => dispatch({ type: "remove-ingredient", ingredientId: component.ingredient.id })}
+                    >
+                      <IconX size={16} stroke={1.75} />
+                    </button>
+                  </>
+                }
+              />
+            </SwipeableRow>
           </li>
         );
       })}
