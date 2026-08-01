@@ -39,7 +39,13 @@ function MeterTrack({ status }: { status: RequirementStatus }) {
   const bandEnd = effectiveMaximum != null ? pct(effectiveMaximum) : 100;
   const fillPct = pct(accumulated);
 
-  const bandStyle = { left: `${bandStart}%`, width: `${Math.max(bandEnd - bandStart, 0)}%` };
+  const bandBorderStyle = "var(--border-width-thick) solid var(--hairline)"
+  const bandStyle = {
+    left: `${bandStart}%`,
+    width: `${Math.max(bandEnd - bandStart, 0)}%`,
+    borderLeft: bandStart === 0 ? "none" : bandBorderStyle,
+    borderRight: bandBorderStyle,
+  };
 
   return (
     <Progress.Root className="capsule-meter-track" value={accumulated} max={scaleMax}>
