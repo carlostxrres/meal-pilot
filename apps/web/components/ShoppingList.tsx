@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useOptimistic, useTransition } from "react";
-import { PLANNING_HORIZON_DAYS, type ShoppingListItem, type ShoppingReason } from "@meal-pilot/core";
+import { PLANNING_HORIZON_DAYS, type Ingredient, type ShoppingListItem, type ShoppingReason } from "@meal-pilot/core";
 import { markPurchasedAction } from "@/app/(app)/actions";
 import { PurchaseCheckbox } from "./PurchaseCheckbox";
 
@@ -21,10 +21,10 @@ export function ShoppingList({ items }: { items: ShoppingListItem[] }) {
     state.filter((item) => item.ingredient.id !== ingredientId),
   );
 
-  function purchase(ingredientId: string, restockQuantity: number) {
+  function purchase(ingredient: Ingredient, quantity: number) {
     startTransition(async () => {
-      removeItem(ingredientId);
-      await markPurchasedAction(ingredientId, restockQuantity);
+      removeItem(ingredient.id);
+      await markPurchasedAction(ingredient.id, quantity);
       router.refresh();
     });
   }

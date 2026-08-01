@@ -76,9 +76,10 @@ export async function setDishActiveAction(dishId: string, active: boolean) {
   revalidatePath("/");
 }
 
-export async function markPurchasedAction(ingredientId: string, restockQuantity: number) {
+/** `quantity` negativa deshace una compra (resta lo añadido) — usado por el botón "Deshacer" del toast de Compra. */
+export async function markPurchasedAction(ingredientId: string, quantity: number) {
   const supabase = await createClient();
-  await addToHomeInventory(supabase, ingredientId, restockQuantity);
+  await addToHomeInventory(supabase, ingredientId, quantity);
   revalidatePath("/shopping");
   revalidatePath("/inventory");
 }
