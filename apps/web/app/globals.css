@@ -1312,6 +1312,90 @@ label.ingredient-row-info {
   margin-top: var(--space-16);
 }
 
+/* --- Toast (Radix) — confirmación de compra en Compra, con "Deshacer" --- */
+
+.purchase-toast-viewport {
+  position: fixed;
+  bottom: calc(var(--tabbar-clearance) + env(safe-area-inset-bottom, 0px));
+  left: 0;
+  right: 0;
+  max-width: var(--shell-width);
+  margin: 0 auto;
+  padding: 0 var(--space-16);
+  display: flex;
+  justify-content: center;
+  list-style: none;
+  z-index: 30;
+}
+
+.purchase-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+  width: 100%;
+  background: var(--ink);
+  color: var(--canvas);
+  padding: var(--space-12) var(--space-16);
+  box-shadow: 0 4px 16px rgba(17, 17, 17, 0.24);
+}
+
+.purchase-toast[data-state="open"] {
+  animation: purchase-toast-in 200ms ease-out;
+}
+
+.purchase-toast[data-state="closed"] {
+  animation: purchase-toast-out 150ms ease-in;
+}
+
+.purchase-toast[data-swipe="move"] {
+  transform: translateX(var(--radix-toast-swipe-move-x));
+}
+
+.purchase-toast[data-swipe="cancel"] {
+  transform: translateX(0);
+  transition: transform 150ms ease-out;
+}
+
+.purchase-toast[data-swipe="end"] {
+  animation: purchase-toast-out 100ms ease-in;
+}
+
+@keyframes purchase-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-16));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes purchase-toast-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.purchase-toast-text {
+  flex: 1;
+  font-size: var(--text-base);
+}
+
+.purchase-toast-undo {
+  flex-shrink: 0;
+  border: var(--border-width) solid var(--canvas);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--canvas);
+  padding: var(--space-4) var(--space-16);
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+
 /* --- Buttons --- */
 
 button,
