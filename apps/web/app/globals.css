@@ -901,6 +901,18 @@ body {
   background: var(--off);
 }
 
+/* Marca los límites de la banda por encima de .capsule-meter-fill (que la
+   tapa en cuanto el valor entra o supera la banda) — así siguen viéndose
+   aunque la zona en sí quede oculta bajo el relleno. */
+.capsule-meter-band-limits {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: var(--border-width-thick) solid var(--charcoal);
+  border-right: var(--border-width-thick) solid var(--charcoal);
+  pointer-events: none;
+}
+
 /* Sub-nutriente estilo etiqueta europea ("Grasas" > "de las cuales
    saturadas"): ligera sangría + nombre sin negrita, para leerse como
    desglose de la línea anterior, no como un nutriente independiente. */

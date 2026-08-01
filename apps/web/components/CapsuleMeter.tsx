@@ -39,17 +39,20 @@ function MeterTrack({ status }: { status: RequirementStatus }) {
   const bandEnd = effectiveMaximum != null ? pct(effectiveMaximum) : 100;
   const fillPct = pct(accumulated);
 
+  const bandStyle = { left: `${bandStart}%`, width: `${Math.max(bandEnd - bandStart, 0)}%` };
+
   return (
     <Progress.Root className="capsule-meter-track" value={accumulated} max={scaleMax}>
-      <div
-        className="capsule-meter-band"
-        style={{ left: `${bandStart}%`, width: `${Math.max(bandEnd - bandStart, 0)}%` }}
-      />
+      <div className="capsule-meter-band" style={bandStyle} />
       <Progress.Indicator
         className="capsule-meter-fill"
         data-off={!withinRange}
         style={{ transform: `translateX(-${100 - fillPct}%)` }}
       />
+      {/* Límites de la banda por encima del relleno: sin esto, .capsule-meter-fill
+          los tapa en cuanto el valor acumulado entra o supera la banda de
+          tolerancia, y deja de verse dónde empieza/termina. */}
+      <div className="capsule-meter-band-limits" style={bandStyle} />
     </Progress.Root>
   );
 }
