@@ -3,7 +3,6 @@ import {
   computeDinnerTargets,
   computeDishPrice,
   computeHomeToOfficeCarry,
-  computeMealNutrition,
   computeOfficeToStreetGrab,
   pickDailyTip,
   type DayProposal,
@@ -16,7 +15,6 @@ import { IconAlertTriangle, IconBike, IconBulb, IconFlask, IconMoon, IconToolsKi
 import { CapsuleMeter } from "./CapsuleMeter";
 import DishCard from "./DishCard";
 import { MealConfirmCheckbox } from "./MealConfirmCheckbox";
-import { NutritionPopover } from "./NutritionPopover";
 
 function formatTime(time: string): string {
   return time.slice(0, 5);
@@ -173,7 +171,6 @@ export function DayProposalView({
                 price={computeDishPrice(mealProposal.resolved)}
                 mealName={mealProposal.meal.name}
                 complianceChecks={checkDishCompliance(mealProposal.resolved, mealRequirements).checks}
-                headerActions={<NutritionPopover totals={computeMealNutrition(mealProposal.resolved)} />}
                 checkStock
               >
                 {isToday && (

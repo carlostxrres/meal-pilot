@@ -13,8 +13,9 @@ Tarjeta de un plato ("ticket"), compartida entre el catálogo de Platos
 ingredientes con IngredientRow) vive aquí; lo que cambia por contexto entra
 por props:
   - `headerActions`: control extra en la esquina superior derecha — el
-    menú del plato (DishCreator, activar/desactivar...) en el catálogo, el
-    NutritionPopover del meal resuelto en Hoy.
+    menú del plato (DishCreator, activar/desactivar...) en el catálogo; en
+    Hoy no se pasa nada (la info nutricional ya vive en el chip de
+    cumplimiento de `complianceChecks`, no hace falta un segundo tooltip).
   - `mealName`/`complianceChecks`: para los chips de meal y de ventana
     nutricional, presentes en ambos contextos (catálogo y Hoy).
   - `checkStock`: si se da, cada IngredientRow resalta su stock en rojo
