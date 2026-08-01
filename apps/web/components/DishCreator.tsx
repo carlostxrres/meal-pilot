@@ -582,7 +582,7 @@ function CreatorMeters({
               aria-label={`Ver contribuciones de ${status.requirement.name}`}
               onClick={() => dispatch({ type: "inspect", requirementId: status.requirement.id })}
             >
-              <IconEye size={15} stroke={1.75} />
+              <IconEye size={14} stroke={1.75} />
             </button>
             <button
               type="button"
@@ -590,7 +590,7 @@ function CreatorMeters({
               aria-label={`Sugerencias para ${status.requirement.name}`}
               onClick={() => dispatch({ type: "suggest", requirementId: status.requirement.id })}
             >
-              <IconBulb size={15} stroke={1.75} />
+              <IconBulb size={14} stroke={1.75} />
             </button>
           </span>
         )}

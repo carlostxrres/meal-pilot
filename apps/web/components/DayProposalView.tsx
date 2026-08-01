@@ -161,7 +161,7 @@ export function DayProposalView({
             {!mealProposal.resolved ? (
               <>
                 <p className="warning">
-                  <IconAlertTriangle size={16} stroke={1.75} /> Sin propuesta válida: {mealProposal.unresolvedReason}
+                  <IconAlertTriangle size={14} stroke={1.75} /> Sin propuesta válida: {mealProposal.unresolvedReason}
                 </p>
               </>
             ) : (
