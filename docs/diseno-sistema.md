@@ -224,7 +224,7 @@ Cuando no existe combinación de comidas que satisfaga todos los requisitos del 
 1. Se satisfacen primero todos los requisitos **mandatory**.
 2. Entre los **advisory**, se prioriza por cercanía al vencimiento del periodo (un advisory semanal que ya lleva 6 de 7 días sin cumplirse pesa más que uno que acaba de reiniciarse).
 3. Si un requisito semanal (mandatory o advisory) no se puede cumplir hoy pero quedan días de la semana, **se aplaza** — no se marca como incumplido hasta que se cierra la ventana semanal sin haberlo alcanzado.
-4. Solo si un mandatory diario es matemáticamente imposible de cumplir con el inventario/opciones actuales, el sistema debe **señalarlo explícitamente** (no fallar en silencio) para que el usuario decida (ej. añadirlo a la lista de la compra urgente, o aceptar el incumplimiento puntual).
+4. Solo si un mandatory diario es matemáticamente imposible de cumplir con el inventario/opciones actuales, el sistema debe **señalarlo explícitamente** (no fallar en silencio) para que el usuario decida (ej. añadirlo a la lista de la compra urgente, o aceptar el incumplimiento puntual). En el plan comprometido esto se materializa como una fila de `planned_meal` sin `dish_id` y con `unresolved_reason` (ver [ADR-0019](adrs/0019-plan-comprometido-con-horizonte-rodante.md)): el slot queda comprometido igualmente, visible y con su motivo, y es la señal que dispara la reparación por inviabilidad.
 
 ### 3.8 Trazabilidad semanal
 
@@ -268,21 +268,51 @@ Aunque es un sistema de un único usuario, se decide usar **Supabase Auth + Row 
 - **supplement_day** (supplement_id → supplement, day_of_week) — solo si la frecuencia es de días fijos (lunes/miércoles/viernes)
 - **dietary_requirement** (id, owner_id, scope_type, scope_ref_id, period, week_reset_day, meal_id nullable → meal, minimum, maximum, unit, tolerance_margin, strictness, description)
 - **requirement_log** (requirement_id → dietary_requirement, period_start, period_end, accumulated, fulfilled bool)
-- **meal_log** (id, owner_id, date, meal_id → meal, dish_id → dish, confirmed bool) — para el "registro de comidas" mencionado como idea adicional en la idea original
+- **planned_meal** (id, owner_id, date, meal_id → meal, dish_id → dish *nullable*, dish_name, unresolved_reason, components jsonb, generated_at) — el **compromiso**: qué se comerá cada día del horizonte. `unique (owner_id, date, meal_id)`; `dish_id` nullable para poder comprometer un slot sin candidata válida (ver 3.7); `components` y `dish_name` congelan el plato en el momento de comprometer, de modo que editarlo después no altera lo prometido ni lo que hay que comprar (ADR-0019)
+- **meal_log** (id, owner_id, date, meal_id → meal, dish_id → dish *nullable*, dish_name, description, confirmed bool) — el **hecho**: lo que el usuario confirma haber comido, y lo que dispara el descuento de inventario (ADR-0021). `unique (owner_id, date, meal_id)`. Es el "registro de comidas" mencionado como idea adicional en la idea original
+
+Las dos FK a `dish` son `ON DELETE SET NULL` con el nombre congelado: limpiar el catálogo no cuesta historia. Por eso los CHECK y la lectura del historial se apoyan en `dish_name`, nunca en `dish_id` — un CHECK sobre `dish_id` haría fallar el borrado de cualquier plato, porque `SET NULL` es un UPDATE que revalida el CHECK.
+
+`planned_meal` y `meal_log` no se solapan: uno es compromiso y el otro es hecho. Un `meal_log` admite cuatro lecturas (ADR-0022), y de ahí sale la regla para no contar un slot dos veces:
+
+| Estado | Fila | Cuenta para diversidad y acumulados |
+| --- | --- | --- |
+| Sin responder | no hay fila | el `planned_meal` (se asume que se siguió el plan) |
+| Seguí el plan / comí otro plato | `confirmed = true`, `dish_name` | esa dish |
+| Comí fuera | `confirmed = true`, `description`, `dish_name` nulo | nada (no hay perfil nutricional que contar) |
+| No comí | `confirmed = false`, todo nulo | nada |
+
+El inventario es más estricto que esta tabla: **solo se descuenta con una afirmación explícita**, nunca por el "se asume que se siguió el plan". El sistema asume lo que es barato equivocar y se recalcula solo; exige confirmación para lo que es un hecho material.
 
 ---
 
 ## 5. Algoritmo de generación de menú (alto nivel)
 
-Descripción en pseudocódigo/prosa, sin implementación:
+### 5.1 Cuándo se calcula el plan
+
+El plan **no** es una opinión que se recalcule cada vez que alguien mira: es un **compromiso persistido** en `planned_meal` (ver [ADR-0019](adrs/0019-plan-comprometido-con-horizonte-rodante.md)). El contrato es:
+
+> Lo que el sistema dice que comerás en los próximos días es un compromiso; la lista de la compra es exactamente lo que falta para cumplirlo; **comprar nunca cambia el compromiso**.
+
+- **Horizonte comprometido rodante de 3 días** (hoy + 2, `PLANNING_HORIZON_DAYS`). La lista de la compra cubre exactamente ese horizonte, por construcción.
+- **Roll-forward perezoso**: al cargar `/` o `/shopping` se generan solo los `(date, meal_id)` que falten, encadenados detrás de los días ya comprometidos. Al pasar el día entra uno nuevo por el extremo; hoy y mañana no se tocan. No hay cron.
+- **Solo tres cosas disparan generación**: (a) un hueco sin planificar; (b) una acción explícita del usuario (cambiar un plato, regenerar un día, regenerar el horizonte); (c) reparación por inviabilidad — el compromiso ha dejado de poder servirse. Solo (c) puede tocar un día ya comprometido, y solo hacia adelante.
+- **No disparan nada**: marcar algo como comprado, editar el inventario a mano, confirmar un meal.
+- **Los días pasados no se regeneran nunca**: quedan como histórico (lo comprometido frente a lo realmente comido).
+
+De ahí sale la propiedad que hace funcionar el ciclo: la **lista de la compra es el mecanismo de reparación**. Cualquier divergencia del inventario —se estropeó algo, te lo comiste sin registrarlo, vaciaste una balda— aparece como ítem de compra, nunca como un cambio del plan.
+
+### 5.2 Cómo se calcula
 
 ```
-para cada día a planificar:
+generar los días que falten del horizonte, encadenados tras los ya comprometidos:
   entrada:
-    - inventario actual (home + office)
-    - dietary requirements activos y su acumulado (requirement_log)
-    - caducidades de ingredientes abiertos
-    - catálogo de dishes fijas, cada una de un meal (dish.meal_id)
+    - inventario actual (home + office) -> se copia a un STOCK VIRTUAL
+    - acumulado de requisitos, replayado desde el inicio del periodo semanal
+      sobre planned_meal + meal_log, resolviendo cada slot con la tabla de
+      cuatro estados de 4.2 (requirement_log no se usa)
+    - ingredientes usados recientemente (misma resolución de cuatro estados)
+    - catálogo de dishes fijas activas, cada una de un meal (dish.meal_id)
 
   para cada uno de los 4 meals del día (en orden horario):
     candidatas = dishes con meal_id = este meal
@@ -291,12 +321,17 @@ para cada día a planificar:
     filtrar candidatas que romperían un techo mandatory GLOBAL
       (ej. máximo semanal de atún — las ventanas del propio meal no se
        filtran aquí: se cumplen por construcción)
-    puntuar cada candidata (media sobre sus ingredientes):
-      1. que ya están en inventario (evitar compra impulsiva)
-      2. que ayudan a acercarse a un requisito global mandatory no cumplido
-      3. que no se hayan usado recientemente (norma de diversidad —
-         la rotación es ENTRE dishes fijas del meal, ver sección 2)
-    elegir la mejor (empates: variación aleatoria con semilla por fecha)
+    puntuar cada candidata: SUMA PONDERADA de términos que compiten
+      (solo comparable dentro del mismo meal)
+      - coste:    cuántos componentes NO cubre el STOCK VIRTUAL   (penaliza)
+      - variedad: cuántos componentes se usaron hace poco          (penaliza)
+      - requisitos: ayuda a un mínimo mandatory global no cumplido (premia)
+      - drenaje:  consume ingredientes con mucho stock acumulado   (premia)
+      INVARIANTE: los dos primeros se cuentan en unidades absolutas,
+      no en fracciones -> un plato sin nada que comprar y sin
+      repeticiones puntúa igual con 1 componente que con 6
+    elegir la mejor (empates -con epsilon-: azar con semilla por fecha)
+    DECREMENTAR el stock virtual con lo que consume la dish elegida
 
   aplicar supplements correspondientes a cada meal, en su relative_timing
 
@@ -304,8 +339,16 @@ para cada día a planificar:
     objetivo − suma de las 4 dishes -> "Prepara tu cena" (ADR-0017)
 
   si algún meal queda sin candidata válida ->
-    señalar explícitamente al usuario (no fallar en silencio, ver 3.7)
+    comprometerlo igualmente sin dish_id, con unresolved_reason (ver 3.7)
+
+persistir el día en planned_meal, congelando componentes y cantidades
 ```
+
+Dos piezas merecen énfasis, porque son lo que hace que el compromiso valga algo (ver [ADR-0020](adrs/0020-funcion-objetivo-con-terminos-que-compiten.md)):
+
+- **El stock virtual se decrementa** al asignar cada dish, entre días del horizonte y entre meals del mismo día. Sin esto, los mismos 200 g de atún "cubrirían" los tres días y el plan comprometido sería inviable — es decir, se congelaría justo la promesa que se quiere garantizar.
+- **La puntuación es una suma ponderada, no un orden de prioridades.** La variedad y la disponibilidad **compiten**: el objetivo declarado del sistema es maximizar variedad de ingredientes y minimizar inventario en stock a la vez, y eso es un equilibrio, no una jerarquía. Los pesos concretos son provisionales hasta que exista un catálogo de platos sano.
+- **Las desviaciones se cuentan, no se promedian**, y de ahí sale el invariante de neutralidad al tamaño. Sumar los aciertos sesga hacia los platos con muchos componentes; promediarlos sesga hacia los que tienen pocos (un plato de 1 ingrediente alcanzaría el máximo siempre). Contar lo que falta no sesga hacia ninguno, y además se lee como el objetivo real: un plato al que le faltan 3 ingredientes cuesta 3 compras, tenga el tamaño que tenga. Esto es lo que permite diseñar el catálogo sin tener que igualar el número de componentes dentro de cada meal.
 
 El resultado por día es una propuesta concreta de las 4 comidas + supplements, ya lista para "abrir la nevera y tener todo lo necesario" (objetivo de "sentirse mágico" de la idea original), más el objetivo nutricional que le queda a la cena.
 
@@ -315,12 +358,12 @@ El resultado por día es una propuesta concreta de las 4 comidas + supplements, 
 
 Las 4 fases de la idea original, conectadas explícitamente con el modelo de requisitos:
 
-1. **Compra**: la lista de la compra (fase 4) se deriva de lo que falta en inventario para cubrir los próximos meals generados, priorizado por los requisitos mandatory pendientes (sección 3.7) y por caducidad.
-2. **Elaboración de comida**: el sistema entrega la propuesta diaria del algoritmo de la sección 5; el usuario solo ejecuta (preparación mínima).
-3. **Revisión de inventario**: tras comer, el usuario actualiza cantidades restantes en `ingredient.office_inventory` / `home_inventory`. Esto retroalimenta tanto el generador del día siguiente como la lista de la compra.
-4. **Lista de la compra dinámica**: se recalcula a partir de (a) inventario actual, (b) dietary requirements con acumulado pendiente en su periodo vigente, y (c) caducidades — de forma que se compra lo justo y a tiempo, sin que el usuario tenga que pensarlo.
+1. **Compra**: la lista de la compra (fase 4) se deriva de lo que falta en inventario para cubrir los meals **ya comprometidos** del horizonte, priorizado por los requisitos mandatory pendientes (sección 3.7) y por caducidad. Como el plan no se mueve al comprar (5.1), la lista es la contrapartida exacta de un compromiso: el usuario puede comprar sin saber para qué receta es cada cosa.
+2. **Elaboración de comida**: el sistema entrega la propuesta diaria comprometida (sección 5); el usuario solo ejecuta (preparación mínima).
+3. **Confirmación y revisión de inventario**: al confirmar un meal, el sistema **descuenta las cantidades congeladas en el compromiso** ([ADR-0021](adrs/0021-confirmar-comida-descuenta-inventario.md)). El inventario nunca se mueve sin una afirmación explícita del usuario, pero el sistema **la persigue en vez de esperarla**: al abrir la app, si quedan comidas sin responder de días anteriores, pregunta una por una si se hizo cada una — saltable siempre, y acotado a los mismos 3 días del horizonte ([ADR-0022](adrs/0022-historial-de-comidas-editable-y-repaso-guiado.md)). Al final del día, además, recuerda abrir la nevera y corregir a mano lo que no cuadre en `ingredient.office_inventory` / `home_inventory`. El descuento estima; la revisión mide.
+4. **Lista de la compra dinámica**: se recalcula a partir de (a) inventario actual, (b) lo que exigen los días comprometidos, (c) dietary requirements con acumulado pendiente en su periodo vigente, y (d) caducidades — de forma que se compra lo justo y a tiempo, sin que el usuario tenga que pensarlo.
 
-Este ciclo es circular: cada revisión de inventario alimenta la siguiente generación de menú y la siguiente lista de la compra, sin intervención manual más allá de confirmar datos.
+Este ciclo es circular, pero **no simétrico**, y esa asimetría es lo que lo hace habitable: el inventario alimenta la generación de los días que **aún no** están comprometidos, nunca la de los que ya lo están. Comprar, editar inventario o confirmar una comida jamás reescriben lo prometido; se limitan a mover la lista de la compra. Dicho al revés: **el plan es lo estable y la lista de la compra es lo que absorbe la incertidumbre**. Es la única forma de sostener a la vez las dos frases de la idea original — "abro la nevera y tengo todo lo necesario" y "compro lo que el sistema me dice, sin ni siquiera tener que saber para qué receta es".
 
 ---
 
@@ -373,7 +416,19 @@ No entran en el alcance de v1, pero conviene dejarlas anotadas porque encajan de
 - **Proteína del snack post-entreno**: ventana 25–35g (antes mínimo suelto de 35g), dentro del set de requisitos por meal del ADR-0017. Ver 3.3 y 3.9.
 - **Equivalencia ración → gramos** (necesaria para cargar sardinas/atún como datos semilla): 1 ración de pescado en lata = 120g (asunción tomada al escribir la fase 2c, ajustable). Ver `supabase/migrations/20260726130000_seed_initial_catalog.sql`.
 
+### Resueltas en el ciclo del plan comprometido (2026-08-01)
+
+- **Cuándo se calcula el plan**: compromiso persistido en `planned_meal`, horizonte rodante de 3 días, tres triggers. Comprar no lo cambia. Ver 5.1 y [ADR-0019](adrs/0019-plan-comprometido-con-horizonte-rodante.md).
+- **Función objetivo**: suma ponderada de términos que compiten sobre stock virtual, con las desviaciones contadas en unidades absolutas (invariante de neutralidad al tamaño). Ver 5.2 y [ADR-0020](adrs/0020-funcion-objetivo-con-terminos-que-compiten.md).
+- **Ciclo de inventario**: confirmar descuenta; el sistema persigue la confirmación con un repaso guiado. Ver sección 6, [ADR-0021](adrs/0021-confirmar-comida-descuenta-inventario.md) y [ADR-0022](adrs/0022-historial-de-comidas-editable-y-repaso-guiado.md).
+- **Historial**: `planned_meal` (compromiso) vs `meal_log` (hecho), editable por el usuario, con `ON DELETE SET NULL` y nombre de plato congelado para que limpiar el catálogo no cueste historia. Ver 4.2 y ADR-0022.
+- **Minimizar stock**: se sirve con un término de drenaje heurístico (vaciar lo que más stock acumula), sin modelar fechas de apertura. Ver ADR-0020.
+
 ### Aún abiertas
 
 - **Alcance de la fase 5 (IA)**: de las 5 ideas de la sección 8, cuál (si alguna) se aborda primero — no es necesario decidirlo ahora, solo antes de empezar esa fase.
-- **Gramos de hidratos en el almuerzo**: mencionado como idea en la sección 9 original, pero nunca se formalizó como fila en 3.3 — no bloquea nada, se puede añadir como `dietary_requirement` nuevo cuando se decida.
+- **~~Gramos de hidratos en el almuerzo~~** *(resuelta, era deuda de documentación)*: la ventana está formalizada desde el 2026-07-27 como parte del set completo por meal del ADR-0017 — **115–155 g, mandatory** (`20260727121000_per_meal_nutritional_requirements.sql`). Los 4 meals tienen sus 8 nutrientes. La tabla de 3.3 no la recoge porque es de ejemplos anteriores a ADR-0017; la referencia buena es 3.9.
+- **Suplementos fuera de todos los cálculos**: no entran en generación, compra ni descuento, y `frequency`/`supplement_day` no los lee ninguna línea del repo, pese a consumir inventario real. Ver ADR-0021.
+- **Separación oficina/casa**: informativa hasta que exista un evento "ya me lo he llevado". Ver ADR-0021.
+- **Envase vs ración**: comprar suma el déficit exacto, no el tamaño real del envase. Ver ADR-0013 y ADR-0021.
+- **Caducidad real** (fecha de apertura por ingrediente o lotes de inventario): el término de drenaje la aproxima, no la sustituye. Ver ADR-0020.
