@@ -22,6 +22,10 @@ Registro de decisiones de arquitectura del proyecto. Cada ADR es un archivo con 
 | [0016](0016-monorepo-npm-workspaces-para-compartir-engine-y-data.md) | Monorepo npm workspaces para compartir `engine`/`data` (CLI + web) |
 | [0017](0017-requisitos-dieteticos-por-meal-como-mecanismo-principal.md) | Requisitos dietéticos por meal como mecanismo principal, vista "Prepara tu cena" |
 | [0018](0018-dish-fija-con-meal-unico.md) | Toda dish es fija y pertenece a exactamente un meal (sustituye a 0008) |
+| [0019](0019-plan-comprometido-con-horizonte-rodante.md) | El plan de comidas es un compromiso persistido, con horizonte rodante de 3 días |
+| [0020](0020-funcion-objetivo-con-terminos-que-compiten.md) | Simulación de consumo y función objetivo con términos que compiten |
+| [0021](0021-confirmar-comida-descuenta-inventario.md) | Confirmar una comida descuenta inventario automáticamente |
+| [0022](0022-historial-de-comidas-editable-y-repaso-guiado.md) | Historial de comidas editable y repaso guiado de días pendientes |
 
 ## Cómo añadir un ADR nuevo
 
