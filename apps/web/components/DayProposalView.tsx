@@ -174,6 +174,7 @@ export function DayProposalView({
                 mealName={mealProposal.meal.name}
                 complianceChecks={checkDishCompliance(mealProposal.resolved, mealRequirements).checks}
                 headerActions={<NutritionPopover totals={computeMealNutrition(mealProposal.resolved)} />}
+                checkStock
               >
                 {isToday && (
                   <MealConfirmCheckbox

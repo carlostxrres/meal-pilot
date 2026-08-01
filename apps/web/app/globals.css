@@ -1085,17 +1085,22 @@ body {
   font-weight: 600;
 }
 
-.inventory-qty {
+.ingredient-row-stock {
   display: flex;
   gap: var(--space-12);
   font-size: var(--text-base);
   color: var(--mute);
 }
 
-.inventory-qty strong {
+.ingredient-row-stock strong {
   color: var(--ink);
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+}
+
+.ingredient-row-stock[data-short="true"],
+.ingredient-row-stock[data-short="true"] strong {
+  color: var(--off);
 }
 
 .inventory-edit-btn {
@@ -1147,9 +1152,9 @@ body {
   margin-bottom: 0;
 }
 
-/* --- Ingredient row (compartida entre Inventario, Compra y el creador de
-   platos: misma estructura, tamaño, espaciados y estilo de nombre en los
-   tres — ver components/IngredientRow.tsx) --- */
+/* --- Ingredient row (compartida entre Inventario, Compra, el creador de
+   platos, Hoy y el catálogo de platos: misma estructura, tamaño,
+   espaciados y estilo de nombre en todos — ver components/IngredientRow.tsx) --- */
 
 .ingredient-row {
   display: flex;

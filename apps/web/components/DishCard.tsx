@@ -17,6 +17,8 @@ por props:
     NutritionPopover del meal resuelto en Hoy.
   - `mealName`/`complianceChecks`: para los chips de meal y de ventana
     nutricional, presentes en ambos contextos (catálogo y Hoy).
+  - `checkStock`: si se da, cada IngredientRow resalta su stock en rojo
+    cuando el inventario no llega a la cantidad de la receta (solo Hoy).
   - `children`: contenido tras la lista de ingredientes — en Hoy, los
     suplementos, el consejo del meal, la ventana nutricional y el checkbox
     de confirmar, todos dentro de la misma tarjeta (igual que antes de
@@ -37,6 +39,7 @@ export default function DishCard({
   complianceChecks,
   status,
   headerActions,
+  checkStock,
   children,
 }: {
   dish: DishCardDish;
@@ -49,6 +52,8 @@ export default function DishCard({
   /** Activo/desactivado (solo se pasa en el catálogo de Platos). */
   status?: "active" | "inactive";
   headerActions?: ReactNode;
+  /** Si se da, cada IngredientRow resalta su stock en rojo cuando el inventario no llega a la cantidad de la receta (solo Hoy). */
+  checkStock?: boolean;
   children?: ReactNode;
 }) {
   return (
@@ -83,6 +88,7 @@ export default function DishCard({
           <li key={component.ingredient.id}>
             <IngredientRow
               ingredient={component.ingredient}
+              neededQuantity={checkStock ? component.quantity : undefined}
               trailing={
                 <span className="data-mono">
                   {component.quantity}

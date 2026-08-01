@@ -49,18 +49,6 @@ function InventoryRow({
     >
       <IngredientRow
         ingredient={ingredient}
-        meta={
-          <p className="inventory-qty">
-            <span>
-              Oficina <strong>{ingredient.office_inventory}</strong>
-              {ingredient.base_unit}
-            </span>
-            <span>
-              Casa <strong>{ingredient.home_inventory}</strong>
-              {ingredient.base_unit}
-            </span>
-          </p>
-        }
         trailing={
           <>
             <button

@@ -6,13 +6,16 @@ import { IngredientThumb } from "./IngredientThumb";
 import { NutritionPopover } from "./NutritionPopover";
 
 /*
-Base compartida por los tres lugares que listan ingredientes (Inventario,
-Compra, el creador de platos): misma estructura, tamaño y espaciados
-(clase .ingredient-row), miniatura a la izquierda, nombre con el mismo
-estilo, y el mismo tooltip de valores "por 100g/ml/unidad". Lo que cambia
-por contexto son los slots `meta` (línea secundaria bajo el nombre) y
-`trailing` (controles a la derecha) — cantidades+editar en Inventario,
-motivo+checkbox en Compra, stepper±10/quitar o botón "+" en el creador.
+Base compartida por todos los lugares que listan ingredientes (Inventario,
+Compra, el creador de platos, el plato del día en Hoy y el catálogo de
+platos): misma estructura, tamaño y espaciados (clase .ingredient-row),
+miniatura a la izquierda, nombre con el mismo estilo, la misma línea de
+stock (Oficina/Casa) bajo el nombre, y el mismo tooltip de valores "por
+100g/ml/unidad". Lo que cambia por contexto son los slots `meta` (línea
+secundaria extra bajo el nombre) y `trailing` (controles a la derecha) —
+editar en Inventario, motivo+checkbox en Compra, stepper±10/quitar o botón
+"+" en el creador, cantidad de la receta en Hoy/catálogo. `neededQuantity`
+(solo Hoy) resalta la línea de stock en rojo si el inventario no llega.
 */
 
 function per100Label(unit: Ingredient["base_unit"]): string {
@@ -32,6 +35,7 @@ export function IngredientRow({
   trailing,
   infoHtmlFor,
   onClick,
+  neededQuantity,
 }: {
   ingredient: Ingredient;
   meta?: ReactNode;
@@ -40,6 +44,8 @@ export function IngredientRow({
   infoHtmlFor?: string;
   /** Si se da, toda la fila actúa como botón (ej. resultado de búsqueda para añadir). */
   onClick?: () => void;
+  /** Cantidad que hace falta de este ingrediente (ej. para su receta de "Hoy") — si el inventario total no llega, la línea de stock se resalta en rojo. */
+  neededQuantity?: number;
 }) {
   function handleKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     if (!onClick) return;
@@ -50,6 +56,7 @@ export function IngredientRow({
   }
 
   const InfoWrapper = infoHtmlFor ? "label" : "div";
+  const short = neededQuantity != null && ingredient.office_inventory + ingredient.home_inventory < neededQuantity;
 
   return (
     <div
@@ -66,6 +73,16 @@ export function IngredientRow({
         className="ingredient-row-info"
       >
         <p className="ingredient-row-name">{ingredient.name}</p>
+        <p className="ingredient-row-stock" data-short={short || undefined}>
+          <span>
+            Oficina <strong>{ingredient.office_inventory}</strong>
+            {ingredient.base_unit}
+          </span>
+          <span>
+            Casa <strong>{ingredient.home_inventory}</strong>
+            {ingredient.base_unit}
+          </span>
+        </p>
         {meta}
       </InfoWrapper>
       {/* stopPropagation: si la fila entera es clicable (onClick, ej. resultado
