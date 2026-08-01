@@ -7,6 +7,7 @@ import { useId, useState } from "react";
 import type { Ingredient } from "@meal-pilot/core";
 import { IngredientRow } from "./IngredientRow";
 import { InputNumber } from "./InputNumber";
+import { SwipeableRow } from "./SwipeableRow";
 
 /** Formulario en sí, separado para que su estado se reinicie cada vez que el diálogo se monta (Radix desmonta `Dialog.Content` al cerrar). */
 function PurchaseQuantityForm({
@@ -72,40 +73,49 @@ export function PurchaseCheckbox({
   const id = useId();
 
   return (
-    <IngredientRow
-      ingredient={ingredient}
-      infoHtmlFor={id}
-      meta={<p className="shopping-reason">{reasonText}</p>}
-      trailing={
-        <>
-          <Checkbox.Root
-            id={id}
-            className="checkbox-root"
-            checked={false}
-            onCheckedChange={(value) => {
-              if (value === true) setOpen(true);
-            }}
-          >
-            <Checkbox.Indicator className="checkbox-indicator">
-              <IconCheck size={14} stroke={3} />
-            </Checkbox.Indicator>
-          </Checkbox.Root>
-          <Dialog.Root open={open} onOpenChange={setOpen}>
-            <Dialog.Portal>
-              <Dialog.Overlay className="dialog-overlay" />
-              <Dialog.Content className="dialog-content">
-                <Dialog.Title className="dialog-title">{ingredient.name}</Dialog.Title>
-                <PurchaseQuantityForm
-                  ingredient={ingredient}
-                  restockQuantity={restockQuantity}
-                  onOpenChange={setOpen}
-                  onConfirm={(quantity) => onPurchase(ingredient, quantity)}
-                />
-              </Dialog.Content>
-            </Dialog.Portal>
-          </Dialog.Root>
-        </>
-      }
-    />
+    <SwipeableRow
+      leftAction={{
+        label: "Comprado",
+        icon: <IconCheck size={18} stroke={1.75} />,
+        onTrigger: () => setOpen(true),
+        tone: "positive",
+      }}
+    >
+      <IngredientRow
+        ingredient={ingredient}
+        infoHtmlFor={id}
+        meta={<p className="shopping-reason">{reasonText}</p>}
+        trailing={
+          <>
+            <Checkbox.Root
+              id={id}
+              className="checkbox-root"
+              checked={false}
+              onCheckedChange={(value) => {
+                if (value === true) setOpen(true);
+              }}
+            >
+              <Checkbox.Indicator className="checkbox-indicator">
+                <IconCheck size={14} stroke={3} />
+              </Checkbox.Indicator>
+            </Checkbox.Root>
+            <Dialog.Root open={open} onOpenChange={setOpen}>
+              <Dialog.Portal>
+                <Dialog.Overlay className="dialog-overlay" />
+                <Dialog.Content className="dialog-content">
+                  <Dialog.Title className="dialog-title">{ingredient.name}</Dialog.Title>
+                  <PurchaseQuantityForm
+                    ingredient={ingredient}
+                    restockQuantity={restockQuantity}
+                    onOpenChange={setOpen}
+                    onConfirm={(quantity) => onPurchase(ingredient, quantity)}
+                  />
+                </Dialog.Content>
+              </Dialog.Portal>
+            </Dialog.Root>
+          </>
+        }
+      />
+    </SwipeableRow>
   );
 }

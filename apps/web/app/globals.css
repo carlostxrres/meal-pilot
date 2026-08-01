@@ -1113,7 +1113,7 @@ body {
   font-size: var(--text-base);
 }
 
-/* --- Swipe gestures (Inventario) --- */
+/* --- Swipe gestures (Inventario, Compra, el creador de platos) --- */
 
 .swipe-row {
   position: relative;
@@ -1137,6 +1137,10 @@ body {
 .swipe-row-action-left {
   left: 0;
   background: var(--off);
+}
+
+.swipe-row-action-left[data-tone="positive"] {
+  background: var(--success);
 }
 
 .swipe-row-action-right {

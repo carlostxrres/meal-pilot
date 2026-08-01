@@ -13,6 +13,8 @@ export interface SwipeAction {
   label: string;
   icon: React.ReactNode;
   onTrigger: () => void;
+  /** Color de fondo revelado al arrastrar — "destructive" (rojo, por defecto: vaciar/eliminar) o "positive" (verde: confirmar/comprado). */
+  tone?: "destructive" | "positive";
 }
 
 /**
@@ -70,6 +72,7 @@ export function SwipeableRow({
           className="swipe-row-action swipe-row-action-left"
           style={{ opacity: Math.max(0, progress) }}
           data-armed={progress >= 1}
+          data-tone={leftAction.tone ?? "destructive"}
         >
           {leftAction.icon}
           <span>{leftAction.label}</span>
