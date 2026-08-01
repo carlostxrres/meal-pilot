@@ -5,7 +5,7 @@ export default function SettingsPage() {
   return (
     <div>
       <h2 className="section-title">
-        <IconSettings size={14} stroke={2} /> Configuración
+        <IconSettings size={16} stroke={2} /> Configuración
       </h2>
       <p className="section-note">Todavía no hay nada que configurar aquí.</p>
     </div>

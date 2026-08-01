@@ -96,7 +96,7 @@ export function PurchaseCheckbox({
               }}
             >
               <Checkbox.Indicator className="checkbox-indicator">
-                <IconCheck size={14} stroke={3} />
+                <IconCheck size={16} stroke={3} />
               </Checkbox.Indicator>
             </Checkbox.Root>
             <Dialog.Root open={open} onOpenChange={setOpen}>

@@ -50,7 +50,7 @@ export function InputNumber({
         onClick={() => onChange(clamp(value - step))}
         disabled={disabled || (min != null && value <= min)}
       >
-        <IconMinus size={13} stroke={2} />
+        <IconMinus size={18} stroke={2} />
       </button>
       <input
         id={id}
@@ -76,7 +76,7 @@ export function InputNumber({
         onClick={() => onChange(clamp(value + step))}
         disabled={disabled || (max != null && value >= max)}
       >
-        <IconPlus size={13} stroke={2} />
+        <IconPlus size={18} stroke={2} />
       </button>
     </div>
   );

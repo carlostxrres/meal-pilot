@@ -36,7 +36,7 @@ export function MealConfirmCheckbox({
         }}
       >
         <Checkbox.Indicator className="checkbox-indicator">
-          <IconCheck size={14} stroke={3} />
+          <IconCheck size={16} stroke={3} />
         </Checkbox.Indicator>
       </Checkbox.Root>
       <label htmlFor={id} className="meal-confirm-label">

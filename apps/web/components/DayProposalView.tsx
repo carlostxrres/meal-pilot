@@ -125,7 +125,7 @@ export function DayProposalView({
             {/* Después de "Desayuno en casa" (el primer meal), no antes. */}
             {isSecond && (
               <CommuteSection
-                icon={<IconBike size={14} stroke={2} />}
+                icon={<IconBike size={16} stroke={2} />}
                 title="Commute: de casa a la oficina"
                 prepBullet={prepMiddleSnackBullet}
                 carryLists={homeToOfficeCarry}
@@ -134,14 +134,14 @@ export function DayProposalView({
             )}
             {isLast && mealProposal.resolved && (
               <CommuteSection
-                icon={<IconBike size={14} stroke={2} />}
+                icon={<IconBike size={16} stroke={2} />}
                 title="Commute: de la oficina a la calle"
                 carryLists={officeToStreetGrab ? [officeToStreetGrab] : []}
                 emptyText="Ningún ingrediente que llevar de la oficina hoy."
               />
             )}
             <h2 className="section-title">
-              <IconToolsKitchen2 size={14} stroke={2} />
+              <IconToolsKitchen2 size={16} stroke={2} />
               {" "}
               {mealProposal.meal.name}
               {" "}
@@ -155,13 +155,13 @@ export function DayProposalView({
                 * después del plato.
                 */
               <p key={supplement.id} className="supplement-note">
-                <IconFlask size={14} stroke={1.75} /> {supplement.name} ({supplement.relative_timing})
+                <IconFlask size={16} stroke={1.75} /> {supplement.name} ({supplement.relative_timing})
               </p>
             ))}
             {!mealProposal.resolved ? (
               <>
                 <p className="warning">
-                  <IconAlertTriangle size={14} stroke={1.75} /> Sin propuesta válida: {mealProposal.unresolvedReason}
+                  <IconAlertTriangle size={16} stroke={1.75} /> Sin propuesta válida: {mealProposal.unresolvedReason}
                 </p>
               </>
             ) : (
@@ -186,7 +186,7 @@ export function DayProposalView({
 
             {tip && (
               <p className="meal-tip">
-                <IconBulb size={14} stroke={1.75} /> {tip.text}
+                <IconBulb size={16} stroke={1.75} /> {tip.text}
               </p>
             )}
 
@@ -195,7 +195,7 @@ export function DayProposalView({
       })}
 
       <h3 className="section-title">
-        <IconMoon size={14} stroke={2} /> Prepara tu cena
+        <IconMoon size={16} stroke={2} /> Prepara tu cena
       </h3>
       <p className="section-note">
         Lo que queda de los objetivos diarios tras los 4 meals — la cena se cocina fuera de esta app.

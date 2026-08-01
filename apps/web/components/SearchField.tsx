@@ -30,7 +30,7 @@ export function SearchField({
           aria-label="Borrar búsqueda"
           onClick={() => onChange("")}
         >
-          <IconX size={14} stroke={2} />
+          <IconX size={16} stroke={2} />
         </button>
       )}
     </div>

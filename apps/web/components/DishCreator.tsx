@@ -308,9 +308,9 @@ function SuggestionDialog({
                     trailing={
                       <span className="suggestion-qty data-mono">
                         {suggestion.kind === "add" ? (
-                          <IconPlus size={13} stroke={2} />
+                          <IconPlus size={18} stroke={2} />
                         ) : (
-                          <IconMinus size={13} stroke={2} />
+                          <IconMinus size={18} stroke={2} />
                         )}
                         {formatQuantity(suggestion.quantity)}
                         {suggestion.ingredient.base_unit}
@@ -399,7 +399,7 @@ function DishDetailsFields({
           <Select.Trigger id="dish-meal-trigger" className="select-trigger dish-meal-trigger">
             <Select.Value />
             <Select.Icon>
-              <IconChevronDown size={14} stroke={1.75} />
+              <IconChevronDown size={16} stroke={1.75} />
             </Select.Icon>
           </Select.Trigger>
           <Select.Portal>
@@ -408,7 +408,7 @@ function DishDetailsFields({
                 {meals.map((meal) => (
                   <Select.Item key={meal.id} value={meal.id} className="select-item select-item-with-check">
                     <Select.ItemIndicator className="select-item-indicator">
-                      <IconCheck size={14} stroke={2} />
+                      <IconCheck size={16} stroke={2} />
                     </Select.ItemIndicator>
                     <Select.ItemText>{meal.name}</Select.ItemText>
                   </Select.Item>
@@ -582,7 +582,7 @@ function CreatorMeters({
               aria-label={`Ver contribuciones de ${status.requirement.name}`}
               onClick={() => dispatch({ type: "inspect", requirementId: status.requirement.id })}
             >
-              <IconEye size={14} stroke={1.75} />
+              <IconEye size={16} stroke={1.75} />
             </button>
             <button
               type="button"
@@ -590,7 +590,7 @@ function CreatorMeters({
               aria-label={`Sugerencias para ${status.requirement.name}`}
               onClick={() => dispatch({ type: "suggest", requirementId: status.requirement.id })}
             >
-              <IconBulb size={14} stroke={1.75} />
+              <IconBulb size={16} stroke={1.75} />
             </button>
           </span>
         )}

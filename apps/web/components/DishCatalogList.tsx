@@ -58,7 +58,7 @@ export function DishCatalogList({
           <Select.Trigger className="select-trigger" aria-label="Ordenar por">
             <Select.Value />
             <Select.Icon>
-              <IconChevronDown size={14} stroke={2} />
+              <IconChevronDown size={16} stroke={2} />
             </Select.Icon>
           </Select.Trigger>
           <Select.Portal>
@@ -67,7 +67,7 @@ export function DishCatalogList({
                 {SORT_OPTIONS.map(([value, label]) => (
                   <Select.Item key={value} value={value} className="select-item select-item-with-check">
                     <Select.ItemIndicator className="select-item-indicator">
-                      <IconCheck size={14} stroke={2} />
+                      <IconCheck size={16} stroke={2} />
                     </Select.ItemIndicator>
                     <Select.ItemText>{label}</Select.ItemText>
                   </Select.Item>
@@ -79,7 +79,7 @@ export function DishCatalogList({
       </div>
 
       <h2 className="section-title">
-        <IconToolsKitchen2 size={14} stroke={2} /> Platos del catálogo ({filtered.length})
+        <IconToolsKitchen2 size={16} stroke={2} /> Platos del catálogo ({filtered.length})
       </h2>
 
       {filtered.length === 0 ? (

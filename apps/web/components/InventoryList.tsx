@@ -118,7 +118,7 @@ export function InventoryList({ ingredients }: { ingredients: Ingredient[] }) {
           <Select.Trigger className="select-trigger" aria-label="Ordenar por">
             <Select.Value />
             <Select.Icon>
-              <IconChevronDown size={14} stroke={2} />
+              <IconChevronDown size={16} stroke={2} />
             </Select.Icon>
           </Select.Trigger>
           <Select.Portal>
@@ -134,7 +134,7 @@ export function InventoryList({ ingredients }: { ingredients: Ingredient[] }) {
                 ).map(([value, label]) => (
                   <Select.Item key={value} value={value} className="select-item select-item-with-check">
                     <Select.ItemIndicator className="select-item-indicator">
-                      <IconCheck size={14} stroke={2} />
+                      <IconCheck size={16} stroke={2} />
                     </Select.ItemIndicator>
                     <Select.ItemText>{label}</Select.ItemText>
                   </Select.Item>
@@ -146,7 +146,7 @@ export function InventoryList({ ingredients }: { ingredients: Ingredient[] }) {
       </div>
 
       <h2 className="section-title">
-        <IconBox size={14} stroke={2} /> En stock ({inStock.length})
+        <IconBox size={16} stroke={2} /> En stock ({inStock.length})
       </h2>
       {inStock.length === 0 ? (
         <p className="inventory-empty">Nada en stock con este filtro.</p>
@@ -155,7 +155,7 @@ export function InventoryList({ ingredients }: { ingredients: Ingredient[] }) {
       )}
 
       <h2 className="section-title">
-        <IconCircleOff size={14} stroke={2} /> Agotado ({outOfStock.length})
+        <IconCircleOff size={16} stroke={2} /> Agotado ({outOfStock.length})
       </h2>
       {outOfStock.length === 0 ? (
         <p className="inventory-empty">Nada agotado con este filtro.</p>

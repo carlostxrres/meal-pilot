@@ -18,7 +18,7 @@ export function TabBar() {
     <nav className="tabbar">
       {TABS.map(({ href, label, Icon }) => (
         <Link key={href} href={href} className="tabbar-item" data-active={pathname === href}>
-          <Icon className="tabbar-icon" size={22} stroke={1.75} aria-hidden="true" />
+          <Icon className="tabbar-icon" size={18} stroke={1.75} aria-hidden="true" />
           {label}
         </Link>
       ))}
