@@ -505,6 +505,7 @@ body {
   flex-shrink: 0;
   color: var(--ink);
   cursor: pointer;
+  flex-grow: 1;
 }
 
 .input-number-btn:hover,
