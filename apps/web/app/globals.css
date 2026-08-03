@@ -378,7 +378,7 @@ body {
   margin: var(--space-8) 0;
 }
 
-.dish-meal-chip {
+.chip {
   display: inline-flex;
   align-items: center;
   gap: var(--space-8);
@@ -388,19 +388,24 @@ body {
   color: var(--mute);
 }
 
-.dish-compliance-chip {
+.chip-button {
   background: transparent;
   font: inherit;
+  /* `font: inherit` resetea font-size al del contenedor (para anular el
+     tamaño por defecto del <button> del UA) — hay que reafirmarlo aquí,
+     si no el chip pierde el --text-sm que le da .chip. */
+  font-size: var(--text-sm);
   cursor: pointer;
   color: var(--mute);
   border-color: var(--hairline);
 }
 
-.dish-compliance-chip svg {
+.chip-button svg {
   flex-shrink: 0;
 }
 
-.dish-compliance-chip[data-compliance="off"] {
+.chip[data-tone="off"],
+.chip-button[data-tone="off"] {
   color: var(--off);
   border-color: var(--off);
 }

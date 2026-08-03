@@ -8,6 +8,7 @@ import {
   type DishComplianceCheck,
   type RequirementStatus,
 } from "@meal-pilot/core";
+import { ChipButton } from "./Chip";
 import { NutritionalThresholds } from "./NutritionalThresholds";
 
 /*
@@ -51,10 +52,8 @@ export function DishComplianceChip({ checks }: { checks: DishComplianceCheck[] }
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
-        <button
-          type="button"
-          className="dish-meal-chip dish-compliance-chip"
-          data-compliance={compliant ? "ok" : "off"}
+        <ChipButton
+          tone={compliant ? "default" : "off"}
           onMouseEnter={openOnHover}
           onMouseLeave={closeOnHover}
         >
@@ -62,7 +61,7 @@ export function DishComplianceChip({ checks }: { checks: DishComplianceCheck[] }
           {!compliant && (
             <>Fuera de ventana: {failing.map((check) => check.requirement.name).join(", ")}</>
           )}
-        </button>
+        </ChipButton>
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content

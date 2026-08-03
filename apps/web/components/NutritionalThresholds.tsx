@@ -4,8 +4,8 @@ import { CapsuleMeter } from "./CapsuleMeter";
 
 /*
 Grid de CapsuleMeter en variante compact, compartido entre el creador de
-platos (con acciones de inspección/sugerencias por fila) y el tooltip de
-.dish-meal-chip en el card de plato (de solo lectura, sin acciones).
+platos (con acciones de inspección/sugerencias por fila) y el tooltip del
+chip de cumplimiento en el card de plato (de solo lectura, sin acciones).
 */
 
 export function NutritionalThresholds({

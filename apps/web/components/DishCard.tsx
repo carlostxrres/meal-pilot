@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import type { DishComplianceCheck, ResolvedComponent } from "@meal-pilot/core";
 import { formatEur } from "@/lib/formatPrice";
+import { Chip } from "./Chip";
 import { DishComplianceChip } from "./DishComplianceChip";
 import { IngredientRow } from "./IngredientRow";
 
@@ -77,7 +78,7 @@ export default function DishCard({
 
       {(mealName || (complianceChecks && complianceChecks.length > 0)) && (
         <div className="dish-meal-chips">
-          {mealName && <span className="dish-meal-chip">{mealName}</span>}
+          {mealName && <Chip>{mealName}</Chip>}
           {complianceChecks && complianceChecks.length > 0 && (
             <DishComplianceChip checks={complianceChecks} />
           )}
