@@ -311,6 +311,18 @@ body {
   color: var(--off);
 }
 
+.creator-history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  margin-bottom: var(--space-8);
+}
+
+.creator-history-row .creator-price {
+  margin-bottom: 0;
+}
+
 .creator-price {
   display: flex;
   align-items: center;
@@ -668,6 +680,11 @@ body {
 .meter-action:hover,
 .meter-action:focus-visible {
   color: var(--ink);
+}
+
+.meter-action:disabled {
+  color: var(--hairline);
+  cursor: not-allowed;
 }
 
 /* Modal de contribuciones: barras de magnitud, serie única en tinta. */

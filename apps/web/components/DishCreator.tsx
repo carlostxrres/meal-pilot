@@ -3,6 +3,8 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Select from "@radix-ui/react-select";
 import {
+  IconArrowBackUp,
+  IconArrowForwardUp,
   IconBulb,
   IconCheck,
   IconChevronDown,
@@ -62,6 +64,13 @@ y diálogos de inspección) vive en un reducer: las transiciones que tocan
 varios campos a la vez (reset, añadir ingrediente, aplicar sugerencia) son
 una sola acción. Solo lo transitorio (diálogo abierto, envío en curso,
 arrastre) queda como useState.
+
+Deshacer/rehacer (`past`/`future` en el propio CreatorState, botones junto al
+precio y Ctrl/Cmd+Z / Ctrl/Cmd+Shift+Z) cubre los campos del plato y sus
+ingredientes, no lo transitorio (búsqueda, error, qué diálogo está abierto).
+Ediciones consecutivas del mismo campo de texto o de la cantidad del mismo
+ingrediente comparten una sola entrada de historial (`coalesceKey`) — si no,
+cada tecla pulsada sería un paso de deshacer distinto.
 */
 
 interface DraftComponent {
@@ -84,21 +93,36 @@ function formatQuantity(value: number): string {
 
 const MAX_PICKER_RESULTS = 8;
 
-interface CreatorState {
+/** Subconjunto de CreatorState que deshacer/rehacer restaura — no lo transitorio (búsqueda, error, diálogos abiertos). */
+interface DraftSnapshot {
   name: string;
   dishType: string;
   description: string;
   mealId: string;
   components: DraftComponent[];
+}
+
+interface CreatorState extends DraftSnapshot {
   query: string;
   error: string | null;
   inspectingId: string | null;
   suggestingId: string | null;
+  past: DraftSnapshot[];
+  future: DraftSnapshot[];
+  coalesceKey: string | null;
 }
 
 /** `prefillDish` precarga el borrador tanto para editar como para "nuevo plato similar". */
 function initialCreatorState(prefillDish: DishCatalogEntry | undefined, meals: Meal[]): CreatorState {
-  const ui = { query: "", error: null, inspectingId: null, suggestingId: null };
+  const ui = {
+    query: "",
+    error: null,
+    inspectingId: null,
+    suggestingId: null,
+    past: [],
+    future: [],
+    coalesceKey: null,
+  };
   if (prefillDish) {
     return {
       ...ui,
@@ -112,6 +136,31 @@ function initialCreatorState(prefillDish: DishCatalogEntry | undefined, meals: M
   return { ...ui, name: "", dishType: "", description: "", mealId: meals[0]?.id ?? "", components: [] };
 }
 
+function snapshotOf(state: CreatorState): DraftSnapshot {
+  return {
+    name: state.name,
+    dishType: state.dishType,
+    description: state.description,
+    mealId: state.mealId,
+    components: state.components,
+  };
+}
+
+/**
+ * Registra el estado previo a una edición del borrador. `key` identifica la
+ * "ráfaga" de edición actual (ej. `field:name` mientras se teclea el
+ * nombre, `qty:<ingredientId>` mientras se ajusta una cantidad): si coincide
+ * con la última, se asume que es la misma ráfaga y no abre una entrada de
+ * historial nueva. `key: null` (acciones discretas: añadir/quitar/reordenar
+ * ingrediente, aplicar sugerencia) nunca coalesce.
+ */
+function pushHistory(state: CreatorState, key: string | null): Pick<CreatorState, "past" | "future" | "coalesceKey"> {
+  if (key !== null && state.coalesceKey === key) {
+    return { past: state.past, future: state.future, coalesceKey: key };
+  }
+  return { past: [...state.past, snapshotOf(state)], future: [], coalesceKey: key };
+}
+
 type CreatorAction =
   | { type: "reset"; state: CreatorState }
   | { type: "set-field"; field: "name" | "dishType" | "description" | "mealId" | "query"; value: string }
@@ -123,14 +172,19 @@ type CreatorAction =
   | { type: "inspect"; requirementId: string | null }
   | { type: "suggest"; requirementId: string | null }
   | { type: "submit-start" }
-  | { type: "submit-error"; error: string };
+  | { type: "submit-error"; error: string }
+  | { type: "undo" }
+  | { type: "redo" };
 
 function creatorReducer(state: CreatorState, action: CreatorAction): CreatorState {
   switch (action.type) {
     case "reset":
       return action.state;
-    case "set-field":
-      return { ...state, [action.field]: action.value };
+    case "set-field": {
+      const next = { ...state, [action.field]: action.value };
+      if (action.field === "query") return next;
+      return { ...next, ...pushHistory(state, `field:${action.field}`) };
+    }
     case "add-ingredient":
       return {
         ...state,
@@ -139,6 +193,7 @@ function creatorReducer(state: CreatorState, action: CreatorAction): CreatorStat
           { ingredient: action.ingredient, quantity: defaultQuantity(action.ingredient) },
         ],
         query: "",
+        ...pushHistory(state, null),
       };
     case "set-quantity":
       return {
@@ -146,18 +201,20 @@ function creatorReducer(state: CreatorState, action: CreatorAction): CreatorStat
         components: state.components.map((c) =>
           c.ingredient.id === action.ingredientId ? { ...c, quantity: action.quantity } : c,
         ),
+        ...pushHistory(state, `qty:${action.ingredientId}`),
       };
     case "remove-ingredient":
       return {
         ...state,
         components: state.components.filter((c) => c.ingredient.id !== action.ingredientId),
+        ...pushHistory(state, null),
       };
     case "reorder": {
       if (action.from === action.to) return state;
       const components = [...state.components];
       const [moved] = components.splice(action.from, 1);
       components.splice(action.to, 0, moved!);
-      return { ...state, components };
+      return { ...state, components, ...pushHistory(state, null) };
     }
     case "apply-suggestion": {
       const { suggestion } = action;
@@ -178,7 +235,7 @@ function creatorReducer(state: CreatorState, action: CreatorAction): CreatorStat
           return remaining > 0 ? [{ ...c, quantity: remaining }] : [];
         });
       }
-      return { ...state, components, suggestingId: null };
+      return { ...state, components, suggestingId: null, ...pushHistory(state, null) };
     }
     case "inspect":
       return { ...state, inspectingId: action.requirementId };
@@ -188,6 +245,28 @@ function creatorReducer(state: CreatorState, action: CreatorAction): CreatorStat
       return { ...state, error: null };
     case "submit-error":
       return { ...state, error: action.error };
+    case "undo": {
+      if (state.past.length === 0) return state;
+      const previous = state.past[state.past.length - 1]!;
+      return {
+        ...state,
+        ...previous,
+        past: state.past.slice(0, -1),
+        future: [snapshotOf(state), ...state.future],
+        coalesceKey: null,
+      };
+    }
+    case "redo": {
+      if (state.future.length === 0) return state;
+      const next = state.future[0]!;
+      return {
+        ...state,
+        ...next,
+        past: [...state.past, snapshotOf(state)],
+        future: state.future.slice(1),
+        coalesceKey: null,
+      };
+    }
   }
 }
 
@@ -492,12 +571,16 @@ function CreatorMeters({
   livePrice,
   liveStatuses,
   isEditing,
+  canUndo,
+  canRedo,
   dispatch,
   children,
 }: {
   livePrice: number;
   liveStatuses: RequirementStatus[];
   isEditing: boolean;
+  canUndo: boolean;
+  canRedo: boolean;
   dispatch: Dispatch<CreatorAction>;
   children: React.ReactNode;
 }) {
@@ -505,9 +588,31 @@ function CreatorMeters({
 
   return (
     <div className="creator-meters">
-      <p className="creator-price">
-        Precio aproximado: <strong className="data-mono">{formatEur(livePrice)}</strong>
-      </p>
+      <div className="creator-history-row">
+        <p className="creator-price">
+          Precio aproximado: <strong className="data-mono">{formatEur(livePrice)}</strong>
+        </p>
+        <span className="meter-actions">
+          <button
+            type="button"
+            className="meter-action"
+            aria-label="Deshacer último cambio"
+            disabled={!canUndo}
+            onClick={() => dispatch({ type: "undo" })}
+          >
+            <IconArrowBackUp size={18} stroke={1.75} />
+          </button>
+          <button
+            type="button"
+            className="meter-action"
+            aria-label="Rehacer cambio"
+            disabled={!canRedo}
+            onClick={() => dispatch({ type: "redo" })}
+          >
+            <IconArrowForwardUp size={18} stroke={1.75} />
+          </button>
+        </span>
+      </div>
       <h3 className="section-title">Ventana nutricional</h3>
       <NutritionalThresholds
         statuses={liveStatuses}
@@ -629,6 +734,27 @@ export function DishCreator({
       document.removeEventListener("pointercancel", onUp);
     };
   }, [dragIndex, dragOverIndex]);
+
+  const canUndo = state.past.length > 0;
+  const canRedo = state.future.length > 0;
+
+  // Ctrl/Cmd+Z y Ctrl/Cmd+Shift+Z para deshacer/rehacer, salvo con el foco en
+  // un campo de texto — ahí se deja el undo nativo del propio input/textarea
+  // en vez de interceptarlo con el historial del borrador.
+  useEffect(() => {
+    if (!open) return;
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== "z") return;
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      e.preventDefault();
+      dispatch({ type: e.shiftKey ? "redo" : "undo" });
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
 
   const pickerResults = useMemo(() => {
     const q = state.query.trim().toLowerCase();
@@ -831,6 +957,8 @@ export function DishCreator({
               livePrice={livePrice}
               liveStatuses={liveStatuses}
               isEditing={isEditing}
+              canUndo={canUndo}
+              canRedo={canRedo}
               dispatch={dispatch}
             >
               <div className="dialog-actions">
