@@ -80,7 +80,7 @@ export default function DishCard({
         <div className="dish-meal-chips">
           {mealName && <Chip>{mealName}</Chip>}
           {complianceChecks && complianceChecks.length > 0 && (
-            <DishComplianceChip checks={complianceChecks} />
+            <DishComplianceChip checks={complianceChecks} components={components} />
           )}
         </div>
       )}
