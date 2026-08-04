@@ -206,8 +206,13 @@ export type Database = {
           base_unit: Database["public"]["Enums"]["base_unit"]
           calcium_mg_per_100: number | null
           carbs_g_per_100: number | null
+          created_at: string
+          description: string | null
+          enabled: boolean
           fat_g_per_100: number | null
           fiber_g_per_100: number | null
+          freezer_shelf_life_days: number | null
+          fridge_shelf_life_days: number | null
           home_inventory: number
           id: string
           iron_mg_per_100: number | null
@@ -216,8 +221,8 @@ export type Database = {
           name: string
           office_inventory: number
           omega3_g_per_100: number | null
-          opened_shelf_life_days: number | null
           owner_id: string
+          pantry_shelf_life_days: number | null
           price_eur_per_100: number | null
           protein_g_per_100: number | null
           recommended_time: Database["public"]["Enums"]["time_of_day"]
@@ -225,14 +230,20 @@ export type Database = {
           sodium_mg_per_100: number | null
           storage_type: Database["public"]["Enums"]["storage_type"]
           sugar_g_per_100: number | null
+          updated_at: string
           vitamin_c_mg_per_100: number | null
         }
         Insert: {
           base_unit: Database["public"]["Enums"]["base_unit"]
           calcium_mg_per_100?: number | null
           carbs_g_per_100?: number | null
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
           fat_g_per_100?: number | null
           fiber_g_per_100?: number | null
+          freezer_shelf_life_days?: number | null
+          fridge_shelf_life_days?: number | null
           home_inventory?: number
           id?: string
           iron_mg_per_100?: number | null
@@ -241,8 +252,8 @@ export type Database = {
           name: string
           office_inventory?: number
           omega3_g_per_100?: number | null
-          opened_shelf_life_days?: number | null
           owner_id: string
+          pantry_shelf_life_days?: number | null
           price_eur_per_100?: number | null
           protein_g_per_100?: number | null
           recommended_time?: Database["public"]["Enums"]["time_of_day"]
@@ -250,14 +261,20 @@ export type Database = {
           sodium_mg_per_100?: number | null
           storage_type: Database["public"]["Enums"]["storage_type"]
           sugar_g_per_100?: number | null
+          updated_at?: string
           vitamin_c_mg_per_100?: number | null
         }
         Update: {
           base_unit?: Database["public"]["Enums"]["base_unit"]
           calcium_mg_per_100?: number | null
           carbs_g_per_100?: number | null
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
           fat_g_per_100?: number | null
           fiber_g_per_100?: number | null
+          freezer_shelf_life_days?: number | null
+          fridge_shelf_life_days?: number | null
           home_inventory?: number
           id?: string
           iron_mg_per_100?: number | null
@@ -266,8 +283,8 @@ export type Database = {
           name?: string
           office_inventory?: number
           omega3_g_per_100?: number | null
-          opened_shelf_life_days?: number | null
           owner_id?: string
+          pantry_shelf_life_days?: number | null
           price_eur_per_100?: number | null
           protein_g_per_100?: number | null
           recommended_time?: Database["public"]["Enums"]["time_of_day"]
@@ -275,6 +292,7 @@ export type Database = {
           sodium_mg_per_100?: number | null
           storage_type?: Database["public"]["Enums"]["storage_type"]
           sugar_g_per_100?: number | null
+          updated_at?: string
           vitamin_c_mg_per_100?: number | null
         }
         Relationships: []
@@ -320,6 +338,35 @@ export type Database = {
           },
           {
             foreignKeyName: "ingredient_category_link_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredient"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ingredient_purchase_link: {
+        Row: {
+          id: string
+          ingredient_id: string
+          supermarket: Database["public"]["Enums"]["supermarket"]
+          url: string
+        }
+        Insert: {
+          id?: string
+          ingredient_id: string
+          supermarket: Database["public"]["Enums"]["supermarket"]
+          url: string
+        }
+        Update: {
+          id?: string
+          ingredient_id?: string
+          supermarket?: Database["public"]["Enums"]["supermarket"]
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingredient_purchase_link_ingredient_id_fkey"
             columns: ["ingredient_id"]
             isOneToOne: false
             referencedRelation: "ingredient"
@@ -545,6 +592,7 @@ export type Database = {
       requirement_scope_type: "ingredient" | "ingredient_category" | "nutrient"
       requirement_strictness: "mandatory" | "advisory"
       storage_type: "pantry" | "fridge" | "freezer"
+      supermarket: "mercadona"
       supplement_frequency: "daily" | "specific_days"
       time_of_day: "morning" | "midday" | "afternoon" | "any"
       weekday: "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun"
@@ -688,6 +736,7 @@ export const Constants = {
       requirement_scope_type: ["ingredient", "ingredient_category", "nutrient"],
       requirement_strictness: ["mandatory", "advisory"],
       storage_type: ["pantry", "fridge", "freezer"],
+      supermarket: ["mercadona"],
       supplement_frequency: ["daily", "specific_days"],
       time_of_day: ["morning", "midday", "afternoon", "any"],
       weekday: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],

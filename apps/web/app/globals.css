@@ -238,6 +238,13 @@ body {
   cursor: pointer;
 }
 
+.ingredient-warning-trigger {
+  all: unset;
+  display: flex;
+  color: var(--off);
+  cursor: pointer;
+}
+
 .nutrition-popover {
   background: var(--canvas);
   border: var(--border-width) solid var(--hairline);

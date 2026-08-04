@@ -4,6 +4,7 @@ type Tables = Database["public"]["Tables"];
 
 export type Ingredient = Tables["ingredient"]["Row"];
 export type IngredientCategory = Tables["ingredient_category"]["Row"];
+export type IngredientPurchaseLink = Tables["ingredient_purchase_link"]["Row"];
 export type Dish = Tables["dish"]["Row"];
 export type DishIngredient = Tables["dish_ingredient"]["Row"];
 export type Meal = Tables["meal"]["Row"];
@@ -29,6 +30,10 @@ export const NUTRIENT_COLUMNS = [
 ] as const;
 
 export type NutrientColumn = (typeof NUTRIENT_COLUMNS)[number];
+
+export const SUPERMARKETS = ["mercadona"] as const;
+
+export type Supermarket = (typeof SUPERMARKETS)[number];
 
 /** Dish (siempre fija, ver ADR-0018) con sus componentes. */
 export interface DishWithComponents {

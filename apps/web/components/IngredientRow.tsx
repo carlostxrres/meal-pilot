@@ -1,5 +1,7 @@
 "use client";
 
+import * as Popover from "@radix-ui/react-popover";
+import { IconAlertTriangle } from "@tabler/icons-react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { NUTRIENT_COLUMNS, type Ingredient, type NutritionTotals } from "@meal-pilot/core";
 import { IngredientThumb } from "./IngredientThumb";
@@ -16,6 +18,9 @@ secundaria extra bajo el nombre) y `trailing` (controles a la derecha) —
 editar en Inventario, motivo+checkbox en Compra, stepper±10/quitar o botón
 "+" en el creador, cantidad de la receta en Hoy/catálogo. `neededQuantity`
 (solo Hoy) resalta la línea de stock en rojo si el inventario no llega.
+
+Si el ingrediente está deshabilitado (ADR-0023), se añade un aviso junto al
+de nutrición — mismo Popover al tocar, no un tooltip por hover.
 */
 
 function per100Label(unit: Ingredient["base_unit"]): string {
@@ -27,6 +32,29 @@ function per100Totals(ingredient: Ingredient): NutritionTotals {
   return Object.fromEntries(
     NUTRIENT_COLUMNS.map((column) => [column, ingredient[column] ?? 0]),
   ) as NutritionTotals;
+}
+
+/** Aviso de ingrediente deshabilitado (ver ADR-0023): Popover al tocar, no tooltip por hover — el resto de la app es de uso táctil. */
+function DisabledWarning({ ingredientName }: { ingredientName: string }) {
+  return (
+    <Popover.Root>
+      <Popover.Trigger asChild>
+        <button
+          type="button"
+          className="ingredient-warning-trigger"
+          aria-label={`${ingredientName} está deshabilitado`}
+        >
+          <IconAlertTriangle size={18} stroke={1.75} />
+        </button>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content className="nutrition-popover" sideOffset={6} align="end">
+          <p>Este ingrediente está deshabilitado para nuevos platos.</p>
+          <Popover.Arrow className="nutrition-arrow" />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  );
 }
 
 export function IngredientRow({
@@ -89,6 +117,7 @@ export function IngredientRow({
           de búsqueda), abrir el popover de nutrición no debe además disparar
           la acción de la fila (añadir el ingrediente). */}
       <span onClick={(e) => e.stopPropagation()}>
+        {!ingredient.enabled && <DisabledWarning ingredientName={ingredient.name} />}
         <NutritionPopover totals={per100Totals(ingredient)} title={per100Label(ingredient.base_unit)} />
       </span>
       {trailing}

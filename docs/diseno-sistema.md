@@ -40,31 +40,50 @@ Se listan los campos como si fueran columnas de tabla (nombre — tipo — ejemp
 
 Alimento comprable, unidad mínima del sistema.
 
-| Campo                | Tipo                                                      | Ejemplo             |
-| --------------------- | ---------------------------------------------------------- | -------------------- |
-| id                       | uuid (PK), default `gen_random_uuid()`                     | a1b2c3...            |
-| name                     | string                                                     | "Atún en lata"       |
-| base_unit                | enum(g, ml, unit)                                          | g                    |
-| storage_type             | enum(pantry, fridge, freezer)                              | fridge               |
-| opened_shelf_life_days   | int, nullable                                              | 3                    |
-| recommended_time         | enum/lista(morning, midday, afternoon, any)                | any                  |
-| office_inventory         | int/decimal (cantidad actual)                              | 200 (g)              |
-| home_inventory           | int/decimal (cantidad actual)                              | 0 (g)                |
-| categories               | relación N:M con `ingredient_category` (ver más abajo)     | Protein (salad)      |
-| kcal_per_100             | decimal                                                    | —                    |
-| protein_g_per_100        | decimal                                                    | —                    |
-| carbs_g_per_100          | decimal                                                    | —                    |
-| sugar_g_per_100          | decimal                                                    | —                    |
-| fiber_g_per_100          | decimal                                                    | —                    |
-| fat_g_per_100            | decimal                                                    | —                    |
-| saturated_fat_g_per_100  | decimal                                                    | —                    |
-| sodium_mg_per_100        | decimal                                                    | —                    |
-| vitamin_c_mg_per_100     | decimal                                                    | —                    |
-| iron_mg_per_100          | decimal                                                    | —                    |
-| calcium_mg_per_100       | decimal                                                    | —                    |
-| omega3_g_per_100         | decimal                                                    | —                    |
+| Campo                    | Tipo                                                        | Ejemplo              |
+| ------------------------ | ------------------------------------------------------------ | -------------------- |
+| id                       | uuid (PK), default `gen_random_uuid()`                        | a1b2c3...            |
+| name                     | string                                                        | "Atún en lata"       |
+| description              | string, nullable — texto libre                                | "Marca X, en aceite de oliva" |
+| base_unit                | enum(g, ml, unit)                                              | g                    |
+| storage_type             | enum(pantry, fridge, freezer)                                  | fridge               |
+| pantry_shelf_life_days   | int, nullable — vida útil una vez abierto, en despensa         | —                    |
+| fridge_shelf_life_days   | int, nullable — vida útil una vez abierto, en nevera           | 3                    |
+| freezer_shelf_life_days  | int, nullable — vida útil una vez abierto, en congelador       | —                    |
+| recommended_time         | enum/lista(morning, midday, afternoon, any)                    | any                  |
+| enabled                  | boolean, default true                                          | true                 |
+| office_inventory         | int/decimal (cantidad actual)                                  | 200 (g)              |
+| home_inventory           | int/decimal (cantidad actual)                                  | 0 (g)                |
+| price_eur_per_100        | decimal, nullable — precio estimado, por 100 `base_unit`        | 1.20                 |
+| max_quantity_per_dish    | decimal, nullable — techo opcional por plato                    | 200                  |
+| purchase_links           | relación 1:N con `ingredient_purchase_link` (ver más abajo)     | Mercadona → URL      |
+| categories               | relación N:M con `ingredient_category` (ver más abajo)         | Protein (salad)      |
+| created_at / updated_at  | timestamptz                                                    | —                    |
+| kcal_per_100             | decimal                                                        | —                    |
+| protein_g_per_100        | decimal                                                        | —                    |
+| carbs_g_per_100          | decimal                                                        | —                    |
+| sugar_g_per_100          | decimal                                                        | —                    |
+| fiber_g_per_100          | decimal                                                        | —                    |
+| fat_g_per_100            | decimal                                                        | —                    |
+| saturated_fat_g_per_100  | decimal                                                        | —                    |
+| sodium_mg_per_100        | decimal                                                        | —                    |
+| vitamin_c_mg_per_100     | decimal                                                        | —                    |
+| iron_mg_per_100          | decimal                                                        | —                    |
+| calcium_mg_per_100       | decimal                                                        | —                    |
+| omega3_g_per_100         | decimal                                                        | —                    |
 
 Todos los `*_per_100` son "por 100 `base_unit`" (100g, 100ml, o 100 unidades, según el ingrediente).
+
+**Habilitado/deshabilitado** *(ver [ADR-0023](adrs/0023-propiedades-ampliadas-de-ingredient.md))*: `enabled = false` oculta el ingrediente del alta de nuevos platos, sin borrarlo ni afectar a los platos que ya lo usan — estos lo siguen mostrando, con un aviso visual de que el ingrediente está deshabilitado. Espejo de `dish.active`.
+
+**Links de compra** (`ingredient_purchase_link`): cada fila liga un ingrediente con un supermercado concreto y la URL de compra online.
+
+| Campo       | Tipo                                | Ejemplo                          |
+| ----------- | ------------------------------------ | --------------------------------- |
+| id          | uuid (PK)                           | —                                 |
+| ingredient_id | FK, NOT NULL                      | 8 (Atún en lata)                  |
+| supermarket | enum(mercadona, ...)                | mercadona                         |
+| url         | string, NOT NULL                    | https://...                       |
 
 **Lista de nutrientes** *(cerrada para arrancar la fase 2)*: macros completos (kcal, proteína, hidratos, azúcar, fibra, grasa, grasa saturada) + los micronutrientes que ya aparecían mencionados en la idea original o en las normas del sistema — sodio (norma "sano", relevante en conservas/embutidos), vitamina C y hierro (mencionados explícitamente), calcio, y omega-3 (relevante por el consumo de pescado azul). No es una lista cerrada para siempre: si en el futuro hace falta trackear otro nutriente, se añade con un `ALTER TABLE` — no bloquea el resto del esquema.
 

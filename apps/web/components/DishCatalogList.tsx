@@ -1,10 +1,11 @@
 "use client";
 
-import * as Select from "@radix-ui/react-select";
-import { IconCheck, IconChevronDown, IconToolsKitchen2 } from "@tabler/icons-react";
+import { IconToolsKitchen2 } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import type { DietaryRequirement, DishCatalogEntry, Ingredient, Meal } from "@meal-pilot/core";
+import { CatalogSection } from "./CatalogSection";
 import { DishCatalogCard } from "./DishCatalogCard";
+import { FilterSelect } from "./FilterSelect";
 import { SearchField } from "./SearchField";
 
 type SortKey = "name-asc" | "name-desc" | "created-desc" | "created-asc" | "updated-desc" | "updated-asc";
@@ -44,44 +45,6 @@ const COMPLIANCE_OPTIONS: [ComplianceFilter, string][] = [
   ["compliant", "Dentro de ventana"],
   ["non-compliant", "Fuera de ventana"],
 ];
-
-/** Un <Select> de filtro, mismo look que el de orden — evita repetir el boilerplate de Radix 4 veces en este archivo. */
-function FilterSelect<T extends string>({
-  value,
-  onChange,
-  options,
-  ariaLabel,
-}: {
-  value: T;
-  onChange: (value: T) => void;
-  options: readonly [T, string][];
-  ariaLabel: string;
-}) {
-  return (
-    <Select.Root value={value} onValueChange={(v) => onChange(v as T)}>
-      <Select.Trigger className="select-trigger" aria-label={ariaLabel}>
-        <Select.Value />
-        <Select.Icon>
-          <IconChevronDown size={16} stroke={2} />
-        </Select.Icon>
-      </Select.Trigger>
-      <Select.Portal>
-        <Select.Content className="select-content" position="popper" sideOffset={4}>
-          <Select.Viewport>
-            {options.map(([optionValue, label]) => (
-              <Select.Item key={optionValue} value={optionValue} className="select-item select-item-with-check">
-                <Select.ItemIndicator className="select-item-indicator">
-                  <IconCheck size={16} stroke={2} />
-                </Select.ItemIndicator>
-                <Select.ItemText>{label}</Select.ItemText>
-              </Select.Item>
-            ))}
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
-    </Select.Root>
-  );
-}
 
 export function DishCatalogList({
   dishes,
@@ -192,24 +155,22 @@ export function DishCatalogList({
         )}
       </div>
 
-      <h2 className="section-title">
-        <IconToolsKitchen2 size={16} stroke={2} /> Platos del catálogo ({filtered.length})
-      </h2>
-
-      {filtered.length === 0 ? (
-        <p className="inventory-empty">Ningún plato coincide con este filtro.</p>
-      ) : (
-        filtered.map((entry) => (
+      <CatalogSection
+        icon={<IconToolsKitchen2 size={16} stroke={2} />}
+        title="Platos del catálogo"
+        items={filtered}
+        emptyMessage="Ningún plato coincide con este filtro."
+        getKey={(entry) => entry.dish.id}
+        renderItem={(entry) => (
           <DishCatalogCard
-            key={entry.dish.id}
             entry={entry}
             dishes={dishes}
             ingredients={ingredients}
             meals={meals}
             mealRequirements={mealRequirements}
           />
-        ))
-      )}
+        )}
+      />
     </div>
   );
 }

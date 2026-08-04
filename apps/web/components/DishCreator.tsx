@@ -761,7 +761,10 @@ export function DishCreator({
     if (q === "") return [];
     const usedIds = new Set(state.components.map((c) => c.ingredient.id));
     return ingredients
-      .filter((i) => !usedIds.has(i.id) && i.name.toLowerCase().includes(q))
+      // Los deshabilitados (ADR-0023) no se pueden añadir a platos nuevos,
+      // pero un plato que ya los usara los sigue mostrando (con aviso, ver
+      // IngredientRow) — no se tocan sus dish_ingredient existentes.
+      .filter((i) => i.enabled && !usedIds.has(i.id) && i.name.toLowerCase().includes(q))
       .slice(0, MAX_PICKER_RESULTS);
   }, [ingredients, state.components, state.query]);
 

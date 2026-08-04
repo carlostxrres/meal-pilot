@@ -26,6 +26,7 @@ Registro de decisiones de arquitectura del proyecto. Cada ADR es un archivo con 
 | [0020](0020-funcion-objetivo-con-terminos-que-compiten.md) | Simulación de consumo y función objetivo con términos que compiten |
 | [0021](0021-confirmar-comida-descuenta-inventario.md) | Confirmar una comida descuenta inventario automáticamente |
 | [0022](0022-historial-de-comidas-editable-y-repaso-guiado.md) | Historial de comidas editable y repaso guiado de días pendientes |
+| [0023](0023-propiedades-ampliadas-de-ingredient.md) | Propiedades ampliadas de `ingredient`: conservación, habilitado, descripción, links de compra |
 
 ## Cómo añadir un ADR nuevo
 

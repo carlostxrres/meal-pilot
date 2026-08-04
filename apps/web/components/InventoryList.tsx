@@ -1,11 +1,12 @@
 "use client";
 
-import * as Select from "@radix-ui/react-select";
-import { IconBox, IconCheck, IconChevronDown, IconCircleOff, IconPencil, IconTrash } from "@tabler/icons-react";
+import { IconBox, IconCircleOff, IconPencil, IconTrash } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useOptimistic, useState, useTransition } from "react";
 import type { Ingredient } from "@meal-pilot/core";
 import { updateInventoryAction } from "@/app/(app)/actions";
+import { CatalogSection } from "./CatalogSection";
+import { FilterSelect } from "./FilterSelect";
 import { IngredientRow } from "./IngredientRow";
 import { InventoryEditDialog } from "./InventoryEditDialog";
 import { SearchField } from "./SearchField";
@@ -114,54 +115,38 @@ export function InventoryList({ ingredients }: { ingredients: Ingredient[] }) {
       <div className="inventory-controls">
         <SearchField value={query} onChange={setQuery} placeholder="Buscar ingrediente..." />
 
-        <Select.Root value={sort} onValueChange={(v) => setSort(v as SortKey)}>
-          <Select.Trigger className="select-trigger" aria-label="Ordenar por">
-            <Select.Value />
-            <Select.Icon>
-              <IconChevronDown size={16} stroke={2} />
-            </Select.Icon>
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Content className="select-content" position="popper" sideOffset={4}>
-              <Select.Viewport>
-                {(
-                  [
-                    ["qty-desc", "Cantidad (mayor a menor)"],
-                    ["qty-asc", "Cantidad (menor a mayor)"],
-                    ["name-asc", "Nombre (A-Z)"],
-                    ["name-desc", "Nombre (Z-A)"],
-                  ] as const
-                ).map(([value, label]) => (
-                  <Select.Item key={value} value={value} className="select-item select-item-with-check">
-                    <Select.ItemIndicator className="select-item-indicator">
-                      <IconCheck size={16} stroke={2} />
-                    </Select.ItemIndicator>
-                    <Select.ItemText>{label}</Select.ItemText>
-                  </Select.Item>
-                ))}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
-        </Select.Root>
+        <FilterSelect
+          value={sort}
+          onChange={setSort}
+          options={
+            [
+              ["qty-desc", "Cantidad (mayor a menor)"],
+              ["qty-asc", "Cantidad (menor a mayor)"],
+              ["name-asc", "Nombre (A-Z)"],
+              ["name-desc", "Nombre (Z-A)"],
+            ] as const
+          }
+          ariaLabel="Ordenar por"
+        />
       </div>
 
-      <h2 className="section-title">
-        <IconBox size={16} stroke={2} /> En stock ({inStock.length})
-      </h2>
-      {inStock.length === 0 ? (
-        <p className="inventory-empty">Nada en stock con este filtro.</p>
-      ) : (
-        inStock.map((i) => <InventoryRow key={i.id} ingredient={i} onUpdate={updateInventory} />)
-      )}
+      <CatalogSection
+        icon={<IconBox size={16} stroke={2} />}
+        title="En stock"
+        items={inStock}
+        emptyMessage="Nada en stock con este filtro."
+        getKey={(i) => i.id}
+        renderItem={(i) => <InventoryRow ingredient={i} onUpdate={updateInventory} />}
+      />
 
-      <h2 className="section-title">
-        <IconCircleOff size={16} stroke={2} /> Agotado ({outOfStock.length})
-      </h2>
-      {outOfStock.length === 0 ? (
-        <p className="inventory-empty">Nada agotado con este filtro.</p>
-      ) : (
-        outOfStock.map((i) => <InventoryRow key={i.id} ingredient={i} onUpdate={updateInventory} />)
-      )}
+      <CatalogSection
+        icon={<IconCircleOff size={16} stroke={2} />}
+        title="Agotado"
+        items={outOfStock}
+        emptyMessage="Nada agotado con este filtro."
+        getKey={(i) => i.id}
+        renderItem={(i) => <InventoryRow ingredient={i} onUpdate={updateInventory} />}
+      />
     </div>
   );
 }
