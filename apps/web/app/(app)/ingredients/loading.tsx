@@ -1,14 +1,19 @@
-import { MealRowSkeleton, SkeletonBar } from "@/components/Skeleton";
+import { IngredientRowSkeleton, SkeletonBar } from "@/components/Skeleton";
 
 export default function IngredientsLoading() {
   return (
     <div aria-hidden="true">
-      <SkeletonBar width="100%" />
-      <div style={{ marginTop: "var(--space-16)" }}>
-        {Array.from({ length: 4 }).map((_, i) => (
-          <MealRowSkeleton key={i} />
-        ))}
+      <div className="inventory-controls">
+        <SkeletonBar />
+        <SkeletonBar width="140px" />
       </div>
+      <div className="dish-filters-row">
+        <SkeletonBar width="140px" />
+        <SkeletonBar width="160px" />
+      </div>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <IngredientRowSkeleton key={i} />
+      ))}
     </div>
   );
 }

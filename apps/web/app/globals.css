@@ -1253,12 +1253,24 @@ body {
 
 .ingredient-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-12);
   background: var(--canvas);
   border: var(--border-width) solid var(--hairline);
   margin-bottom: -1px;
   padding: var(--space-12) var(--space-16);
+}
+
+/* Grupo de controles (badge, tipo, precio, editar, menú "...") del catálogo
+   de Ingredientes: si no caben junto a la miniatura+info en una línea,
+   `flex-wrap` de `.ingredient-row` los baja a una línea propia, y
+   `margin-left: auto` los mantiene pegados a la derecha en ambos casos. */
+.ingredient-row-trailing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin-left: auto;
 }
 
 .ingredient-row[data-clickable="true"] {
@@ -1269,6 +1281,10 @@ body {
 .ingredient-row[data-clickable="true"]:focus-visible {
   background: var(--paper);
   outline: none;
+}
+
+.ingredient-row[data-inactive] {
+  opacity: 0.55;
 }
 
 .ingredient-thumb {

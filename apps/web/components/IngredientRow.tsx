@@ -64,6 +64,7 @@ export function IngredientRow({
   infoHtmlFor,
   onClick,
   neededQuantity,
+  inactive,
 }: {
   ingredient: Ingredient;
   meta?: ReactNode;
@@ -74,6 +75,8 @@ export function IngredientRow({
   onClick?: () => void;
   /** Cantidad que hace falta de este ingrediente (ej. para su receta de "Hoy") — si el inventario total no llega, la línea de stock se resalta en rojo. */
   neededQuantity?: number;
+  /** Atenúa la fila (ver ADR-0023): ingrediente deshabilitado en el catálogo. */
+  inactive?: boolean;
 }) {
   function handleKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     if (!onClick) return;
@@ -90,6 +93,7 @@ export function IngredientRow({
     <div
       className="ingredient-row"
       data-clickable={onClick ? "true" : undefined}
+      data-inactive={inactive || undefined}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
       onClick={onClick}

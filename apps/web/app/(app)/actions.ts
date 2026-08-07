@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import {
-  addToHomeInventory,
   createDish,
   createIngredient,
   setDishActive,
@@ -37,8 +36,7 @@ export async function updateInventoryAction(input: {
     office_inventory: input.office_inventory,
     home_inventory: input.home_inventory,
   });
-  revalidatePath("/inventory");
-  revalidatePath("/shopping");
+  revalidatePath("/ingredients");
   revalidatePath("/");
 }
 
@@ -78,14 +76,6 @@ export async function setDishActiveAction(dishId: string, active: boolean) {
   await setDishActive(supabase, dishId, active);
   revalidatePath("/dishes");
   revalidatePath("/");
-}
-
-/** `quantity` negativa deshace una compra (resta lo añadido) — usado por el botón "Deshacer" del toast de Compra. */
-export async function markPurchasedAction(ingredientId: string, quantity: number) {
-  const supabase = await createClient();
-  await addToHomeInventory(supabase, ingredientId, quantity);
-  revalidatePath("/shopping");
-  revalidatePath("/inventory");
 }
 
 export async function createIngredientAction(
