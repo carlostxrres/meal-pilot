@@ -58,7 +58,6 @@ export function IngredientCatalogRow({
         inactive={!ingredient.enabled}
         meta={
           <>
-            {ingredient.description && <p className="dish-description">{ingredient.description}</p>}
             {purchaseLinks.length > 0 && (
               <div className="dish-meal-chips">
                 {purchaseLinks.map((link) => (

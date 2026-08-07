@@ -115,6 +115,7 @@ export function IngredientRow({
             {ingredient.base_unit}
           </span>
         </p>
+        {ingredient.description && <p className="dish-description">{ingredient.description}</p>}
         {meta}
       </InfoWrapper>
       {/* stopPropagation: si la fila entera es clicable (onClick, ej. resultado
