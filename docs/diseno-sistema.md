@@ -74,6 +74,8 @@ Alimento comprable, unidad mínima del sistema.
 
 Todos los `*_per_100` son "por 100 `base_unit`" (100g, 100ml, o 100 unidades, según el ingrediente).
 
+**Conservación por método de almacenamiento** *(ver [ADR-0023](adrs/0023-propiedades-ampliadas-de-ingredient.md))*: `storage_type` es dónde vive el ingrediente hoy — afecta solo a agrupación/visualización (ej. las secciones de `/ingredients`), ninguna lógica de negocio lo usa todavía. Las tres `*_shelf_life_days` son independientes entre sí **y de `storage_type`**: cada una responde a "si este ingrediente se guardara así una vez abierto, ¿cuántos días duraría?", así que se pueden rellenar 0, 1, 2 o las 3 sin relación obligatoria con el `storage_type` vigente (ej. puede interesar saber cuánto duraría en el congelador aunque hoy se guarde en la nevera). Son puramente informativas para el usuario — el motor no las consume (ninguna línea del repo las lee fuera del formulario de alta/edición y de `IngredientCatalogRow`, que solo muestra `storage_type`, nunca las tres duraciones). Una caducidad real que el motor sí pudiera usar necesitaría además saber cuándo se abrió cada envase, dato que hoy no se guarda (decisión abierta, ver `next-steps.md`).
+
 **Habilitado/deshabilitado** *(ver [ADR-0023](adrs/0023-propiedades-ampliadas-de-ingredient.md))*: `enabled = false` oculta el ingrediente del alta de nuevos platos, sin borrarlo ni afectar a los platos que ya lo usan — estos lo siguen mostrando, con un aviso visual de que el ingrediente está deshabilitado. Espejo de `dish.active`.
 
 **Links de compra** (`ingredient_purchase_link`): cada fila liga un ingrediente con un supermercado concreto y la URL de compra online.
