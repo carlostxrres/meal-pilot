@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types.js";
+import { RequestCache } from "./requestCache.js";
 import type { DietaryRequirement, Ingredient, Meal } from "../engine/types.js";
 
 /** Todo lo que necesita la UI de alta/edición de dishes: catálogo de ingredientes, meals y sus ventanas. */
@@ -12,15 +13,18 @@ export interface DishAuthoringContext {
 
 export async function fetchDishAuthoringContext(
   supabase: SupabaseClient<Database>,
+  cache: RequestCache = new RequestCache(),
 ): Promise<DishAuthoringContext> {
   const [
     { data: ingredients, error: ingredientsError },
     { data: meals, error: mealsError },
     { data: mealRequirements, error: requirementsError },
   ] = await Promise.all([
-    supabase.from("ingredient").select("*").order("name"),
-    supabase.from("meal").select("*").order("usual_start_time"),
-    supabase.from("dietary_requirement").select("*").not("meal_id", "is", null),
+    cache.get("ingredient:all", () => supabase.from("ingredient").select("*").order("name")),
+    cache.get("meal:all", () => supabase.from("meal").select("*").order("usual_start_time")),
+    cache.get("dietary_requirement:meal_scoped", () =>
+      supabase.from("dietary_requirement").select("*").not("meal_id", "is", null),
+    ),
   ]);
   const error = ingredientsError ?? mealsError ?? requirementsError;
   if (error) throw new Error(`fetchDishAuthoringContext: ${error.message}`);

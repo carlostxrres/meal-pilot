@@ -9,6 +9,7 @@ import type {
   RequirementLog,
 } from "../engine/types.js";
 import type { Database } from "./database.types.js";
+import { RequestCache } from "./requestCache.js";
 
 const DIVERSITY_WINDOW_DAYS = 3;
 
@@ -25,9 +26,16 @@ const DIVERSITY_WINDOW_DAYS = 3;
  * `apps/web` (cada sesión ve solo lo suyo), pero `apps/cli` pasaría a
  * necesitar un owner_id explícito en vez de asumir "el único que hay".
  */
+/**
+ * `cache`: se llama una vez por fecha del horizonte (`fetchContextsForDates`)
+ * y a veces junto a otras funciones que piden las mismas tablas completas
+ * (`ingredient` con `fetchIngredientCatalog` en /ingredients) — pasar la
+ * misma `RequestCache` entre todas evita repetir esas queries.
+ */
 export async function fetchDailyContext(
   supabase: SupabaseClient<Database>,
   date: string,
+  cache: RequestCache = new RequestCache(),
 ): Promise<DailyContext> {
   const [
     { data: ingredients, error: ingredientsError },
@@ -41,14 +49,14 @@ export async function fetchDailyContext(
     { data: requirementLogs, error: requirementLogsError },
     { data: mealLogs, error: mealLogsError },
   ] = await Promise.all([
-    supabase.from("ingredient").select("*"),
+    cache.get("ingredient:all", () => supabase.from("ingredient").select("*").order("name")),
     supabase.from("ingredient_category").select("*"),
     supabase.from("ingredient_category_link").select("*"),
     supabase.from("dish").select("*").eq("active", true),
     supabase.from("dish_ingredient").select("*").order("position"),
     supabase.from("meal").select("*").order("usual_start_time"),
     supabase.from("supplement").select("*"),
-    supabase.from("dietary_requirement").select("*"),
+    cache.get("dietary_requirement:all", () => supabase.from("dietary_requirement").select("*")),
     supabase.from("requirement_log").select("*").order("period_start", { ascending: false }),
     supabase.from("meal_log").select("*"),
   ]);

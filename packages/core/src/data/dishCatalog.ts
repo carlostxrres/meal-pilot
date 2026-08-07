@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types.js";
+import { RequestCache } from "./requestCache.js";
 import { checkDishCompliance, type DishCompliance } from "../engine/compliance.js";
 import { computeDishPrice } from "../engine/price.js";
 import type { Dish, Ingredient, ResolvedComponent } from "../engine/types.js";
@@ -15,9 +16,16 @@ export interface DishCatalogEntry {
   price: number;
 }
 
-/** Catálogo completo de dishes con componentes, meal, cumplimiento de su ventana nutricional y precio. */
+/**
+ * Catálogo completo de dishes con componentes, meal, cumplimiento de su
+ * ventana nutricional y precio. `ingredient`/`meal`/`dietary_requirement`
+ * (ligado a meal) son exactamente las mismas queries que hace
+ * `fetchDishAuthoringContext` — ambas se llaman juntas desde `/dishes`, así
+ * que comparten `cache` para pedir cada tabla una sola vez por página.
+ */
 export async function fetchDishCatalog(
   supabase: SupabaseClient<Database>,
+  cache: RequestCache = new RequestCache(),
 ): Promise<DishCatalogEntry[]> {
   const [
     { data: dishes, error: dishesError },
@@ -28,9 +36,11 @@ export async function fetchDishCatalog(
   ] = await Promise.all([
     supabase.from("dish").select("*"),
     supabase.from("dish_ingredient").select("*").order("position"),
-    supabase.from("ingredient").select("*"),
-    supabase.from("meal").select("id, name"),
-    supabase.from("dietary_requirement").select("*").not("meal_id", "is", null),
+    cache.get("ingredient:all", () => supabase.from("ingredient").select("*").order("name")),
+    cache.get("meal:all", () => supabase.from("meal").select("*").order("usual_start_time")),
+    cache.get("dietary_requirement:meal_scoped", () =>
+      supabase.from("dietary_requirement").select("*").not("meal_id", "is", null),
+    ),
   ]);
   const error = dishesError ?? diError ?? ingredientsError ?? mealsError ?? requirementsError;
   if (error) throw new Error(error.message);

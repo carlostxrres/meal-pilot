@@ -3,6 +3,7 @@ import { createSeededRandom } from "../engine/random.js";
 import { generateMultiDayPlan } from "../engine/resolve.js";
 import type { DailyContext, DayProposal } from "../engine/types.js";
 import { fetchDailyContext } from "./fetchDailyContext.js";
+import { RequestCache } from "./requestCache.js";
 import type { Database } from "./database.types.js";
 
 /** Horizonte de planificación por defecto: hoy + los siguientes días, encadenados. */
@@ -19,17 +20,25 @@ export const PLANNING_HORIZON_DAYS = 3;
 export async function generateProposalsForDates(
   supabase: SupabaseClient<Database>,
   dates: readonly string[],
+  cache: RequestCache = new RequestCache(),
 ): Promise<DayProposal[]> {
-  const contexts = await fetchContextsForDates(supabase, dates);
+  const contexts = await fetchContextsForDates(supabase, dates, cache);
   return generateMultiDayPlan(contexts, createSeededRandom(dates[0] ?? ""));
 }
 
-/** Como `generateProposalsForDates`, pero también devuelve los `DailyContext` (ej. para `confirmedMealIds`). */
+/**
+ * Como `generateProposalsForDates`, pero también devuelve los `DailyContext`
+ * (ej. para `confirmedMealIds`). `cache` se comparte entre las llamadas a
+ * `fetchDailyContext` de cada fecha (evita repetir `ingredient`/
+ * `dietary_requirement`, que no varían por fecha) y, si el caller lo pasa,
+ * con otras funciones de la misma página que pidan esas mismas tablas.
+ */
 export async function fetchContextsForDates(
   supabase: SupabaseClient<Database>,
   dates: readonly string[],
+  cache: RequestCache = new RequestCache(),
 ): Promise<DailyContext[]> {
-  return Promise.all(dates.map((date) => fetchDailyContext(supabase, date)));
+  return Promise.all(dates.map((date) => fetchDailyContext(supabase, date, cache)));
 }
 
 /** YYYY-MM-DD de hoy + los siguientes `days - 1` días (incluye hoy). */

@@ -1,7 +1,7 @@
 import { IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { fetchDishAuthoringContext, fetchDishCatalog } from "@meal-pilot/core";
+import { fetchDishAuthoringContext, fetchDishCatalog, RequestCache } from "@meal-pilot/core";
 import { createClient } from "@/lib/supabase/server";
 import { DishCatalogCard } from "@/components/DishCatalogCard";
 
@@ -9,9 +9,10 @@ import { DishCatalogCard } from "@/components/DishCatalogCard";
 export default async function DishPage({ params }: { params: Promise<{ dishId: string }> }) {
   const { dishId } = await params;
   const supabase = await createClient();
+  const cache = new RequestCache();
   const [dishes, authoring] = await Promise.all([
-    fetchDishCatalog(supabase),
-    fetchDishAuthoringContext(supabase),
+    fetchDishCatalog(supabase, cache),
+    fetchDishAuthoringContext(supabase, cache),
   ]);
 
   const entry = dishes.find((d) => d.dish.id === dishId);

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types.js";
+import { RequestCache } from "./requestCache.js";
 import {
   NUTRIENT_COLUMNS,
   type Ingredient,
@@ -13,15 +14,21 @@ export interface IngredientCatalogEntry {
   purchaseLinks: IngredientPurchaseLink[];
 }
 
-/** Catálogo completo de ingredientes con sus links de compra, para /ingredients. */
+/**
+ * Catálogo completo de ingredientes con sus links de compra, para
+ * /ingredients. La query de `ingredient` es la misma que usa
+ * `fetchDailyContext` (llamada, vía `generateProposalsForDates`, en la misma
+ * página) — comparten `cache` para pedir la tabla una sola vez.
+ */
 export async function fetchIngredientCatalog(
   supabase: SupabaseClient<Database>,
+  cache: RequestCache = new RequestCache(),
 ): Promise<IngredientCatalogEntry[]> {
   const [
     { data: ingredients, error: ingredientsError },
     { data: links, error: linksError },
   ] = await Promise.all([
-    supabase.from("ingredient").select("*").order("name"),
+    cache.get("ingredient:all", () => supabase.from("ingredient").select("*").order("name")),
     supabase.from("ingredient_purchase_link").select("*"),
   ]);
   const error = ingredientsError ?? linksError;

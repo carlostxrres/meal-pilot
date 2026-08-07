@@ -1,13 +1,14 @@
-import { fetchDishAuthoringContext, fetchDishCatalog } from "@meal-pilot/core";
+import { fetchDishAuthoringContext, fetchDishCatalog, RequestCache } from "@meal-pilot/core";
 import { createClient } from "@/lib/supabase/server";
 import { DishCatalogList } from "@/components/DishCatalogList";
 import { DishCreator } from "@/components/DishCreator";
 
 export default async function DishesPage() {
   const supabase = await createClient();
+  const cache = new RequestCache();
   const [dishes, authoring] = await Promise.all([
-    fetchDishCatalog(supabase),
-    fetchDishAuthoringContext(supabase),
+    fetchDishCatalog(supabase, cache),
+    fetchDishAuthoringContext(supabase, cache),
   ]);
 
   return (
