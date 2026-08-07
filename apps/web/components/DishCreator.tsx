@@ -379,6 +379,7 @@ function CollisionDialog({
               price={collision.match.price}
               mealName={collision.match.mealName}
               complianceChecks={collision.match.compliance.checks}
+              dietType={collision.match.dietType}
               status={collision.match.dish.active ? "active" : "inactive"}
             />
           )}

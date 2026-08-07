@@ -24,6 +24,7 @@ export function DishCatalogCard({
       price={entry.price}
       mealName={entry.mealName}
       complianceChecks={entry.compliance.checks}
+      dietType={entry.dietType}
       status={entry.dish.active ? "active" : "inactive"}
       headerActions={
         <DishCardMenu

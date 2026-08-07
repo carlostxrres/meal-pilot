@@ -1,6 +1,7 @@
 import {
   checkDishCompliance,
   computeDinnerTargets,
+  computeDishDietType,
   computeDishPrice,
   computeHomeToOfficeCarry,
   computeOfficeToStreetGrab,
@@ -171,6 +172,7 @@ export function DayProposalView({
                 price={computeDishPrice(mealProposal.resolved)}
                 mealName={mealProposal.meal.name}
                 complianceChecks={checkDishCompliance(mealProposal.resolved, mealRequirements).checks}
+                dietType={computeDishDietType(mealProposal.resolved)}
                 checkStock
               >
                 {isToday && (

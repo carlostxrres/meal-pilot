@@ -18,6 +18,12 @@ const STORAGE_LABELS: Record<Ingredient["storage_type"], string> = {
   freezer: "Congelador",
 };
 
+const ANIMAL_ORIGIN_LABELS: Record<Ingredient["animal_origin"], string> = {
+  animal: "Animal",
+  animal_derived: "Derivado animal",
+  plant: "Vegetal",
+};
+
 const REASON_LABELS: Record<ShoppingReason, string> = {
   upcoming_need: `para los próximos ${PLANNING_HORIZON_DAYS} días`,
   requirement: "para un requisito pendiente",
@@ -78,6 +84,7 @@ export function IngredientCatalogRow({
               {ingredient.enabled ? "Habilitado" : "Deshabilitado"}
             </span>
             <span className="dish-type-label">{STORAGE_LABELS[ingredient.storage_type]}</span>
+            <span className="dish-type-label">{ANIMAL_ORIGIN_LABELS[ingredient.animal_origin]}</span>
             {ingredient.price_eur_per_100 != null && (
               <span className="dish-price">
                 {formatEurPer100(ingredient.price_eur_per_100, ingredient.base_unit)}

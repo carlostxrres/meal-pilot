@@ -1,11 +1,16 @@
 "use client";
 
 import type { ReactNode } from "react";
-import type { DishComplianceCheck, ResolvedComponent } from "@meal-pilot/core";
+import type { DishComplianceCheck, DishDietType, ResolvedComponent } from "@meal-pilot/core";
 import { formatEur } from "@/lib/formatPrice";
 import { Chip } from "./Chip";
 import { DishComplianceChip } from "./DishComplianceChip";
 import { IngredientRow } from "./IngredientRow";
+
+const DIET_TYPE_LABELS: Partial<Record<DishDietType, string>> = {
+  vegan: "Vegano",
+  vegetarian: "Vegetariano",
+};
 
 /*
 Tarjeta de un plato ("ticket"), compartida entre el catálogo de Platos
@@ -39,6 +44,7 @@ export default function DishCard({
   price,
   mealName,
   complianceChecks,
+  dietType,
   status,
   headerActions,
   checkStock,
@@ -51,6 +57,8 @@ export default function DishCard({
   mealName?: string | null;
   /** Cumplimiento del plato contra la ventana nutricional de su meal — chip de métricas. */
   complianceChecks?: DishComplianceCheck[];
+  /** Vegano/vegetariano/no (computeDishDietType) — chip informativo, oculto si es "omnivore". */
+  dietType?: DishDietType;
   /** Activo/desactivado (solo se pasa en el catálogo de Platos). */
   status?: "active" | "inactive";
   headerActions?: ReactNode;
@@ -58,6 +66,8 @@ export default function DishCard({
   checkStock?: boolean;
   children?: ReactNode;
 }) {
+  const dietTypeLabel = dietType ? DIET_TYPE_LABELS[dietType] : undefined;
+
   return (
     <div className="dish-row" data-inactive={status === "inactive" || undefined}>
       <div className="dish-row-head">
@@ -76,9 +86,10 @@ export default function DishCard({
 
       {dish.description && <p className="dish-description">{dish.description}</p>}
 
-      {(mealName || (complianceChecks && complianceChecks.length > 0)) && (
+      {(mealName || (complianceChecks && complianceChecks.length > 0) || dietTypeLabel) && (
         <div className="dish-meal-chips">
           {mealName && <Chip>{mealName}</Chip>}
+          {dietTypeLabel && <Chip>{dietTypeLabel}</Chip>}
           {complianceChecks && complianceChecks.length > 0 && (
             <DishComplianceChip checks={complianceChecks} components={components} />
           )}

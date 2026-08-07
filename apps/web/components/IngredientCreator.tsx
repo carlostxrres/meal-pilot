@@ -46,6 +46,12 @@ const STORAGE_TYPE_OPTIONS: [Ingredient["storage_type"], string][] = [
   ["freezer", "Congelador"],
 ];
 
+const ANIMAL_ORIGIN_OPTIONS: [Ingredient["animal_origin"], string][] = [
+  ["animal", "Animal"],
+  ["animal_derived", "Derivado de animal"],
+  ["plant", "Vegetal"],
+];
+
 const RECOMMENDED_TIME_OPTIONS: [Ingredient["recommended_time"], string][] = [
   ["any", "Cualquier momento"],
   ["morning", "Mañana"],
@@ -91,6 +97,7 @@ interface CreatorState {
   description: string;
   baseUnit: Ingredient["base_unit"];
   storageType: Ingredient["storage_type"];
+  animalOrigin: Ingredient["animal_origin"];
   recommendedTime: Ingredient["recommended_time"];
   pantryShelfLifeDays: string;
   fridgeShelfLifeDays: string;
@@ -113,6 +120,7 @@ function initialCreatorState(existingEntry: IngredientCatalogEntry | undefined):
       description: "",
       baseUnit: "g",
       storageType: "pantry",
+      animalOrigin: "plant",
       recommendedTime: "any",
       pantryShelfLifeDays: "",
       fridgeShelfLifeDays: "",
@@ -130,6 +138,7 @@ function initialCreatorState(existingEntry: IngredientCatalogEntry | undefined):
     description: ingredient.description ?? "",
     baseUnit: ingredient.base_unit,
     storageType: ingredient.storage_type,
+    animalOrigin: ingredient.animal_origin,
     recommendedTime: ingredient.recommended_time,
     pantryShelfLifeDays: numberOrEmpty(ingredient.pantry_shelf_life_days),
     fridgeShelfLifeDays: numberOrEmpty(ingredient.fridge_shelf_life_days),
@@ -149,6 +158,7 @@ type CreatorAction =
   | { type: "set-field"; field: ScalarField; value: string }
   | { type: "set-base-unit"; value: Ingredient["base_unit"] }
   | { type: "set-storage-type"; value: Ingredient["storage_type"] }
+  | { type: "set-animal-origin"; value: Ingredient["animal_origin"] }
   | { type: "set-recommended-time"; value: Ingredient["recommended_time"] }
   | { type: "set-nutrient"; column: NutrientColumn; value: string }
   | { type: "add-purchase-link" }
@@ -167,6 +177,8 @@ function creatorReducer(state: CreatorState, action: CreatorAction): CreatorStat
       return { ...state, baseUnit: action.value };
     case "set-storage-type":
       return { ...state, storageType: action.value };
+    case "set-animal-origin":
+      return { ...state, animalOrigin: action.value };
     case "set-recommended-time":
       return { ...state, recommendedTime: action.value };
     case "set-nutrient":
@@ -249,6 +261,16 @@ function IngredientIdentityFields({ state, dispatch }: { state: CreatorState; di
             ariaLabel="Almacenamiento"
           />
         </div>
+      </div>
+
+      <div className="field">
+        <label htmlFor="ingredient-animal-origin">Origen</label>
+        <FilterSelect
+          value={state.animalOrigin}
+          onChange={(value) => dispatch({ type: "set-animal-origin", value })}
+          options={ANIMAL_ORIGIN_OPTIONS}
+          ariaLabel="Origen"
+        />
       </div>
 
       <div className="field">
@@ -443,6 +465,7 @@ export function IngredientCreator({
       name: state.name.trim(),
       baseUnit: state.baseUnit,
       storageType: state.storageType,
+      animalOrigin: state.animalOrigin,
       recommendedTime: state.recommendedTime,
       description: state.description.trim() || undefined,
       pantryShelfLifeDays: parseOptionalNumber(state.pantryShelfLifeDays),
