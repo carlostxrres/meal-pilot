@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -203,6 +198,7 @@ export type Database = {
       }
       ingredient: {
         Row: {
+          animal_origin: Database["public"]["Enums"]["animal_origin"]
           base_unit: Database["public"]["Enums"]["base_unit"]
           calcium_mg_per_100: number | null
           carbs_g_per_100: number | null
@@ -234,6 +230,7 @@ export type Database = {
           vitamin_c_mg_per_100: number | null
         }
         Insert: {
+          animal_origin: Database["public"]["Enums"]["animal_origin"]
           base_unit: Database["public"]["Enums"]["base_unit"]
           calcium_mg_per_100?: number | null
           carbs_g_per_100?: number | null
@@ -265,6 +262,7 @@ export type Database = {
           vitamin_c_mg_per_100?: number | null
         }
         Update: {
+          animal_origin?: Database["public"]["Enums"]["animal_origin"]
           base_unit?: Database["public"]["Enums"]["base_unit"]
           calcium_mg_per_100?: number | null
           carbs_g_per_100?: number | null
@@ -583,6 +581,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      animal_origin: "animal" | "animal_derived" | "plant"
       base_unit: "g" | "ml" | "unit"
       relative_timing_type:
         | "before_fasting_ends"
@@ -726,6 +725,7 @@ export const Constants = {
   },
   public: {
     Enums: {
+      animal_origin: ["animal", "animal_derived", "plant"],
       base_unit: ["g", "ml", "unit"],
       relative_timing_type: [
         "before_fasting_ends",
@@ -743,3 +743,4 @@ export const Constants = {
     },
   },
 } as const
+
