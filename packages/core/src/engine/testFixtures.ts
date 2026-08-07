@@ -24,6 +24,7 @@ export function makeIngredient(overrides: Partial<Ingredient> = {}): Ingredient 
     name: "Ingrediente de prueba",
     base_unit: "g",
     storage_type: "fridge",
+    animal_origin: "plant",
     opened_shelf_life_days: null,
     recommended_time: "any",
     office_inventory: 0,

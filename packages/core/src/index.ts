@@ -5,6 +5,7 @@ export * from "./engine/diversity.js";
 export * from "./engine/shoppingList.js";
 export * from "./engine/nutrition.js";
 export * from "./engine/compliance.js";
+export * from "./engine/dietType.js";
 export * from "./engine/dinner.js";
 export * from "./engine/suggestions.js";
 export * from "./engine/commute.js";

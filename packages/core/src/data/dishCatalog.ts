@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types.js";
 import { RequestCache } from "./requestCache.js";
 import { checkDishCompliance, type DishCompliance } from "../engine/compliance.js";
+import { computeDishDietType, type DishDietType } from "../engine/dietType.js";
 import { computeDishPrice } from "../engine/price.js";
 import type { Dish, Ingredient, ResolvedComponent } from "../engine/types.js";
 
@@ -14,6 +15,8 @@ export interface DishCatalogEntry {
   compliance: DishCompliance;
   /** Precio aproximado (EUR), suma de sus componentes — ver engine/price.ts. */
   price: number;
+  /** Vegano/vegetariano/no, computado a partir de ingredient.animal_origin — ver engine/dietType.ts. */
+  dietType: DishDietType;
 }
 
 /**
@@ -65,6 +68,7 @@ export async function fetchDishCatalog(
         mealName: mealNameById.get(dish.meal_id) ?? null,
         compliance: checkDishCompliance({ dish, components }, requirements ?? []),
         price: computeDishPrice({ components }),
+        dietType: computeDishDietType({ components }),
       };
     })
     .sort((a, b) => a.dish.name.localeCompare(b.dish.name));

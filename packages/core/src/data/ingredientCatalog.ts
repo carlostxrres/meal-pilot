@@ -50,6 +50,7 @@ export interface IngredientInput {
   name: string;
   baseUnit: Ingredient["base_unit"];
   storageType: Ingredient["storage_type"];
+  animalOrigin: Ingredient["animal_origin"];
   recommendedTime: Ingredient["recommended_time"];
   /** Notas libres del usuario. */
   description?: string;
@@ -97,6 +98,7 @@ export async function createIngredient(
       name: input.name.trim(),
       base_unit: input.baseUnit,
       storage_type: input.storageType,
+      animal_origin: input.animalOrigin,
       recommended_time: input.recommendedTime,
       description: input.description?.trim() || null,
       pantry_shelf_life_days: input.pantryShelfLifeDays ?? null,
@@ -148,6 +150,7 @@ export async function updateIngredient(
       name: input.name.trim(),
       base_unit: input.baseUnit,
       storage_type: input.storageType,
+      animal_origin: input.animalOrigin,
       recommended_time: input.recommendedTime,
       description: input.description?.trim() || null,
       pantry_shelf_life_days: input.pantryShelfLifeDays ?? null,
