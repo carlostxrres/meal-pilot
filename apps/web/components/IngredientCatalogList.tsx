@@ -3,16 +3,24 @@
 import { IconApple } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useOptimistic, useState, useTransition } from "react";
-import type { IngredientCatalogEntry, ShoppingReason } from "@meal-pilot/core";
+import {
+  NUTRIENT_COLUMNS,
+  sortColumnsByDisplayOrder,
+  type IngredientCatalogEntry,
+  type NutrientColumn,
+  type ShoppingReason,
+} from "@meal-pilot/core";
 import { updateInventoryAction } from "@/app/(app)/actions";
 import { CatalogSection } from "./CatalogSection";
 import { FilterSelect } from "./FilterSelect";
 import { IngredientCatalogRow, type InventoryPatch } from "./IngredientCatalogRow";
 import { SearchField } from "./SearchField";
 
-type SortKey = "name-asc" | "name-desc" | "created-desc" | "created-asc" | "updated-desc" | "updated-asc";
+type BaseSortKey = "name-asc" | "name-desc" | "created-desc" | "created-asc" | "updated-desc" | "updated-asc";
+type NutrientSortKey = `${NutrientColumn}-asc` | `${NutrientColumn}-desc`;
+type SortKey = BaseSortKey | NutrientSortKey;
 
-const SORT_OPTIONS: [SortKey, string][] = [
+const BASE_SORT_OPTIONS: [BaseSortKey, string][] = [
   ["name-asc", "Nombre (A-Z)"],
   ["name-desc", "Nombre (Z-A)"],
   ["created-desc", "Más recientes primero"],
@@ -21,7 +29,7 @@ const SORT_OPTIONS: [SortKey, string][] = [
   ["updated-asc", "Modificados hace más"],
 ];
 
-const SORTERS: Record<SortKey, (a: IngredientCatalogEntry, b: IngredientCatalogEntry) => number> = {
+const BASE_SORTERS: Record<BaseSortKey, (a: IngredientCatalogEntry, b: IngredientCatalogEntry) => number> = {
   "name-asc": (a, b) => a.ingredient.name.localeCompare(b.ingredient.name),
   "name-desc": (a, b) => b.ingredient.name.localeCompare(a.ingredient.name),
   "created-desc": (a, b) =>
@@ -32,6 +40,44 @@ const SORTERS: Record<SortKey, (a: IngredientCatalogEntry, b: IngredientCatalogE
     new Date(b.ingredient.updated_at).getTime() - new Date(a.ingredient.updated_at).getTime(),
   "updated-asc": (a, b) =>
     new Date(a.ingredient.updated_at).getTime() - new Date(b.ingredient.updated_at).getTime(),
+};
+
+/** Mismo orden que NutritionPopover/.capsule-meter-grid (sortColumnsByDisplayOrder), para que "ordenar por nutriente" liste los nutrientes en el mismo orden en que se ven en el resto de la app. */
+const NUTRIENT_SORT_LABELS: Record<NutrientColumn, string> = {
+  kcal_per_100: "Calorías",
+  fat_g_per_100: "Grasas",
+  saturated_fat_g_per_100: "Grasa saturada",
+  carbs_g_per_100: "Hidratos",
+  sugar_g_per_100: "Azúcares",
+  fiber_g_per_100: "Fibra",
+  protein_g_per_100: "Proteína",
+  sodium_mg_per_100: "Sodio",
+  vitamin_c_mg_per_100: "Vitamina C",
+  iron_mg_per_100: "Hierro",
+  calcium_mg_per_100: "Calcio",
+  omega3_g_per_100: "Omega 3",
+};
+
+const ORDERED_NUTRIENT_COLUMNS = sortColumnsByDisplayOrder(NUTRIENT_COLUMNS, (column) => column);
+
+const NUTRIENT_SORT_OPTIONS: [NutrientSortKey, string][] = ORDERED_NUTRIENT_COLUMNS.flatMap((column) => [
+  [`${column}-desc`, `${NUTRIENT_SORT_LABELS[column]} (mayor a menor)`],
+  [`${column}-asc`, `${NUTRIENT_SORT_LABELS[column]} (menor a mayor)`],
+]) as [NutrientSortKey, string][];
+
+const NUTRIENT_SORTERS = Object.fromEntries(
+  NUTRIENT_COLUMNS.flatMap((column) => [
+    [`${column}-desc`, (a: IngredientCatalogEntry, b: IngredientCatalogEntry) =>
+      (b.ingredient[column] ?? 0) - (a.ingredient[column] ?? 0)],
+    [`${column}-asc`, (a: IngredientCatalogEntry, b: IngredientCatalogEntry) =>
+      (a.ingredient[column] ?? 0) - (b.ingredient[column] ?? 0)],
+  ]),
+) as Record<NutrientSortKey, (a: IngredientCatalogEntry, b: IngredientCatalogEntry) => number>;
+
+const SORT_OPTIONS: [SortKey, string][] = [...BASE_SORT_OPTIONS, ...NUTRIENT_SORT_OPTIONS];
+const SORTERS: Record<SortKey, (a: IngredientCatalogEntry, b: IngredientCatalogEntry) => number> = {
+  ...BASE_SORTERS,
+  ...NUTRIENT_SORTERS,
 };
 
 /** Sentinel de Radix Select (no admite value=""), representa "sin filtrar por esta propiedad". */
