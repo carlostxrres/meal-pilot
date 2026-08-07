@@ -2,6 +2,7 @@
 
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import {
+  IconClipboardText,
   IconCopy,
   IconDotsVertical,
   IconPencil,
@@ -11,7 +12,18 @@ import {
 import { useState, useTransition } from "react";
 import type { DietaryRequirement, DishCatalogEntry, Ingredient, Meal } from "@meal-pilot/core";
 import { setDishActiveAction } from "@/app/(app)/actions";
+import { formatEur } from "@/lib/formatPrice";
 import { DishCreator } from "./DishCreator";
+
+function dishToText(entry: DishCatalogEntry): string {
+  const lines = [`${entry.dish.name} (${entry.dish.dish_type}) — ${formatEur(entry.price)}`];
+  if (entry.dish.description) lines.push(entry.dish.description);
+  lines.push("");
+  for (const component of entry.components) {
+    lines.push(`- ${component.ingredient.name}: ${component.quantity}${component.ingredient.base_unit}`);
+  }
+  return lines.join("\n");
+}
 
 /*
 Menú "..." del card de plato, solo en el catálogo de Platos (/dishes): editar,
@@ -70,6 +82,14 @@ export function DishCardMenu({
               onSelect={selectItem(() => setDuplicateOpen(true))}
             >
               <IconCopy size={16} stroke={1.75} /> Nuevo plato similar
+            </DropdownMenu.Item>
+            <DropdownMenu.Item
+              className="select-item dropdown-item"
+              onSelect={selectItem(() => {
+                void navigator.clipboard.writeText(dishToText(entry));
+              })}
+            >
+              <IconClipboardText size={16} stroke={1.75} /> Copiar como texto
             </DropdownMenu.Item>
             <DropdownMenu.Item
               className="select-item dropdown-item"
