@@ -8,6 +8,7 @@ import {
   IconBulb,
   IconCheck,
   IconChevronDown,
+  IconChevronUp,
   IconEye,
   IconGripVertical,
   IconMinus,
@@ -585,6 +586,7 @@ function CreatorMeters({
   children: React.ReactNode;
 }) {
   const allWithinWindow = liveStatuses.length > 0 && liveStatuses.every((s) => s.withinRange);
+  const [minimized, setMinimized] = useState(false);
 
   return (
     <div className="creator-meters">
@@ -611,37 +613,49 @@ function CreatorMeters({
           >
             <IconArrowForwardUp size={18} stroke={1.75} />
           </button>
+          <button
+            type="button"
+            className="meter-action"
+            aria-label={minimized ? "Mostrar ventana nutricional" : "Minimizar ventana nutricional"}
+            onClick={() => setMinimized((m) => !m)}
+          >
+            {minimized ? <IconChevronUp size={18} stroke={1.75} /> : <IconChevronDown size={18} stroke={1.75} />}
+          </button>
         </span>
       </div>
-      <h3 className="section-title">Ventana nutricional</h3>
-      <NutritionalThresholds
-        statuses={liveStatuses}
-        emptyMessage="Esta comida no tiene requisitos nutricionales definidos."
-        renderActions={(status) => (
-          <span className="meter-actions">
-            <button
-              type="button"
-              className="meter-action"
-              aria-label={`Ver contribuciones de ${status.requirement.name}`}
-              onClick={() => dispatch({ type: "inspect", requirementId: status.requirement.id })}
-            >
-              <IconEye size={16} stroke={1.75} />
-            </button>
-            <button
-              type="button"
-              className="meter-action"
-              aria-label={`Sugerencias para ${status.requirement.name}`}
-              onClick={() => dispatch({ type: "suggest", requirementId: status.requirement.id })}
-            >
-              <IconBulb size={16} stroke={1.75} />
-            </button>
-          </span>
-        )}
-      />
-      {allWithinWindow && (
-        <p className="section-note" data-ok="true">
-          Dentro de la ventana: listo para {isEditing ? "guardar" : "crear"}.
-        </p>
+      {!minimized && (
+        <>
+          <h3 className="section-title">Ventana nutricional</h3>
+          <NutritionalThresholds
+            statuses={liveStatuses}
+            emptyMessage="Esta comida no tiene requisitos nutricionales definidos."
+            renderActions={(status) => (
+              <span className="meter-actions">
+                <button
+                  type="button"
+                  className="meter-action"
+                  aria-label={`Ver contribuciones de ${status.requirement.name}`}
+                  onClick={() => dispatch({ type: "inspect", requirementId: status.requirement.id })}
+                >
+                  <IconEye size={16} stroke={1.75} />
+                </button>
+                <button
+                  type="button"
+                  className="meter-action"
+                  aria-label={`Sugerencias para ${status.requirement.name}`}
+                  onClick={() => dispatch({ type: "suggest", requirementId: status.requirement.id })}
+                >
+                  <IconBulb size={16} stroke={1.75} />
+                </button>
+              </span>
+            )}
+          />
+          {allWithinWindow && (
+            <p className="section-note" data-ok="true">
+              Dentro de la ventana: listo para {isEditing ? "guardar" : "crear"}.
+            </p>
+          )}
+        </>
       )}
       {children}
     </div>
