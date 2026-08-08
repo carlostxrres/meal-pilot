@@ -6,10 +6,13 @@ export interface MealCarryList {
 }
 
 /**
- * Heurística simple (no simula consumo secuencial dentro del día, igual que
- * el resto del motor — ver limitaciones conocidas en docs/status.md):
- * un componente "no está disponible en la oficina" si el stock de oficina
- * por sí solo no cubre la cantidad que ese componente necesita.
+ * Heurística simple: un componente "no está disponible en la oficina" si el
+ * stock de oficina por sí solo no cubre la cantidad que ese componente
+ * necesita. A diferencia del resto del motor (que desde ADR-0020 sí simula
+ * consumo con un stock virtual decrementado dish a dish), esto compara
+ * contra el inventario nominal de oficina sin descontar lo que otros meals
+ * del mismo día ya se habrían llevado — limitación conocida (ver
+ * docs/status.md), no una inconsistencia introducida por el ADR-0020.
  */
 function componentsNeedingCarry(resolved: ResolvedDish): ResolvedComponent[] {
   return resolved.components.filter((c) => c.ingredient.office_inventory < c.quantity);

@@ -36,6 +36,39 @@ describe("generateMultiDayPlan", () => {
     expect(chosen2).not.toBe(chosen1);
   });
 
+  it("el stock virtual se decrementa entre días del horizonte (ADR-0020): el mismo inventario no cubre dos días", () => {
+    // compartido solo alcanza para un uso (40 = lo que pide meal1). meal1 es
+    // la única candidata del día 1 (elección forzada, sin empate posible),
+    // así que agota su stock virtual de forma determinista. El día 2 evalúa
+    // un meal distinto con dos candidatas: repetir compartido (ahora con
+    // coste 1, stock virtual 0) o usar alternativo (coste 0, nunca tocado).
+    // Con el motor anterior (inventario nominal, nunca decrementado) ambas
+    // candidatas habrían aparecido igual de "en stock" el día 2.
+    const compartido = makeIngredient({ name: "Compartido", home_inventory: 40 });
+    const alternativo = makeIngredient({ name: "Alternativo", home_inventory: 40 });
+    const meal1 = makeMeal({ name: "Meal día 1" });
+    const meal2 = makeMeal({ name: "Meal día 2" });
+    const unicaCandidataDia1 = makeCandidate(meal1.id, [{ ingredient: compartido, quantity: 40 }]);
+    const usaCompartido = makeCandidate(meal2.id, [{ ingredient: compartido, quantity: 40 }]);
+    const usaAlternativo = makeCandidate(meal2.id, [{ ingredient: alternativo, quantity: 40 }]);
+
+    const day1Ctx = buildTestContext({
+      date: "2026-08-01",
+      ingredients: [compartido, alternativo],
+      meals: [{ meal: meal1, candidates: [unicaCandidataDia1] }],
+    });
+    const day2Ctx = buildTestContext({
+      date: "2026-08-02",
+      ingredients: [compartido, alternativo],
+      meals: [{ meal: meal2, candidates: [usaCompartido, usaAlternativo] }],
+    });
+
+    const [day1, day2] = generateMultiDayPlan([day1Ctx, day2Ctx], createSeededRandom("plan-stock"));
+
+    expect(day1!.meals[0]!.resolved!.dish.id).toBe(unicaCandidataDia1.dish.id);
+    expect(day2!.meals[0]!.resolved!.dish.id).toBe(usaAlternativo.dish.id);
+  });
+
   it("acumula un requisito semanal a través de varios días sin reiniciarlo", () => {
     const sardinas = makeIngredient({ name: "Sardinas" });
     const meal = makeMeal();

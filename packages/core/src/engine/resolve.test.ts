@@ -1,13 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { createSeededRandom } from "./random.js";
-import { generateDayProposal } from "./resolve.js";
+import { generateDayProposal, scoreResolvedDish } from "./resolve.js";
 import {
   buildTestContext,
   makeCandidate,
+  makeDish,
   makeIngredient,
   makeMeal,
   makeRequirement,
 } from "./testFixtures.js";
+import type { DietaryRequirement, ResolvedDish } from "./types.js";
 
 describe("generateDayProposal", () => {
   it("materializa una dish fija completa (todos sus componentes, con cantidades)", () => {
@@ -35,8 +37,8 @@ describe("generateDayProposal", () => {
     ]);
   });
 
-  it("prioriza la dish cuyos ingredientes ya están en inventario", () => {
-    const enStock = makeIngredient({ name: "En stock", office_inventory: 200 });
+  it("prioriza la dish con coste de compra 0 (el stock virtual cubre todos sus componentes)", () => {
+    const enStock = makeIngredient({ name: "En stock", home_inventory: 200 });
     const sinStock = makeIngredient({ name: "Sin stock" });
     const meal = makeMeal();
     const conStock = makeCandidate(meal.id, [{ ingredient: enStock, quantity: 50 }]);
@@ -52,7 +54,7 @@ describe("generateDayProposal", () => {
     expect(proposal.meals[0]!.resolved!.dish.id).toBe(conStock.dish.id);
   });
 
-  it("prioriza la dish que ayuda a un requisito global mandatory no cumplido", () => {
+  it("prioriza la dish que ayuda a un requisito global mandatory pendiente (a nivel de plato)", () => {
     const ricoEnVitC = makeIngredient({ name: "Rico en vitC", vitamin_c_mg_per_100: 80 });
     const pobreEnVitC = makeIngredient({ name: "Pobre en vitC", vitamin_c_mg_per_100: 0 });
     const meal = makeMeal();
@@ -102,6 +104,32 @@ describe("generateDayProposal", () => {
       ["2026-08-01", "2026-08-02", "2026-08-03", "2026-08-04", "2026-08-05"].map(proposalFor),
     );
     expect(results.size).toBeGreaterThan(1);
+  });
+
+  it("el stock virtual se decrementa entre meals del mismo día (ADR-0020)", () => {
+    // ingredienteEscaso solo alcanza para un uso: el meal 1 (única candidata)
+    // lo agota, y el meal 2 debe evitarlo en favor de una dish sin coste,
+    // sin que la diversidad (recentlyUsedIngredientIds) intervenga -- esa
+    // señal solo se actualiza al terminar el día completo, no entre meals.
+    const escaso = makeIngredient({ name: "Escaso", home_inventory: 40 });
+    const abundante = makeIngredient({ name: "Abundante", home_inventory: 40 });
+    const meal1 = makeMeal({ name: "Meal 1" });
+    const meal2 = makeMeal({ name: "Meal 2" });
+    const unicaCandidataMeal1 = makeCandidate(meal1.id, [{ ingredient: escaso, quantity: 40 }]);
+    const usaEscaso = makeCandidate(meal2.id, [{ ingredient: escaso, quantity: 40 }]);
+    const usaAbundante = makeCandidate(meal2.id, [{ ingredient: abundante, quantity: 40 }]);
+
+    const ctx = buildTestContext({
+      date: "2026-08-01",
+      ingredients: [escaso, abundante],
+      meals: [
+        { meal: meal1, candidates: [unicaCandidataMeal1] },
+        { meal: meal2, candidates: [usaEscaso, usaAbundante] },
+      ],
+    });
+
+    const proposal = generateDayProposal(ctx, createSeededRandom("2026-08-01"));
+    expect(proposal.meals[1]!.resolved!.dish.id).toBe(usaAbundante.dish.id);
   });
 
   it("descarta una dish que violaría un techo mandatory global (ej. atún semanal)", () => {
@@ -201,5 +229,32 @@ describe("generateDayProposal", () => {
     const mealProposal = proposal.meals[0]!;
     expect(mealProposal.resolved).toBeNull();
     expect(mealProposal.unresolvedReason).toMatch(/No hay ninguna dish/);
+  });
+});
+
+describe("scoreResolvedDish — invariante de neutralidad al tamaño (ADR-0020)", () => {
+  it("un plato sin nada que comprar y sin repeticiones puntúa igual con 1 componente que con 6", () => {
+    const requirements: DietaryRequirement[] = [];
+    const runningAccumulated = new Map<string, number>();
+    const quantity = 30;
+    const stockPerIngredient = 100; // > quantity (coste 0) y da el mismo ratio de drenaje sea cual sea el tamaño del plato
+
+    const scores = [1, 2, 3, 4, 5, 6].map((componentCount) => {
+      const ingredients = Array.from({ length: componentCount }, (_, i) =>
+        makeIngredient({ name: `Ing ${componentCount}-${i}`, home_inventory: stockPerIngredient }),
+      );
+      const resolved: ResolvedDish = {
+        dish: makeDish(),
+        components: ingredients.map((ingredient) => ({ ingredient, quantity })),
+      };
+      const ctx = buildTestContext({ date: "2026-08-01", ingredients, meals: [] });
+      const virtualStock = new Map(ingredients.map((i) => [i.id, stockPerIngredient]));
+
+      return scoreResolvedDish(resolved, requirements, runningAccumulated, ctx, virtualStock);
+    });
+
+    for (const score of scores) {
+      expect(score).toBeCloseTo(scores[0]!, 10);
+    }
   });
 });

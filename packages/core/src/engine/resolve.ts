@@ -11,12 +11,41 @@ import type {
   ResolvedDish,
 } from "./types.js";
 
-// Pesos para el ranking de prioridad (sección 5 del diseño): inventario >
-// ayuda a un requisito obligatorio > diversidad. Espaciados en órdenes de
-// magnitud para que la suma nunca reordene tiers (son señales 0/1).
-const WEIGHT_IN_STOCK = 100;
-const WEIGHT_HELPS_MANDATORY_MIN = 10;
-const WEIGHT_NOT_RECENTLY_USED = 1;
+// ADR-0020: suma ponderada de términos que compiten, no tiers léxicos. Los
+// pesos nacen provisionales -- la calibración depende de tener un catálogo
+// de platos sano (ver docs/status.md) -- y viven aquí, con su
+// justificación, para que cualquier retoque futuro sepa qué está ajustando:
+//   - coste y repetición PENALIZAN, contados en unidades absolutas (nº de
+//     componentes que faltan / se repiten), nunca como fracción del tamaño
+//     del plato -- de eso sale el invariante de neutralidad al tamaño: un
+//     plato sin nada que comprar y sin repeticiones puntúa igual con 1
+//     componente que con 6 (ver el test de propiedad en resolve.test.ts).
+//   - ayudar a un mínimo mandatory global pendiente PREMIA, a nivel de
+//     plato (0/1) y no por componente sumado/promediado.
+//   - el drenaje PREMIA vaciar lo que más stock virtual acumula. Es el
+//     único término continuo, así que es el que rompe la mayoría de los
+//     empates sin que la semilla por fecha deje de tener papel en los
+//     empates genuinos (dos platos idénticos en los demás términos).
+const WEIGHT_MANDATORY_HELP = 5;
+const WEIGHT_COST = 2;
+const WEIGHT_REPETITION = 1;
+const WEIGHT_DRAINAGE = 1;
+
+/**
+ * Escala de referencia para normalizar el drenaje a un [0,1] aproximado --
+ * evita que un ingrediente con muchísimo stock domine el término sin límite
+ * frente al resto de señales.
+ */
+const DRAINAGE_REFERENCE_STOCK = 500;
+
+/**
+ * Tolerancia para comparar scores float como iguales. Al contar en enteros,
+ * dos platos igual de cubiertos y de frescos empatan de verdad y con
+ * frecuencia -- el drenaje (el único término continuo) es el que rompe la
+ * mayoría de esos empates, y el epsilon evita que lo haga por el último bit
+ * del float en vez de por una diferencia real (ver ADR-0020).
+ */
+const SCORE_EPSILON = 1e-9;
 
 export function effectiveBounds(requirement: DietaryRequirement) {
   const margin = requirement.tolerance_margin;
@@ -75,48 +104,6 @@ function contribution(
     : 0;
 }
 
-function helpsUnmetMandatoryMinimum(
-  ingredient: Ingredient,
-  globalRequirements: readonly DietaryRequirement[],
-  runningAccumulated: ReadonlyMap<string, number>,
-  categoryIdsByIngredientId: ReadonlyMap<string, Set<string>>,
-): boolean {
-  return globalRequirements.some((req) => {
-    if (req.strictness !== "mandatory" || req.minimum == null) return false;
-    const { effectiveMinimum } = effectiveBounds(req);
-    if (effectiveMinimum == null) return false;
-    const current = runningAccumulated.get(req.id) ?? 0;
-    if (current >= effectiveMinimum) return false;
-    return ingredientMatchesRequirementScope(
-      ingredient,
-      req,
-      categoryIdsByIngredientId,
-    );
-  });
-}
-
-function scoreIngredient(
-  ingredient: Ingredient,
-  quantity: number,
-  globalRequirements: readonly DietaryRequirement[],
-  ctx: DailyContext,
-  runningAccumulated: ReadonlyMap<string, number>,
-): number {
-  const inStock = ingredient.office_inventory + ingredient.home_inventory >= quantity;
-  const helps = helpsUnmetMandatoryMinimum(
-    ingredient,
-    globalRequirements,
-    runningAccumulated,
-    ctx.categoryIdsByIngredientId,
-  );
-  const fresh = !ctx.recentlyUsedIngredientIds.has(ingredient.id);
-  return (
-    (inStock ? WEIGHT_IN_STOCK : 0) +
-    (helps ? WEIGHT_HELPS_MANDATORY_MIN : 0) +
-    (fresh ? WEIGHT_NOT_RECENTLY_USED : 0)
-  );
-}
-
 function pickBestByScore<T>(
   items: readonly T[],
   scoreOf: (item: T) => number,
@@ -124,7 +111,7 @@ function pickBestByScore<T>(
 ): T {
   let bestScore = -Infinity;
   for (const item of items) bestScore = Math.max(bestScore, scoreOf(item));
-  const best = items.filter((item) => scoreOf(item) === bestScore);
+  const best = items.filter((item) => scoreOf(item) >= bestScore - SCORE_EPSILON);
   return pickRandom(best, rand);
 }
 
@@ -181,26 +168,101 @@ function violatesMandatoryMaximum(
   });
 }
 
-function scoreResolvedDish(
+/** Coste de compra (ADR-0020): nº de componentes que el stock virtual NO cubre. Se cuenta, no se promedia -- ver invariante de neutralidad al tamaño. */
+function missingComponentCount(
+  resolved: ResolvedDish,
+  virtualStock: ReadonlyMap<string, number>,
+): number {
+  return resolved.components.filter(
+    (c) => (virtualStock.get(c.ingredient.id) ?? 0) < c.quantity,
+  ).length;
+}
+
+/** Repetición (ADR-0020): nº de componentes usados recientemente. Se cuenta, no se promedia -- mismo motivo que el coste. */
+function repeatedComponentCount(
+  resolved: ResolvedDish,
+  recentlyUsedIngredientIds: ReadonlySet<string>,
+): number {
+  return resolved.components.filter((c) => recentlyUsedIngredientIds.has(c.ingredient.id))
+    .length;
+}
+
+/**
+ * Ayuda a un mínimo mandatory global pendiente (ADR-0020): señal 0/1 a
+ * nivel de plato entero, no por componente -- basta con que el plato, en su
+ * conjunto, aporte algo a un requisito obligatorio con mínimo que todavía
+ * no se ha alcanzado.
+ */
+function helpsPendingMandatoryMinimum(
+  resolved: ResolvedDish,
+  globalRequirements: readonly DietaryRequirement[],
+  runningAccumulated: ReadonlyMap<string, number>,
+  categoryIdsByIngredientId: ReadonlyMap<string, Set<string>>,
+): boolean {
+  return globalRequirements.some((req) => {
+    if (req.strictness !== "mandatory" || req.minimum == null) return false;
+    const { effectiveMinimum } = effectiveBounds(req);
+    if (effectiveMinimum == null) return false;
+    const current = runningAccumulated.get(req.id) ?? 0;
+    if (current >= effectiveMinimum) return false;
+    return totalContribution(resolved, req, categoryIdsByIngredientId) > 0;
+  });
+}
+
+/**
+ * Drenaje (ADR-0020): premia vaciar ingredientes con mucho stock virtual
+ * acumulado, como aproximación heurística a "termina lo abierto antes de
+ * abrir otra cosa" (no hay fecha de apertura por ingrediente todavía, ver
+ * `ingredient.opened_shelf_life_days`, sin usar).
+ *
+ * Máximo entre componentes, no suma ni media: sumar favorecería a los
+ * platos con más componentes (cada uno suma su propio drenaje); promediar
+ * favorecería a los pequeños (un solo componente muy cargado de stock
+ * alcanzaría el máximo posible). El máximo hace que añadir componentes que
+ * no drenan más que el mejor ya presente no cambie la puntuación -- respeta
+ * el mismo invariante de neutralidad al tamaño que coste y repetición.
+ */
+function drainageScore(resolved: ResolvedDish, virtualStock: ReadonlyMap<string, number>): number {
+  let best = 0;
+  for (const c of resolved.components) {
+    const stockBefore = virtualStock.get(c.ingredient.id) ?? 0;
+    const ratio = Math.min(1, stockBefore / DRAINAGE_REFERENCE_STOCK);
+    if (ratio > best) best = ratio;
+  }
+  return best;
+}
+
+/** Exportado para el test de propiedad del invariante de neutralidad al tamaño (ADR-0020) -- no se usa fuera del motor en producción. */
+export function scoreResolvedDish(
   resolved: ResolvedDish,
   globalRequirements: readonly DietaryRequirement[],
   runningAccumulated: ReadonlyMap<string, number>,
   ctx: DailyContext,
+  virtualStock: ReadonlyMap<string, number>,
 ): number {
-  // Media, no suma: si sumaramos, una dish con mas componentes ganaria casi
-  // siempre solo por tener mas componentes que puntuan (WEIGHT_IN_STOCK etc.),
-  // independientemente de si es realmente la mejor opcion para el meal.
-  const total = resolved.components.reduce(
-    (sum, c) => sum + scoreIngredient(c.ingredient, c.quantity, globalRequirements, ctx, runningAccumulated),
-    0,
+  const cost = missingComponentCount(resolved, virtualStock);
+  const repetition = repeatedComponentCount(resolved, ctx.recentlyUsedIngredientIds);
+  const helps = helpsPendingMandatoryMinimum(
+    resolved,
+    globalRequirements,
+    runningAccumulated,
+    ctx.categoryIdsByIngredientId,
   );
-  return total / resolved.components.length;
+  const drainage = drainageScore(resolved, virtualStock);
+
+  return (
+    -WEIGHT_COST * cost -
+    WEIGHT_REPETITION * repetition +
+    WEIGHT_MANDATORY_HELP * (helps ? 1 : 0) +
+    WEIGHT_DRAINAGE * drainage
+  );
 }
 
 function resolveMeal(
   mealCtx: MealWithCandidates,
   allRequirements: readonly DietaryRequirement[],
   runningAccumulated: Map<string, number>,
+  virtualStock: Map<string, number>,
   ctx: DailyContext,
   rand: () => number,
 ): MealProposal {
@@ -245,7 +307,7 @@ function resolveMeal(
 
   const chosen = pickBestByScore(
     validCandidates,
-    (r) => scoreResolvedDish(r, globalRequirements, runningAccumulated, ctx),
+    (r) => scoreResolvedDish(r, globalRequirements, runningAccumulated, ctx, virtualStock),
     rand,
   );
 
@@ -255,6 +317,14 @@ function resolveMeal(
     if (req.meal_id !== null && req.meal_id !== mealCtx.meal.id) continue;
     const added = totalContribution(chosen, req, ctx.categoryIdsByIngredientId);
     runningAccumulated.set(req.id, (runningAccumulated.get(req.id) ?? 0) + added);
+  }
+
+  // ADR-0020: decrementa el stock virtual con lo que consume la dish
+  // elegida -- entre meals del mismo día y, vía la misma Map mutable
+  // encadenada en generateMultiDayPlan, entre días del horizonte.
+  for (const component of chosen.components) {
+    const current = virtualStock.get(component.ingredient.id) ?? 0;
+    virtualStock.set(component.ingredient.id, Math.max(0, current - component.quantity));
   }
 
   return {
@@ -313,11 +383,23 @@ function weekPeriodStart(date: string, resetDay: string): string {
  *     reset de semana, también se reinicia.
  *   - Diversidad: los ingredientes usados en el día N se añaden al conjunto
  *     de "usados recientemente" antes de resolver el día N+1.
+ *   - Stock virtual (ADR-0020): se inicializa una sola vez con el
+ *     inventario real (`office_inventory + home_inventory`) y se decrementa
+ *     al asignar cada dish, tanto entre meals del mismo día como entre
+ *     días del horizonte -- sin esto, los mismos 200g de un ingrediente
+ *     "cubrirían" los tres días del horizonte.
  *
  * Limitación conocida: sigue siendo un algoritmo voraz día a día (usa la
  * prioridad de "ayuda a un requisito no cumplido" al puntuar cada dish),
  * no un solver que mire todos los días a la vez para encontrar el reparto
  * óptimo — pero ya no genera cada día de forma aislada.
+ *
+ * Todos los acumuladores (requisitos, diversidad, stock virtual) se siembran
+ * hoy solo desde `contexts[0]` -- correcto mientras el horizonte completo se
+ * genera de una vez. La generación perezosa por días sueltos (ADR-0019,
+ * roll-forward detrás de días ya comprometidos) necesitará sembrarlos por
+ * replay de `planned_meal` + `meal_log` en vez de por `contexts[0]`; queda
+ * pendiente para esa fase, no de este ADR-0020.
  */
 export function generateMultiDayPlan(
   contexts: readonly DailyContext[],
@@ -331,6 +413,11 @@ export function generateMultiDayPlan(
     runningAccumulated.set(reqId, log.accumulated);
   }
   const recentlyUsed = new Set(contexts[0]!.recentlyUsedIngredientIds);
+
+  const virtualStock = new Map<string, number>();
+  for (const ingredient of contexts[0]!.ingredientsById.values()) {
+    virtualStock.set(ingredient.id, ingredient.office_inventory + ingredient.home_inventory);
+  }
 
   const results: DayProposal[] = [];
 
@@ -353,7 +440,7 @@ export function generateMultiDayPlan(
 
     const effectiveCtx: DailyContext = { ...ctx, recentlyUsedIngredientIds: recentlyUsed };
     const meals = ctx.meals.map((mealCtx) =>
-      resolveMeal(mealCtx, requirements, runningAccumulated, effectiveCtx, rand),
+      resolveMeal(mealCtx, requirements, runningAccumulated, virtualStock, effectiveCtx, rand),
     );
 
     for (const mealProposal of meals) {
