@@ -591,14 +591,6 @@ body {
   overflow-y: auto;
 }
 
-/* Icono decorativo de "+" en los resultados de búsqueda: la fila entera ya
-   es el control clicable (ver IngredientRow onClick), este icono es solo
-   la pista visual — nunca debe capturar el click él mismo. */
-.creator-add-icon {
-  color: var(--mute);
-  pointer-events: none;
-}
-
 .section-note[data-ok="true"] {
   color: var(--success);
 }

@@ -961,7 +961,6 @@ export function DishCreator({
                       <IngredientRow
                         ingredient={ingredient}
                         onClick={() => dispatch({ type: "add-ingredient", ingredient })}
-                        trailing={<IconPlus size={16} stroke={2} className="creator-add-icon" />}
                       />
                     </li>
                   ))}
