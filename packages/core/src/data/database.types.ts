@@ -629,7 +629,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      confirm_meal: {
+        Args: {
+          p_confirmed: boolean
+          p_date: string
+          p_dish_id: string
+          p_meal_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       animal_origin: "animal" | "animal_derived" | "plant"

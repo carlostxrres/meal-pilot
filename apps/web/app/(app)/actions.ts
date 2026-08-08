@@ -20,10 +20,15 @@ export async function confirmMealAction(
   mealId: string,
   dishId: string,
   confirmed: boolean,
-) {
-  const supabase = await createClient();
-  await setMealConfirmed(supabase, { date, mealId, dishId, confirmed });
+): Promise<{ error: string | null }> {
+  try {
+    const supabase = await createClient();
+    await setMealConfirmed(supabase, { date, mealId, dishId, confirmed });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Error desconocido confirmando el meal" };
+  }
   revalidatePath("/");
+  return { error: null };
 }
 
 export async function updateInventoryAction(input: {

@@ -6,13 +6,12 @@ import type { Database } from "./database.types.js";
  * propuso, para una fecha dada. v1: sí/no únicamente, sin editar
  * desviaciones (ver docs/plans/2026-07-26-ui-design-system-and-ia.md).
  *
- * No hay UNIQUE(date, meal_id) en el esquema, así que se borra cualquier
- * fila previa de ese meal/fecha antes de (opcionalmente) insertar la nueva,
- * para evitar duplicados si se marca/desmarca varias veces.
- *
- * Limitación conocida: esto NO recalcula requirement_log todavía — el
- * acumulado que ve el usuario en "Hoy" sigue siendo el de la propuesta
- * generada, no el histórico de confirmaciones reales.
+ * ADR-0021: confirmar descuenta del inventario las cantidades congeladas en
+ * planned_meal.components (clamp a 0); desconfirmar las devuelve. La
+ * escritura en meal_log y el descuento van en la función SQL `confirm_meal`
+ * para que sean atómicos -- ver su definición en
+ * supabase/migrations/20260808110000_confirm_meal_deducts_inventory.sql
+ * para el reparto oficina/casa y por qué es solo orientativo.
  */
 export async function setMealConfirmed(
   supabase: SupabaseClient<Database>,
@@ -20,33 +19,13 @@ export async function setMealConfirmed(
 ): Promise<void> {
   const { date, mealId, dishId, confirmed } = params;
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-  if (userError || !user) {
-    throw new Error("setMealConfirmed: no hay usuario autenticado");
-  }
-
-  const { error: deleteError } = await supabase
-    .from("meal_log")
-    .delete()
-    .eq("date", date)
-    .eq("meal_id", mealId);
-  if (deleteError) {
-    throw new Error(`setMealConfirmed: fallo borrando meal_log previo: ${deleteError.message}`);
-  }
-
-  if (!confirmed) return;
-
-  const { error: insertError } = await supabase.from("meal_log").insert({
-    owner_id: user.id,
-    date,
-    meal_id: mealId,
-    dish_id: dishId,
-    confirmed: true,
+  const { error } = await supabase.rpc("confirm_meal", {
+    p_date: date,
+    p_meal_id: mealId,
+    p_dish_id: dishId,
+    p_confirmed: confirmed,
   });
-  if (insertError) {
-    throw new Error(`setMealConfirmed: fallo insertando meal_log: ${insertError.message}`);
+  if (error) {
+    throw new Error(`setMealConfirmed: fallo en confirm_meal: ${error.message}`);
   }
 }

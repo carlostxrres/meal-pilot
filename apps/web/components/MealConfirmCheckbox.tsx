@@ -17,6 +17,7 @@ export function MealConfirmCheckbox({
   initialConfirmed: boolean;
 }) {
   const [checked, setChecked] = useState(initialConfirmed);
+  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const id = useId();
 
@@ -29,9 +30,19 @@ export function MealConfirmCheckbox({
         disabled={isPending}
         onCheckedChange={(value) => {
           const next = value === true;
+          const previous = checked;
           setChecked(next);
+          setError(null);
           startTransition(() => {
-            confirmMealAction(date, mealId, dishId, next);
+            confirmMealAction(date, mealId, dishId, next).then((result) => {
+              // Confirmar ya descuenta inventario (ADR-0021): si la escritura
+              // falla, hay que revertir el check optimista -- de lo contrario
+              // la UI diría "comido" sin que el descuento haya ocurrido.
+              if (result.error) {
+                setChecked(previous);
+                setError(result.error);
+              }
+            });
           });
         }}
       >
@@ -42,6 +53,7 @@ export function MealConfirmCheckbox({
       <label htmlFor={id} className="meal-confirm-label">
         {checked ? "Comido" : "Marcar como comido"}
       </label>
+      {error && <p className="warning">{error}</p>}
     </div>
   );
 }
