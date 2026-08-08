@@ -33,7 +33,7 @@ function shoppingReasonText(reasons: ShoppingReason[]): string {
   return `Comprar ${reasons.map((r) => REASON_LABELS[r]).join(" · ")}`;
 }
 
-/** Fila de un ingrediente del catálogo: mismas acciones de swipe y edición de inventario que Inventario, más el menú "..." del catálogo (editar ficha, habilitar/deshabilitar) y, si toca comprarlo, el motivo. */
+/** Fila de un ingrediente del catálogo: mismas acciones de swipe y edición de inventario que Inventario, más el menú "..." del catálogo (editar ficha, editar inventario, habilitar/deshabilitar) y, si toca comprarlo, el motivo. */
 export function IngredientCatalogRow({
   entry,
   shoppingReasons,
@@ -90,21 +90,13 @@ export function IngredientCatalogRow({
                 {formatEurPer100(ingredient.price_eur_per_100, ingredient.base_unit)}
               </span>
             )}
-            <button
-              type="button"
-              className="inventory-edit-btn"
-              aria-label={`Editar ${ingredient.name}`}
-              onClick={() => setEditOpen(true)}
-            >
-              <IconPencil size={16} stroke={1.75} />
-            </button>
             <InventoryEditDialog
               ingredient={ingredient}
               open={editOpen}
               onOpenChange={setEditOpen}
               onSave={(values) => onUpdateInventory(ingredient.id, values)}
             />
-            <IngredientCardMenu entry={entry} />
+            <IngredientCardMenu entry={entry} onEditInventory={() => setEditOpen(true)} />
           </div>
         }
       />

@@ -1186,15 +1186,6 @@ body {
   color: var(--off);
 }
 
-.inventory-edit-btn {
-  border: var(--border-width) solid var(--hairline);
-  background: transparent;
-  color: var(--ink);
-  padding: var(--space-8) var(--space-16);
-  border-radius: var(--radius-pill);
-  font-size: var(--text-base);
-}
-
 /* --- Swipe gestures (Inventario, Compra, el creador de platos) --- */
 
 .swipe-row {

@@ -1,7 +1,7 @@
 "use client";
 
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { IconDotsVertical, IconPencil, IconPlayerPlay, IconPlayerPause } from "@tabler/icons-react";
+import { IconBoxSeam, IconDotsVertical, IconPencil, IconPlayerPlay, IconPlayerPause } from "@tabler/icons-react";
 import { useState, useTransition } from "react";
 import type { IngredientCatalogEntry } from "@meal-pilot/core";
 import { setIngredientEnabledAction } from "@/app/(app)/actions";
@@ -9,15 +9,23 @@ import { IngredientCreator } from "./IngredientCreator";
 
 /*
 Menú "..." de la ficha de ingrediente, solo en el catálogo de Ingredientes
-(/ingredients): editar y habilitar/deshabilitar. Editar abre un
-IngredientCreator en modo controlado (mismo componente que "Nuevo
-ingrediente", sin su propio trigger visible) — mismo patrón que
+(/ingredients): editar ficha, editar inventario y habilitar/deshabilitar.
+Editar ficha abre un IngredientCreator en modo controlado (mismo componente
+que "Nuevo ingrediente", sin su propio trigger visible) — mismo patrón que
 DishCardMenu, por el mismo motivo: anidar un Dialog.Trigger dentro de un
 DropdownMenu.Item no funciona (el menú se desmonta antes de que el diálogo
 llegue a abrirse), así que el item cierra el menú y abre el diálogo por
-estado.
+estado. Editar inventario reutiliza ese mismo patrón pero delega el diálogo
+(InventoryEditDialog) al padre (IngredientCatalogRow), que ya lo necesita
+para la acción de swipe.
 */
-export function IngredientCardMenu({ entry }: { entry: IngredientCatalogEntry }) {
+export function IngredientCardMenu({
+  entry,
+  onEditInventory,
+}: {
+  entry: IngredientCatalogEntry;
+  onEditInventory: () => void;
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [, startTransition] = useTransition();
@@ -46,6 +54,12 @@ export function IngredientCardMenu({ entry }: { entry: IngredientCatalogEntry })
               onSelect={selectItem(() => setEditOpen(true))}
             >
               <IconPencil size={16} stroke={1.75} /> Editar ingrediente
+            </DropdownMenu.Item>
+            <DropdownMenu.Item
+              className="select-item dropdown-item"
+              onSelect={selectItem(onEditInventory)}
+            >
+              <IconBoxSeam size={16} stroke={1.75} /> Editar inventario
             </DropdownMenu.Item>
             <DropdownMenu.Item
               className="select-item dropdown-item"
