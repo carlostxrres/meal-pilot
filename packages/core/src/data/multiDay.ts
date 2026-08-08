@@ -41,13 +41,28 @@ export async function fetchContextsForDates(
   return Promise.all(dates.map((date) => fetchDailyContext(supabase, date, cache)));
 }
 
-/** YYYY-MM-DD de hoy + los siguientes `days - 1` días (incluye hoy). */
+/**
+ * Formatea una fecha en YYYY-MM-DD usando sus componentes en huso horario
+ * local, no UTC. `toISOString()` siempre convierte a UTC, así que aplicado a
+ * un instante local (`new Date()`) desplaza la fecha en Europe/Madrid entre
+ * medianoche y la 01:00/02:00 — "hoy" se leía como "ayer". Con el plan
+ * comprometido (ADR-0019) ese desplazamiento comprometería el día
+ * equivocado, no solo lo mostraría mal.
+ */
+export function formatLocalDate(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+/** YYYY-MM-DD de hoy (huso horario local) + los siguientes `days - 1` días (incluye hoy). */
 export function upcomingDates(days: number, from: Date = new Date()): string[] {
   const dates: string[] = [];
   for (let i = 0; i < days; i++) {
     const d = new Date(from);
-    d.setUTCDate(d.getUTCDate() + i);
-    dates.push(d.toISOString().slice(0, 10));
+    d.setDate(d.getDate() + i);
+    dates.push(formatLocalDate(d));
   }
   return dates;
 }

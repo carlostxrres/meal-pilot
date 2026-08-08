@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import {
   createSeededRandom,
   fetchDailyContext,
+  formatLocalDate,
   generateDayProposal,
   type DayProposal,
   type Database,
@@ -12,7 +13,7 @@ function parseDateArg(argv: string[]): string {
   if (flagIndex !== -1 && argv[flagIndex + 1]) {
     return argv[flagIndex + 1]!;
   }
-  return new Date().toISOString().slice(0, 10);
+  return formatLocalDate(new Date());
 }
 
 function requireEnv(name: string): string {
