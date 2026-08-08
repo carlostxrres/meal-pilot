@@ -1,7 +1,7 @@
 "use client";
 
 import * as Popover from "@radix-ui/react-popover";
-import { IconInfoCircle } from "@tabler/icons-react";
+import { IconChartBar } from "@tabler/icons-react";
 import {
   NUTRIENT_COLUMNS,
   sortColumnsByDisplayOrder,
@@ -46,7 +46,7 @@ export function NutritionPopover({
           className="nutrition-trigger"
           aria-label={title ? `Ver valores nutricionales (${title})` : "Ver valores nutricionales"}
         >
-          <IconInfoCircle size={18} stroke={1.75} />
+          <IconChartBar size={18} stroke={1.75} />
         </button>
       </Popover.Trigger>
       <Popover.Portal>
