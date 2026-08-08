@@ -2,15 +2,32 @@
 
 > Documento vivo: se actualiza cada sesión conforme avanza el trabajo. Para el diseño estable, ver [`diseno-sistema.md`](diseno-sistema.md); para el porqué de cada decisión, [`adrs/`](adrs/README.md).
 
-**Última actualización**: 2026-08-01
+**Última actualización**: 2026-08-08
 
 ## Fase actual
 
-Rearquitectura ADR-0017/0018 implementada (ver bloques siguientes): requisitos nutricionales por meal + dishes fijas 1:1 + vista "Prepara tu cena", más dos rondas de pulido de UI/UX (2026-07-28 y 2026-08-01, ver más abajo). **Pendiente del usuario: rediseñar el catálogo de platos** (paso 5 del plan) — el catálogo actual es la conversión mecánica del viejo y casi todos los platos están fuera de la ventana de su meal (marcados en `/dishes`, ahora pestaña "Platos").
+**Plan comprometido (ADR-0019/0020/0021/0022) implementado y verificado en vivo** (2026-08-08, ver bloque siguiente): el plan pasa de recalcularse en cada render a ser un compromiso persistido en `planned_meal`, el motor simula stock virtual y puntúa con una suma ponderada, confirmar una comida descuenta inventario, y el historial es editable con repaso guiado. Esto era la rearquitectura pendiente sobre ADR-0017/0018 (requisitos por meal + dishes fijas 1:1 + "Prepara tu cena", implementada el 2026-07-27, más dos rondas de pulido de UI/UX el 2026-07-28 y 2026-08-01).
 
-Encima de eso hay ahora una **rearquitectura decidida y no implementada** (ADR-0019/0020/0021, ver bloque siguiente): el plan pasa a ser un compromiso persistido. Va deliberadamente **después** del rediseño del catálogo, porque la calibración de pesos del ADR-0020 no se puede validar con platos fuera de ventana.
+**Pesos de la función objetivo (ADR-0020) siguen provisionales**: el catálogo tiene pocos platos todavía (el usuario lo confirma sano dentro de ventana, pero corto en número), así que la calibración de magnitudes queda para cuando haya más platos y uso real — el invariante de neutralidad al tamaño sí está verificado desde el día 1 (test de propiedad).
 
-## Plan comprometido: decidido, no implementado (2026-08-01)
+## Plan comprometido: implementado (2026-08-08)
+
+Los cuatro ADRs de abajo (decididos el 2026-08-01) están implementados, verificados con 78 tests, `next build`, `tsc --noEmit`, y navegación en vivo contra la base de datos real (login real, no simulado) en cinco commits atómicos, en el orden que fijaba la sección "Próximo paso concreto": (1) zona horaria, (2) ADR-0020, (3) ADR-0019, (4) ADR-0021, (5) ADR-0022.
+
+- **Motor** (`packages/core/src/engine/resolve.ts`): `generateMultiDayPlan` decrementa un stock virtual y puntúa con la suma ponderada del ADR-0020 (coste/repetición penalizan en cuentas absolutas, ayuda a mandatory pendiente y drenaje premian). Acepta un `seed` opcional (`accumulated`/`recentlyUsedIngredientIds`/`virtualStock`) para la generación perezosa; `replayAccumulation` (nueva, exportada) reconstruye ese estado recorriendo días ya resueltos, compartiendo con la generación la regla de reset diario/semanal (`requirementsNeedingReset`).
+- **Esquema**: `planned_meal` (el compromiso) y `meal_log` ampliado a cuatro estados (el hecho) — ambos con `dish_id` nullable + `ON DELETE SET NULL` y nombre congelado, CHECK apoyado en `dish_name`/`description` nunca en `dish_id`. Tres funciones SQL nuevas: `confirm_meal` (el checkbox de "Hoy"), `set_meal_log_state` (los cuatro estados desde /historial y el repaso guiado) y `apply_planned_meal_deduction` (compartida por las dos, el descuento/devolución con clamp a 0 y reparto oficina/casa).
+- **Datos** (`packages/core/src/data/plannedMeal.ts`, `history.ts`): `ensureCommittedPlan` es el único punto de entrada de "Hoy" e "Ingredientes" — rellena huecos perezosamente y siempre relee de la base de datos tras el upsert. `getRecentlyUsedIngredientIds` pasa a operar sobre slots ya resueltos (tolera `dish_id` nulo) en vez de leer `meal_log` directamente.
+- **Web**: `/historial` (fuera de la tab bar, enlazada desde `UserMenu`) y un bloque de repaso guiado al principio de "Hoy". CLI (`apps/cli`) pasa a ser de solo lectura.
+
+**Deriva encontrada respecto al ADR-0019 (escrito antes de esta sesión)**: `/shopping` ya no existe como ruta propia — se fusionó dentro de `/ingredients` el mismo día 2026-08-07, antes de esta implementación. `ensureCommittedPlan` sirve a ambas vistas (`/` e `/ingredients`) desde el mismo commit, así que la garantía de "un solo plan, nunca generado dos veces" se mantiene igual.
+
+**Decisión tomada con el usuario durante la implementación, no estaba en los ADRs**: ADR-0021 (descuento de inventario) se escribió antes de que ADR-0022 añadiera los estados "comí otro plato"/"comí fuera", así que ningún ADR decía qué hacer con el inventario en esos dos casos. Se decidió que **nunca descuentan inventario nuevo** — solo "seguí el plan" con el plato ya comprometido descuenta (igual que el checkbox de "Hoy"); si había una deducción previa y el nuevo estado ya no la sostiene, se devuelve. Motivo: no hay snapshot congelado de un plato no comprometido (a diferencia de `planned_meal.components`), así que descontar por él no sería revertible con exactitud si se vuelve a editar la entrada.
+
+**Simplificación deliberada, no está en los ADRs**: "comí otra cosa" se registra siempre como texto libre (`ate_out`), tanto en el repaso guiado como en `/historial`. Elegir un plato distinto **del catálogo** (que sí generaría un `dish_name` con `dish_id`, y en teoría podría descontar inventario) queda fuera de esta primera versión — necesitaría un selector de plato nuevo, y el texto libre ya cubre el caso central de corregir el registro/inventario.
+
+**Bug real encontrado y corregido durante la implementación**: `confirm_meal` (ADR-0021) insertaba en `meal_log` sin `dish_name`. Funcionó mientras esa columna no existía, pero en cuanto aterrizó el CHECK del ADR-0022 (que exige `dish_name` o `description` no nulos si `confirmed=true`), confirmar cualquier meal desde "Hoy" habría reventado con un 23514. Corregido en el mismo bloque de trabajo, antes de verificar en vivo.
+
+### Decidido el 2026-08-01, para contexto histórico
 
 Sesión de diseño, sin código. Origen: *"cuando compro y marco cosas como compradas, las comidas planeadas cambian"*.
 
@@ -23,11 +40,11 @@ Tres ADRs, pensados como una pieza (implementar 0019 sin 0020 congelaría un pla
 - **[ADR-0021](adrs/0021-confirmar-comida-descuenta-inventario.md)**: confirmar descuenta inventario y la app recuerda revisarlo al final del día. Cierra el ciclo generar → comer → descontar → comprar.
 - **[ADR-0022](adrs/0022-historial-de-comidas-editable-y-repaso-guiado.md)**: historial editable (confirmar / desmentir / registrar otro plato / registrar comida de fuera) y **repaso guiado** de los días pendientes al abrir la app. Activa `meal_log.confirmed`, que hoy está muerto (solo puede valer `true`, porque desconfirmar borra la fila), y no necesita ninguna tabla nueva: el historial es la comparación entre `planned_meal` y `meal_log`.
 
-**Precondición bloqueante detectada**: `upcomingDates` formatea en UTC un instante local, así que en Europe/Madrid "hoy" es ayer entre medianoche y las 01:00/02:00 (mismo patrón en `apps/cli/src/cli.ts`). Hoy es cosmético; con el plan persistido comprometería el día equivocado, y arreglarlo después movería la fecha bajo datos ya escritos. Va **antes** de la primera escritura de `planned_meal`.
+**Precondición bloqueante detectada** *(resuelta: la zona horaria fue el primer commit de la implementación)*: `upcomingDates` formatea en UTC un instante local, así que en Europe/Madrid "hoy" es ayer entre medianoche y las 01:00/02:00 (mismo patrón en `apps/cli/src/cli.ts`). Hoy es cosmético; con el plan persistido comprometería el día equivocado, y arreglarlo después movería la fecha bajo datos ya escritos. Va **antes** de la primera escritura de `planned_meal`.
 
-**Huecos que la revisión destapó**: no se puede confirmar un día pasado (el checkbox solo se pinta si `isToday`), así que una confirmación olvidada dejaría comida consumida contando como stock indefinidamente — **resuelto por el ADR-0022**; y los suplementos consumen inventario real pero no entran en `ResolvedDish.components`, ni en `sumUpcomingNeed`, ni en el descuento — además `fetchDailyContext` los adjunta ignorando `frequency` y `supplement_day`, que ninguna línea del repo lee. Este segundo sigue pendiente.
+**Huecos que la revisión destapó**: no se puede confirmar un día pasado (el checkbox solo se pinta si `isToday`), así que una confirmación olvidada dejaría comida consumida contando como stock indefinidamente — **resuelto por el ADR-0022**; y los suplementos consumen inventario real pero no entran en `ResolvedDish.components`, ni en `sumUpcomingNeed`, ni en el descuento — además `fetchDailyContext` los adjunta ignorando `frequency` y `supplement_day`, que ninguna línea del repo lee. Este segundo **sigue pendiente** (no lo cubre ningún ADR de esta ronda).
 
-**Punto concreto de código que el ADR-0022 obliga a tocar**: `getRecentlyUsedIngredientIds` recorre todas las filas de `meal_log` sin mirar `confirmed`, y hace `dishIngredientsByDishId.get(log.dish_id)`. En cuanto existan filas desmentidas o sin `dish_id` (comida de fuera), contaría comidas que no ocurrieron y reventaría con el null. `fetchDailyContext:119` sí filtra por `confirmed`, así que esa parte ya está lista.
+**Punto concreto de código que el ADR-0022 obliga a tocar** *(resuelto)*: `getRecentlyUsedIngredientIds` recorre todas las filas de `meal_log` sin mirar `confirmed`, y hace `dishIngredientsByDishId.get(log.dish_id)`. En cuanto existan filas desmentidas o sin `dish_id` (comida de fuera), contaría comidas que no ocurrieron y reventaría con el null. `fetchDailyContext:119` sí filtra por `confirmed`, así que esa parte ya está lista.
 
 ## Ronda de pulido de UI/UX, parte 2 (2026-08-01)
 
@@ -198,7 +215,7 @@ Nota: el nombre de cara al usuario de la app es **Meal Pilot** (título, copy de
 - **Precisión de los valores nutricionales**: son estimaciones a mano (ver arriba), no vienen de una fuente validada. No bloquea la fase 3, pero conviene tenerlo presente al interpretar cualquier cálculo de cumplimiento.
 - **Rediseño del catálogo de dishes** (sustituye al punto anterior sobre "cantidades semilla insuficientes"): con ADR-0017/0018, cada meal necesita 4–6 dishes fijas que caigan dentro de su ventana nutricional. El catálogo actual (convertido mecánicamente) está casi todo fuera de ventana — es la tarea del usuario, con `/dishes` marcando el estado de cada una.
 - **~~Escritura en `requirement_log`~~** (resuelta por [ADR-0019](adrs/0019-plan-comprometido-con-horizonte-rodante.md)): el acumulado se replayará desde `planned_meal` + `meal_log`, no desde `requirement_log`, para no tener dos fuentes de verdad. La tabla queda sin uso.
-- **~~Confirmar días pasados~~** (resuelta por [ADR-0022](adrs/0022-historial-de-comidas-editable-y-repaso-guiado.md)): historial editable + repaso guiado al abrir la app. Queda abierto el **tamaño del backlog** del repaso: se fija en los mismos 3 días del horizonte, pero es el número que más probablemente haya que ajustar con uso real.
+- **~~Confirmar días pasados~~** (resuelta e implementada por [ADR-0022](adrs/0022-historial-de-comidas-editable-y-repaso-guiado.md), 2026-08-08): historial editable + repaso guiado al abrir la app. Queda abierto el **tamaño del backlog** del repaso: se fija en los mismos 3 días del horizonte, pero es el número que más probablemente haya que ajustar con uso real.
 - **Suplementos fuera de todos los cálculos**: consumen inventario real pero no entran en la generación, ni en la compra, ni en el descuento; `frequency` y `supplement_day` no los lee ninguna línea del repo. Anotado en el ADR-0021, sin fecha.
 - **Pesos de la nueva función objetivo** ([ADR-0020](adrs/0020-funcion-objetivo-con-terminos-que-compiten.md)): nacen provisionales y no se pueden calibrar de verdad hasta que el catálogo de platos esté rediseñado. El **invariante de neutralidad al tamaño** sí es verificable desde el día 1 con un test de propiedad, y es la defensa contra que un retoque de pesos reintroduzca el sesgo en silencio.
 - **Separación oficina/casa**: informativa hasta que exista un evento "ya me lo he llevado" — `addToHomeInventory` siempre suma a casa y `office_inventory` no sube nunca solo. Ver ADR-0021.
@@ -209,14 +226,11 @@ Nota: el nombre de cara al usuario de la app es **Meal Pilot** (título, copy de
 
 ## Próximo paso concreto
 
-**Rediseñar el catálogo de platos** (paso 5 del plan de la rearquitectura, tarea del usuario): crear 4–6 platos fijos por meal que cumplan la ventana nutricional de su meal, usando el creador de la pestaña "Platos" (cápsulas en vivo) y el chip de cumplimiento como verificación.
+El plan comprometido (ADR-0019/0020/0021/0022) está implementado y verificado — ver el bloque "Plan comprometido: implementado (2026-08-08)" más arriba. `docs/next-steps.md` (documento de trabajo del usuario, no versionado) tiene el desglose completo de lo que sigue; resumen:
 
-**Después**, implementar el plan comprometido (ADR-0019/0020/0021), en este orden — el orden importa:
-
-1. Arreglar la zona horaria de `upcomingDates` y `apps/cli/src/cli.ts`. **Antes de cualquier escritura**: después movería la fecha bajo datos ya comprometidos.
-2. Simulación de consumo y nueva función objetivo (ADR-0020), que es lo que hace que un plan congelado sea servible.
-3. Tabla `planned_meal`, roll-forward y triggers (ADR-0019).
-4. Descuento de inventario al confirmar y recordatorio de revisión (ADR-0021).
-5. Historial editable, repaso guiado y ruta `/historial` (ADR-0022). Va al final porque el repaso solo tiene sentido cuando ya hay compromisos pasados que repasar y un descuento que corregir.
+- **Track A3 — Histórico con fotos**: ahora desbloqueado (dependía de `/historial`, ya implementada). Sin diseñar todavía más allá de la idea suelta — modelo de datos y flujo de subida quedan por decidir.
+- **Track B — en paralelo, sin dependencias del plan comprometido**: requisitos dietéticos editables (B1), meals editables (B2), eliminar el concepto de suplemento (B3).
+- **Simplificaciones deliberadas de esta ronda, anotadas para revisar con uso real** (ver el bloque de implementación más arriba para el detalle): "comí otra cosa" es siempre texto libre, sin selector de plato del catálogo; el inventario nunca se descuenta por "comí otro plato"/"comí fuera"; los pesos del ADR-0020 siguen provisionales.
+- **Suplementos fuera de todos los cálculos**: sigue sin resolver (ver Track B3), no lo tocó esta ronda.
 
 Lo aparcado sigue aparcado: desplegar a Vercel.
