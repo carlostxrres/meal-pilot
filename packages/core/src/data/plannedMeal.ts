@@ -211,7 +211,9 @@ async function fetchResolvedWindow(
       const key = keyOf(date, meal.id);
       const log = mealLogByKey.get(key);
       if (log) {
-        const dish = catalog.dishesById.get(log.dish_id);
+        // ADR-0022: dish_id null es "comí fuera" o "no comí" (confirmed
+        // distingue cuál) -- ninguno de los dos cuenta nutrientes/ingredientes.
+        const dish = log.dish_id ? catalog.dishesById.get(log.dish_id) : undefined;
         const components = (dish ? catalog.dishIngredientsByDishId.get(dish.id) : undefined) ?? [];
         const resolvedComponents = components
           .map((c) => {

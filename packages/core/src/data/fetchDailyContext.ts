@@ -141,7 +141,10 @@ export async function fetchDailyContext(
   for (const key of new Set([...mealLogByKey.keys(), ...plannedMealByKey.keys()])) {
     const log = mealLogByKey.get(key);
     if (log) {
-      const components = dishIngredientsByDishId.get(log.dish_id) ?? [];
+      // ADR-0022: dish_id null aquí es "comí fuera" o "no comí" (confirmed
+      // determina cuál, pero para diversidad da igual) -- ninguno de los dos
+      // aporta ingredientes.
+      const components = log.dish_id ? (dishIngredientsByDishId.get(log.dish_id) ?? []) : [];
       recentlyUsedSources.push({
         date: log.date,
         ingredientIds: components.map((c) => c.ingredient_id),

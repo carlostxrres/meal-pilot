@@ -1,12 +1,14 @@
 import {
   ensureCommittedPlan,
   fetchMealTips,
+  fetchPendingReviewItems,
   PLANNING_HORIZON_DAYS,
   RequestCache,
   upcomingDates,
 } from "@meal-pilot/core";
 import { createClient } from "@/lib/supabase/server";
 import { DayTabs, type DayTabData } from "@/components/DayTabs";
+import { GuidedReview } from "@/components/GuidedReview";
 import { formatFriendlyDate } from "@/lib/friendlyDate";
 
 export default async function HomePage() {
@@ -19,14 +21,21 @@ export default async function HomePage() {
   // leído de planned_meal, nunca lo generado en memoria. `confirmedMealIds`
   // y los requisitos por meal no vienen de ahí (DayProposal no los lleva),
   // así que se piden aparte; comparten `cache` con la consulta interna de
-  // dietary_requirement que ya hace ensureCommittedPlan.
-  const [proposals, tipsByMeal, { data: requirementsData, error: requirementsError }, { data: mealLogRows, error: mealLogError }] =
-    await Promise.all([
-      ensureCommittedPlan(supabase, dates, cache),
-      fetchMealTips(supabase),
-      cache.get("dietary_requirement:all", () => supabase.from("dietary_requirement").select("*")),
-      supabase.from("meal_log").select("date, meal_id").eq("confirmed", true).in("date", dates),
-    ]);
+  // dietary_requirement que ya hace ensureCommittedPlan. pendingReviewItems
+  // (ADR-0022) es el repaso guiado de días anteriores sin responder.
+  const [
+    proposals,
+    tipsByMeal,
+    { data: requirementsData, error: requirementsError },
+    { data: mealLogRows, error: mealLogError },
+    pendingReviewItems,
+  ] = await Promise.all([
+    ensureCommittedPlan(supabase, dates, cache),
+    fetchMealTips(supabase),
+    cache.get("dietary_requirement:all", () => supabase.from("dietary_requirement").select("*")),
+    supabase.from("meal_log").select("date, meal_id").eq("confirmed", true).in("date", dates),
+    fetchPendingReviewItems(supabase, cache),
+  ]);
   if (requirementsError) throw new Error(requirementsError.message);
   if (mealLogError) throw new Error(mealLogError.message);
 
@@ -45,5 +54,10 @@ export default async function HomePage() {
     isToday: i === 0,
   }));
 
-  return <DayTabs days={days} tipsByMeal={tipsByMeal} mealRequirements={mealRequirements} />;
+  return (
+    <>
+      <GuidedReview items={pendingReviewItems} />
+      <DayTabs days={days} tipsByMeal={tipsByMeal} mealRequirements={mealRequirements} />
+    </>
+  );
 }

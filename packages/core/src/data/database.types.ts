@@ -400,7 +400,9 @@ export type Database = {
         Row: {
           confirmed: boolean
           date: string
-          dish_id: string
+          description: string | null
+          dish_id: string | null
+          dish_name: string | null
           id: string
           meal_id: string
           owner_id: string
@@ -408,7 +410,9 @@ export type Database = {
         Insert: {
           confirmed?: boolean
           date: string
-          dish_id: string
+          description?: string | null
+          dish_id?: string | null
+          dish_name?: string | null
           id?: string
           meal_id: string
           owner_id: string
@@ -416,7 +420,9 @@ export type Database = {
         Update: {
           confirmed?: boolean
           date?: string
-          dish_id?: string
+          description?: string | null
+          dish_id?: string | null
+          dish_name?: string | null
           id?: string
           meal_id?: string
           owner_id?: string
@@ -629,12 +635,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_planned_meal_deduction: {
+        Args: { p_date: string; p_meal_id: string; p_sign: number }
+        Returns: undefined
+      }
       confirm_meal: {
         Args: {
           p_confirmed: boolean
           p_date: string
           p_dish_id: string
           p_meal_id: string
+        }
+        Returns: undefined
+      }
+      set_meal_log_state: {
+        Args: {
+          p_date: string
+          p_description?: string
+          p_dish_id?: string
+          p_meal_id: string
+          p_state: string
         }
         Returns: undefined
       }

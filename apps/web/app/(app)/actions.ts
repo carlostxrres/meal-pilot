@@ -7,11 +7,13 @@ import {
   setDishActive,
   setIngredientEnabled,
   setMealConfirmed,
+  setMealLogState,
   updateDish,
   updateIngredient,
   updateIngredientInventory,
   type DishInput,
   type IngredientInput,
+  type MealLogState,
 } from "@meal-pilot/core";
 import { createClient } from "@/lib/supabase/server";
 
@@ -28,6 +30,25 @@ export async function confirmMealAction(
     return { error: error instanceof Error ? error.message : "Error desconocido confirmando el meal" };
   }
   revalidatePath("/");
+  return { error: null };
+}
+
+export async function setMealLogStateAction(input: {
+  date: string;
+  mealId: string;
+  state: MealLogState;
+  dishId?: string;
+  description?: string;
+}): Promise<{ error: string | null }> {
+  try {
+    const supabase = await createClient();
+    await setMealLogState(supabase, input);
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Error desconocido guardando la respuesta" };
+  }
+  revalidatePath("/historial");
+  revalidatePath("/");
+  revalidatePath("/ingredients");
   return { error: null };
 }
 
