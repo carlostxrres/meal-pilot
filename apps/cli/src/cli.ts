@@ -1,9 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import {
-  createSeededRandom,
-  fetchDailyContext,
+  ensureCommittedPlan,
   formatLocalDate,
-  generateDayProposal,
   type DayProposal,
   type Database,
 } from "@meal-pilot/core";
@@ -27,7 +25,7 @@ function requireEnv(name: string): string {
 
 function formatProposal(proposal: DayProposal): string {
   const lines: string[] = [];
-  lines.push(`Propuesta del día ${proposal.date}`, "");
+  lines.push(`Plan comprometido para ${proposal.date}`, "");
 
   for (const mealProposal of proposal.meals) {
     const { meal } = mealProposal;
@@ -73,16 +71,19 @@ async function main() {
   const url = requireEnv("SUPABASE_URL");
   const key = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
 
+  // ADR-0019: el CLI es de solo lectura frente a planned_meal -- usa
+  // service_role sin sesión, así que no puede comprometer un plan con un
+  // owner_id coherente. Lee el día si ya está comprometido (por la web);
+  // si falta y hay que generarlo, ensureCommittedPlan falla con un error
+  // claro en vez de escribir con un owner_id incorrecto.
   const supabase = createClient<Database>(url, key);
-  const ctx = await fetchDailyContext(supabase, date);
-  const rand = createSeededRandom(date);
-  const proposal = generateDayProposal(ctx, rand);
+  const [proposal] = await ensureCommittedPlan(supabase, [date]);
 
-  console.log(formatProposal(proposal));
+  console.log(formatProposal(proposal!));
 }
 
 main().catch((error: unknown) => {
-  console.error("Error generando la propuesta del día:");
+  console.error("Error leyendo el plan comprometido:");
   console.error(error instanceof Error ? error.message : error);
   process.exit(1);
 });

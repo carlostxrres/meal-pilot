@@ -1,7 +1,7 @@
 import {
   computeShoppingList,
+  ensureCommittedPlan,
   fetchIngredientCatalog,
-  generateProposalsForDates,
   PLANNING_HORIZON_DAYS,
   RequestCache,
   upcomingDates,
@@ -16,12 +16,14 @@ export default async function IngredientsPage() {
   const dates = upcomingDates(PLANNING_HORIZON_DAYS);
   const cache = new RequestCache();
 
-  // `ingredient` y `dietary_requirement` (sin filtrar) son las mismas queries
-  // que dispara `generateProposalsForDates` por dentro (una vez por fecha del
-  // horizonte) — `cache` evita pedirlas más de una vez en esta carga.
+  // ADR-0019: la compra se deriva del mismo plan comprometido que "Hoy"
+  // (ensureCommittedPlan), no de una generación aparte -- así las dos
+  // vistas nunca pueden divergir entre sí. `ingredient`/`dietary_requirement`
+  // son las mismas queries que ensureCommittedPlan dispara por dentro;
+  // `cache` evita pedirlas más de una vez en esta carga.
   const [ingredients, proposals, { data: requirements, error }] = await Promise.all([
     fetchIngredientCatalog(supabase, cache),
-    generateProposalsForDates(supabase, dates, cache),
+    ensureCommittedPlan(supabase, dates, cache),
     cache.get("dietary_requirement:all", () => supabase.from("dietary_requirement").select("*")),
   ]);
   if (error) throw new Error(error.message);

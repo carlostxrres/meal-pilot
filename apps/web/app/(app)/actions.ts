@@ -51,7 +51,7 @@ export async function createDishAction(
   }
   revalidatePath("/dishes");
   revalidatePath("/");
-  revalidatePath("/shopping");
+  revalidatePath("/ingredients");
   return { error: null };
 }
 
@@ -67,7 +67,7 @@ export async function updateDishAction(
   }
   revalidatePath("/dishes");
   revalidatePath("/");
-  revalidatePath("/shopping");
+  revalidatePath("/ingredients");
   return { error: null };
 }
 

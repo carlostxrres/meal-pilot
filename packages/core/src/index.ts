@@ -20,5 +20,7 @@ export * from "./data/dishCatalog.js";
 export * from "./data/createDish.js";
 export * from "./data/ingredientCatalog.js";
 export * from "./data/mealTips.js";
+export * from "./data/plannedMeal.js";
+export * from "./data/plannedMealComponents.js";
 export * from "./data/requestCache.js";
 export type { Database } from "./data/database.types.js";

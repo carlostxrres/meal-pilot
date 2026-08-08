@@ -467,6 +467,57 @@ export type Database = {
           },
         ]
       }
+      planned_meal: {
+        Row: {
+          components: Json
+          date: string
+          dish_id: string | null
+          dish_name: string | null
+          generated_at: string
+          id: string
+          meal_id: string
+          owner_id: string
+          unresolved_reason: string | null
+        }
+        Insert: {
+          components?: Json
+          date: string
+          dish_id?: string | null
+          dish_name?: string | null
+          generated_at?: string
+          id?: string
+          meal_id: string
+          owner_id: string
+          unresolved_reason?: string | null
+        }
+        Update: {
+          components?: Json
+          date?: string
+          dish_id?: string | null
+          dish_name?: string | null
+          generated_at?: string
+          id?: string
+          meal_id?: string
+          owner_id?: string
+          unresolved_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planned_meal_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dish"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planned_meal_meal_id_fkey"
+            columns: ["meal_id"]
+            isOneToOne: false
+            referencedRelation: "meal"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       requirement_log: {
         Row: {
           accumulated: number

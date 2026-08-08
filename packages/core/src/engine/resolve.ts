@@ -335,7 +335,8 @@ function resolveMeal(
   };
 }
 
-function buildRequirementStatuses(
+/** Exportado: la capa de datos lo reutiliza para recalcular el status de un día ya comprometido al leerlo (ADR-0019). */
+export function buildRequirementStatuses(
   requirements: readonly DietaryRequirement[],
   runningAccumulated: ReadonlyMap<string, number>,
 ): RequirementStatus[] {
@@ -359,12 +360,33 @@ const WEEKDAY_INDEX: Record<string, number> = {
   sat: 6,
 };
 
-/** Fecha (YYYY-MM-DD) de inicio de la ventana semanal de `date`, dado el día de reset. */
-function weekPeriodStart(date: string, resetDay: string): string {
+/** Fecha (YYYY-MM-DD) de inicio de la ventana semanal de `date`, dado el día de reset. Exportado: lo reutiliza la capa de datos para el replay semanal (ADR-0019). */
+export function weekPeriodStart(date: string, resetDay: string): string {
   const d = new Date(`${date}T00:00:00Z`);
   const diff = (d.getUTCDay() - (WEEKDAY_INDEX[resetDay] ?? 1) + 7) % 7;
   d.setUTCDate(d.getUTCDate() - diff);
   return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Qué requisitos tocan reinicio al pasar de `previousDate` a `date`:
+ * los de `period = day` siempre, los de `period = week` solo si las dos
+ * fechas caen en ventanas semanales distintas según su `week_reset_day`.
+ * Compartido entre `generateMultiDayPlan` (genera) y `replayAccumulation`
+ * (reconstruye lo ya comprometido) para que la regla de corte no diverja.
+ */
+function requirementsNeedingReset(
+  requirements: readonly DietaryRequirement[],
+  previousDate: string,
+  date: string,
+): DietaryRequirement[] {
+  return requirements.filter((req) => {
+    if (req.period === "day") return true;
+    if (req.period === "week" && req.week_reset_day) {
+      return weekPeriodStart(previousDate, req.week_reset_day) !== weekPeriodStart(date, req.week_reset_day);
+    }
+    return false;
+  });
 }
 
 /**
@@ -394,29 +416,44 @@ function weekPeriodStart(date: string, resetDay: string): string {
  * no un solver que mire todos los días a la vez para encontrar el reparto
  * óptimo — pero ya no genera cada día de forma aislada.
  *
- * Todos los acumuladores (requisitos, diversidad, stock virtual) se siembran
- * hoy solo desde `contexts[0]` -- correcto mientras el horizonte completo se
- * genera de una vez. La generación perezosa por días sueltos (ADR-0019,
- * roll-forward detrás de días ya comprometidos) necesitará sembrarlos por
- * replay de `planned_meal` + `meal_log` en vez de por `contexts[0]`; queda
- * pendiente para esa fase, no de este ADR-0020.
+ * Por defecto, todos los acumuladores (requisitos, diversidad, stock
+ * virtual) se siembran desde `contexts[0]` -- correcto cuando el horizonte
+ * completo se genera de una vez. La generación perezosa por días sueltos
+ * (ADR-0019, roll-forward detrás de días ya comprometidos) necesita
+ * sembrarlos por replay de `planned_meal` + `meal_log` en vez de por
+ * `contexts[0]` (que con horizonte rodante puede estar a mitad de semana):
+ * para eso acepta `seed`, que sustituye la siembra por defecto sin cambiar
+ * nada del resto del algoritmo.
  */
 export function generateMultiDayPlan(
   contexts: readonly DailyContext[],
   rand: () => number,
+  seed?: {
+    accumulated?: ReadonlyMap<string, number>;
+    recentlyUsedIngredientIds?: ReadonlySet<string>;
+    virtualStock?: ReadonlyMap<string, number>;
+  },
 ): DayProposal[] {
   if (contexts.length === 0) return [];
 
   const requirements = contexts[0]!.requirements;
   const runningAccumulated = new Map<string, number>();
-  for (const [reqId, log] of contexts[0]!.latestLogByRequirement) {
-    runningAccumulated.set(reqId, log.accumulated);
+  if (seed?.accumulated) {
+    for (const [reqId, value] of seed.accumulated) runningAccumulated.set(reqId, value);
+  } else {
+    for (const [reqId, log] of contexts[0]!.latestLogByRequirement) {
+      runningAccumulated.set(reqId, log.accumulated);
+    }
   }
-  const recentlyUsed = new Set(contexts[0]!.recentlyUsedIngredientIds);
+  const recentlyUsed = new Set(seed?.recentlyUsedIngredientIds ?? contexts[0]!.recentlyUsedIngredientIds);
 
   const virtualStock = new Map<string, number>();
-  for (const ingredient of contexts[0]!.ingredientsById.values()) {
-    virtualStock.set(ingredient.id, ingredient.office_inventory + ingredient.home_inventory);
+  if (seed?.virtualStock) {
+    for (const [id, value] of seed.virtualStock) virtualStock.set(id, value);
+  } else {
+    for (const ingredient of contexts[0]!.ingredientsById.values()) {
+      virtualStock.set(ingredient.id, ingredient.office_inventory + ingredient.home_inventory);
+    }
   }
 
   const results: DayProposal[] = [];
@@ -424,16 +461,8 @@ export function generateMultiDayPlan(
   contexts.forEach((ctx, dayIndex) => {
     if (dayIndex > 0) {
       const previousDate = contexts[dayIndex - 1]!.date;
-      for (const req of requirements) {
-        if (req.period === "day") {
-          runningAccumulated.set(req.id, ctx.latestLogByRequirement.get(req.id)?.accumulated ?? 0);
-        } else if (req.period === "week" && req.week_reset_day) {
-          const samePeriod =
-            weekPeriodStart(previousDate, req.week_reset_day) === weekPeriodStart(ctx.date, req.week_reset_day);
-          if (!samePeriod) {
-            runningAccumulated.set(req.id, ctx.latestLogByRequirement.get(req.id)?.accumulated ?? 0);
-          }
-        }
+      for (const req of requirementsNeedingReset(requirements, previousDate, ctx.date)) {
+        runningAccumulated.set(req.id, ctx.latestLogByRequirement.get(req.id)?.accumulated ?? 0);
       }
       for (const id of ctx.recentlyUsedIngredientIds) recentlyUsed.add(id);
     }
@@ -466,4 +495,86 @@ export function generateDayProposal(
   rand: () => number,
 ): DayProposal {
   return generateMultiDayPlan([ctx], rand)[0]!;
+}
+
+/** Un día ya resuelto (comprometido o histórico), sin nada que puntuar ni elegir. */
+export interface ReplayDay {
+  date: string;
+  /** Un ResolvedDish por meal_id ya decidido, o null si ese slot no tiene dish (unresolved / no comido / comida de fuera). */
+  resolvedByMealId: ReadonlyMap<string, ResolvedDish | null>;
+}
+
+export interface ReplayResult {
+  accumulated: Map<string, number>;
+  recentlyUsedIngredientIds: Set<string>;
+  /** Stock virtual restante tras descontar lo consumido por cada día replayado, partiendo de `initialVirtualStock`. */
+  virtualStock: Map<string, number>;
+  /**
+   * Snapshot de `accumulated` justo después de procesar cada día de `days`,
+   * en el mismo orden (mismo índice). Para leer el status de un día
+   * concreto dentro de la ventana replayada (ej. "Hoy" cuando `days` empieza
+   * antes, en el inicio de la semana) sin tener que volver a llamar a
+   * `replayAccumulation` acotando la ventana.
+   */
+  accumulatedByDay: Map<string, number>[];
+}
+
+/**
+ * Reconstruye accumulated/recentlyUsedIngredientIds/virtualStock
+ * recorriendo una secuencia de días **ya resueltos** (compromiso
+ * `planned_meal` o hecho `meal_log`, según la regla de resolución del
+ * ADR-0019/0022) — sin puntuar ni elegir nada, solo acumular con la misma
+ * regla de corte diario/semanal y el mismo decremento de stock que usa
+ * `generateMultiDayPlan` al generar.
+ *
+ * Dos usos (ADR-0019, "Acumulados y diversidad al generar de forma
+ * perezosa"): sembrar la generación de un día nuevo detrás de días ya
+ * comprometidos (pasando el resultado como `seed` de `generateMultiDayPlan`,
+ * en vez de sembrar solo desde `contexts[0]`, que con horizonte rodante
+ * puede estar a mitad de semana o dejar stock ya prometido sin descontar),
+ * y recalcular `requirementStatuses`/diversidad de un día ya comprometido al
+ * leerlo, sin fiarse del último resultado en memoria de una generación
+ * anterior.
+ *
+ * `days` debe empezar en la fecha más antigua que pueda afectar a algún
+ * `requirement` de `period = week` (su propio `weekPeriodStart`) — si
+ * empieza más tarde, un acumulado semanal se leería incompleto.
+ */
+export function replayAccumulation(
+  days: readonly ReplayDay[],
+  requirements: readonly DietaryRequirement[],
+  categoryIdsByIngredientId: ReadonlyMap<string, Set<string>>,
+  initialVirtualStock: ReadonlyMap<string, number> = new Map(),
+): ReplayResult {
+  const accumulated = new Map<string, number>();
+  const recentlyUsed = new Set<string>();
+  const virtualStock = new Map(initialVirtualStock);
+  const accumulatedByDay: Map<string, number>[] = [];
+
+  days.forEach((day, dayIndex) => {
+    if (dayIndex > 0) {
+      const previousDate = days[dayIndex - 1]!.date;
+      for (const req of requirementsNeedingReset(requirements, previousDate, day.date)) {
+        accumulated.set(req.id, 0);
+      }
+    }
+
+    for (const [mealId, resolved] of day.resolvedByMealId) {
+      if (!resolved) continue;
+      for (const req of requirements) {
+        if (req.meal_id !== null && req.meal_id !== mealId) continue;
+        const added = totalContribution(resolved, req, categoryIdsByIngredientId);
+        accumulated.set(req.id, (accumulated.get(req.id) ?? 0) + added);
+      }
+      for (const component of resolved.components) {
+        recentlyUsed.add(component.ingredient.id);
+        const current = virtualStock.get(component.ingredient.id) ?? 0;
+        virtualStock.set(component.ingredient.id, Math.max(0, current - component.quantity));
+      }
+    }
+
+    accumulatedByDay.push(new Map(accumulated));
+  });
+
+  return { accumulated, recentlyUsedIngredientIds: recentlyUsed, virtualStock, accumulatedByDay };
 }

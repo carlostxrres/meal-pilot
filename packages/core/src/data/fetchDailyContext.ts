@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getRecentlyUsedIngredientIds } from "../engine/diversity.js";
+import { daysBefore, getRecentlyUsedIngredientIds, type RecentlyUsedSource } from "../engine/diversity.js";
 import type {
   DailyContext,
   DishIngredient,
@@ -9,9 +9,10 @@ import type {
   RequirementLog,
 } from "../engine/types.js";
 import type { Database } from "./database.types.js";
+import { parsePlannedMealComponents } from "./plannedMealComponents.js";
 import { RequestCache } from "./requestCache.js";
 
-const DIVERSITY_WINDOW_DAYS = 3;
+export const DIVERSITY_WINDOW_DAYS = 3;
 
 /**
  * Nota sobre owner_id: nunca se filtra explícitamente por owner_id en
@@ -37,6 +38,8 @@ export async function fetchDailyContext(
   date: string,
   cache: RequestCache = new RequestCache(),
 ): Promise<DailyContext> {
+  const diversityWindowStart = daysBefore(date, DIVERSITY_WINDOW_DAYS);
+
   const [
     { data: ingredients, error: ingredientsError },
     { data: categories, error: categoriesError },
@@ -48,6 +51,7 @@ export async function fetchDailyContext(
     { data: requirements, error: requirementsError },
     { data: requirementLogs, error: requirementLogsError },
     { data: mealLogs, error: mealLogsError },
+    { data: plannedMeals, error: plannedMealsError },
   ] = await Promise.all([
     cache.get("ingredient:all", () => supabase.from("ingredient").select("*").order("name")),
     supabase.from("ingredient_category").select("*"),
@@ -59,6 +63,10 @@ export async function fetchDailyContext(
     cache.get("dietary_requirement:all", () => supabase.from("dietary_requirement").select("*")),
     supabase.from("requirement_log").select("*").order("period_start", { ascending: false }),
     supabase.from("meal_log").select("*"),
+    // ADR-0019: la diversidad también se siembra desde lo comprometido (no
+    // solo lo comido) -- acotado a la misma ventana que meal_log necesitaría
+    // si no fuera por su fetch histórico ya existente sin acotar.
+    supabase.from("planned_meal").select("*").gte("date", diversityWindowStart).lt("date", date),
   ]);
 
   for (const [name, error] of Object.entries({
@@ -72,6 +80,7 @@ export async function fetchDailyContext(
     requirementsError,
     requirementLogsError,
     mealLogsError,
+    plannedMealsError,
   })) {
     if (error) throw new Error(`fetchDailyContext: fallo consultando ${name}: ${error.message}`);
   }
@@ -116,9 +125,38 @@ export async function fetchDailyContext(
     }
   }
 
+  // Regla de resolución del ADR-0019 (dos vías, aún sin el estado "comí
+  // fuera"/"no comí" de meal_log que añade el ADR-0022): para cada
+  // (date, meal_id) manda meal_log si existe; si no, planned_meal. Cada
+  // fuente resuelve sus propios ingredientes: meal_log.dish_id contra el
+  // dish_ingredient vigente (no congela nada todavía), planned_meal contra
+  // su propio components ya congelado.
+  const keyOf = (mealDate: string, mealId: string) => `${mealDate}::${mealId}`;
+  const mealLogByKey = new Map((mealLogs ?? []).map((log) => [keyOf(log.date, log.meal_id), log]));
+  const plannedMealByKey = new Map(
+    (plannedMeals ?? []).map((row) => [keyOf(row.date, row.meal_id), row]),
+  );
+
+  const recentlyUsedSources: RecentlyUsedSource[] = [];
+  for (const key of new Set([...mealLogByKey.keys(), ...plannedMealByKey.keys()])) {
+    const log = mealLogByKey.get(key);
+    if (log) {
+      const components = dishIngredientsByDishId.get(log.dish_id) ?? [];
+      recentlyUsedSources.push({
+        date: log.date,
+        ingredientIds: components.map((c) => c.ingredient_id),
+      });
+      continue;
+    }
+    const planned = plannedMealByKey.get(key)!;
+    recentlyUsedSources.push({
+      date: planned.date,
+      ingredientIds: parsePlannedMealComponents(planned.components).map((c) => c.ingredientId),
+    });
+  }
+
   const recentlyUsedIngredientIds = getRecentlyUsedIngredientIds(
-    mealLogs ?? [],
-    dishIngredientsByDishId,
+    recentlyUsedSources,
     date,
     DIVERSITY_WINDOW_DAYS,
   );

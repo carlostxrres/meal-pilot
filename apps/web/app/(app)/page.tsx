@@ -1,9 +1,8 @@
 import {
-  createSeededRandom,
-  fetchContextsForDates,
+  ensureCommittedPlan,
   fetchMealTips,
-  generateMultiDayPlan,
   PLANNING_HORIZON_DAYS,
+  RequestCache,
   upcomingDates,
 } from "@meal-pilot/core";
 import { createClient } from "@/lib/supabase/server";
@@ -13,19 +12,36 @@ import { formatFriendlyDate } from "@/lib/friendlyDate";
 export default async function HomePage() {
   const supabase = await createClient();
   const dates = upcomingDates(PLANNING_HORIZON_DAYS);
+  const cache = new RequestCache();
 
-  const [contexts, tipsByMeal] = await Promise.all([
-    fetchContextsForDates(supabase, dates),
-    fetchMealTips(supabase),
-  ]);
-  const proposals = generateMultiDayPlan(contexts, createSeededRandom(dates[0] ?? ""));
-  const mealRequirements = (contexts[0]?.requirements ?? []).filter((r) => r.meal_id != null);
+  // ADR-0019: el plan es un compromiso persistido -- ensureCommittedPlan
+  // rellena perezosamente los huecos del horizonte y siempre devuelve lo
+  // leído de planned_meal, nunca lo generado en memoria. `confirmedMealIds`
+  // y los requisitos por meal no vienen de ahí (DayProposal no los lleva),
+  // así que se piden aparte; comparten `cache` con la consulta interna de
+  // dietary_requirement que ya hace ensureCommittedPlan.
+  const [proposals, tipsByMeal, { data: requirementsData, error: requirementsError }, { data: mealLogRows, error: mealLogError }] =
+    await Promise.all([
+      ensureCommittedPlan(supabase, dates, cache),
+      fetchMealTips(supabase),
+      cache.get("dietary_requirement:all", () => supabase.from("dietary_requirement").select("*")),
+      supabase.from("meal_log").select("date, meal_id").eq("confirmed", true).in("date", dates),
+    ]);
+  if (requirementsError) throw new Error(requirementsError.message);
+  if (mealLogError) throw new Error(mealLogError.message);
 
-  const days: DayTabData[] = contexts.map((ctx, i) => ({
-    date: ctx.date,
-    label: formatFriendlyDate(ctx.date, dates[0] ?? ctx.date),
-    proposal: proposals[i]!,
-    confirmedMealIds: ctx.confirmedMealIds,
+  const mealRequirements = (requirementsData ?? []).filter((r) => r.meal_id != null);
+
+  const confirmedMealIdsByDate = new Map<string, Set<string>>(dates.map((date) => [date, new Set()]));
+  for (const log of mealLogRows ?? []) {
+    confirmedMealIdsByDate.get(log.date)?.add(log.meal_id);
+  }
+
+  const days: DayTabData[] = proposals.map((proposal, i) => ({
+    date: proposal.date,
+    label: formatFriendlyDate(proposal.date, dates[0] ?? proposal.date),
+    proposal,
+    confirmedMealIds: confirmedMealIdsByDate.get(proposal.date) ?? new Set(),
     isToday: i === 0,
   }));
 

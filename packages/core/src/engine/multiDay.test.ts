@@ -141,4 +141,33 @@ describe("generateMultiDayPlan", () => {
     expect(only!.date).toBe("2026-08-01");
     expect(only!.meals[0]!.resolved!.components[0]!.ingredient.name).toBe("Solo");
   });
+
+  it("el parámetro seed sustituye la siembra por defecto desde contexts[0] (ADR-0019, generación perezosa)", () => {
+    // ingredienteReservado tiene inventario nominal de sobra (200), pero el
+    // seed dice que su stock virtual ya está a 0 (p.ej. consumido por días
+    // ya comprometidos fuera de este `contexts`). Sin seed, la nominal
+    // ganaría por coste 0; con seed, debe perder frente a la alternativa.
+    const reservado = makeIngredient({ name: "Reservado", home_inventory: 200 });
+    const libre = makeIngredient({ name: "Libre", home_inventory: 50 });
+    const meal = makeMeal();
+    const dishReservado = makeCandidate(meal.id, [{ ingredient: reservado, quantity: 50 }]);
+    const dishLibre = makeCandidate(meal.id, [{ ingredient: libre, quantity: 50 }]);
+
+    const ctx = buildTestContext({
+      date: "2026-08-01",
+      ingredients: [reservado, libre],
+      meals: [{ meal, candidates: [dishReservado, dishLibre] }],
+    });
+
+    const [withoutSeed] = generateMultiDayPlan([ctx], createSeededRandom("2026-08-01"));
+    expect(withoutSeed!.meals[0]!.resolved!.dish.id).toBe(dishReservado.dish.id);
+
+    const [withSeed] = generateMultiDayPlan([ctx], createSeededRandom("2026-08-01"), {
+      virtualStock: new Map([
+        [reservado.id, 0],
+        [libre.id, 50],
+      ]),
+    });
+    expect(withSeed!.meals[0]!.resolved!.dish.id).toBe(dishLibre.dish.id);
+  });
 });
