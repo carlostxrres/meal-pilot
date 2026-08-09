@@ -43,7 +43,7 @@ export function NutritionPopover({
       <Popover.Trigger asChild>
         <button
           type="button"
-          className="nutrition-trigger"
+          className="nutrition-trigger chip"
           aria-label={title ? `Ver valores nutricionales (${title})` : "Ver valores nutricionales"}
         >
           <IconChartBar size={18} stroke={1.75} />

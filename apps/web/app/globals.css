@@ -238,13 +238,6 @@ body {
   cursor: pointer;
 }
 
-.ingredient-warning-trigger {
-  all: unset;
-  display: flex;
-  color: var(--off);
-  cursor: pointer;
-}
-
 .nutrition-popover {
   background: var(--canvas);
   border: var(--border-width) solid var(--hairline);
@@ -286,7 +279,7 @@ body {
 }
 
 .dish-description {
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   font-style: italic;
   color: var(--mute);
   margin: 0 0 var(--space-8);
@@ -474,9 +467,15 @@ body {
 }
 
 .creator-max-warning {
-  margin: 2px 0 0;
+  margin: 0 0 var(--space-4);
   font-size: var(--text-sm);
   color: var(--off);
+}
+
+.creator-edit-controls-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
 }
 
 .drag-handle {
@@ -739,6 +738,13 @@ body {
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+.suggestion-edit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
 }
 
 .suggestion-detail {
@@ -1168,24 +1174,6 @@ body {
   font-weight: 600;
 }
 
-.ingredient-row-stock {
-  display: flex;
-  gap: var(--space-12);
-  font-size: var(--text-base);
-  color: var(--mute);
-}
-
-.ingredient-row-stock strong {
-  color: var(--ink);
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-}
-
-.ingredient-row-stock[data-short="true"],
-.ingredient-row-stock[data-short="true"] strong {
-  color: var(--off);
-}
-
 /* --- Swipe gestures (Inventario, Compra, el creador de platos) --- */
 
 .swipe-row {
@@ -1230,30 +1218,44 @@ body {
   margin-bottom: 0;
 }
 
-/* --- Ingredient row (compartida entre Inventario, Compra, el creador de
-   platos, Hoy y el catálogo de platos: misma estructura, tamaño,
-   espaciados y estilo de nombre en todos — ver components/IngredientRow.tsx) --- */
+/* --- Ingredient row (compartida entre el creador de platos, Hoy, el
+   catálogo de platos y el catálogo de Ingredientes: misma estructura en
+   grid en todos — ver components/IngredientRow.tsx). Cada fila/columna es
+   una `grid-area` fija; lo que cambia por contexto es qué áreas reciben
+   contenido (las que no se usan en un contexto simplemente no se
+   renderizan, así que no ocupan espacio). */
 
 .ingredient-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-12);
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "warning warning warning warning"
+    "thumb   name    qty     menu"
+    "thumb   attrs   attrs   menu"
+    "none    stock   stock   stock"
+    "none    reason  reason  reason"
+    "none    edit    edit    edit"
+    "none    links   links   links";
+  column-gap: var(--space-12);
+  row-gap: var(--space-4);
+  align-items: start;
   background: var(--canvas);
   border: var(--border-width) solid var(--hairline);
   margin-bottom: -1px;
   padding: var(--space-12) var(--space-16);
 }
 
-/* Grupo de controles (badge, tipo, precio, editar, menú "...") del catálogo
-   de Ingredientes: si no caben junto a la miniatura+info en una línea,
-   `flex-wrap` de `.ingredient-row` los baja a una línea propia, y
-   `margin-left: auto` los mantiene pegados a la derecha en ambos casos. */
-.ingredient-row-trailing {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  margin-left: auto;
+/* Cuando SÍ existe el elemento .ingredient-row-description, se inserta su fila */
+.ingredient-row:has(> .ingredient-row-description) {
+  grid-template-areas:
+    "warning warning warning warning"
+    "thumb   name    qty     menu"
+    "thumb   desc    desc    menu"
+    "thumb   attrs   attrs   menu"
+    "none    stock   stock   stock"
+    "none    reason  reason  reason"
+    "none    edit    edit    edit"
+    "none    links   links   links";
 }
 
 .ingredient-row[data-clickable="true"] {
@@ -1270,7 +1272,19 @@ body {
   opacity: 0.55;
 }
 
+.ingredient-row-warning {
+  grid-area: warning;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: var(--text-sm);
+  color: var(--off);
+  margin: 0;
+}
+
 .ingredient-thumb {
+  grid-area: thumb;
+  align-self: center;
   width: 40px;
   height: 40px;
   flex-shrink: 0;
@@ -1278,6 +1292,7 @@ body {
 }
 
 .ingredient-thumb-placeholder {
+  grid-area: thumb;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1285,24 +1300,67 @@ body {
   background: var(--paper);
 }
 
-.ingredient-row-info {
-  flex: 1;
-  min-width: 0;
-}
-
 .ingredient-row-name {
+  grid-area: name;
+  align-self: center;
   font-size: var(--text-base);
   font-weight: 500;
+  margin: 0;
 }
 
-/* Compra envuelve nombre+motivo en un <label>: tocar el texto marca el checkbox. */
-label.ingredient-row-info {
-  cursor: pointer;
+.ingredient-row-quantity {
+  grid-area: qty;
+  align-self: center;
+}
+
+.ingredient-row-menu {
+  grid-area: menu;
+  align-self: start;
+}
+
+.ingredient-row-description {
+  grid-area: desc;
+  margin: 0;
+}
+
+.ingredient-row-attrs {
+  grid-area: attrs;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.ingredient-row-stock {
+  grid-area: stock;
+  display: flex;
+  gap: var(--space-12);
+
+  font-size: var(--text-sm);
+  color: var(--mute);
+  margin: 0;
+}
+
+.ingredient-row-stock[data-short="true"]{
+  color: var(--off);
+}
+
+.ingredient-row-shopping-reason {
+  grid-area: reason;
+}
+
+.ingredient-row-edit-controls {
+  grid-area: edit;
+}
+
+.ingredient-row-purchase-links {
+  grid-area: links;
 }
 
 .shopping-reason {
   font-size: var(--text-sm);
   color: var(--mute);
+  margin: 0;
 }
 
 .shopping-empty,
@@ -1583,6 +1641,7 @@ input {
 }
 
 .skeleton-thumb {
+  grid-area: thumb;
   width: 40px;
   height: 40px;
   flex-shrink: 0;

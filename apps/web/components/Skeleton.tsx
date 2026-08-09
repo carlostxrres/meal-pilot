@@ -14,9 +14,11 @@ export function IngredientRowSkeleton() {
   return (
     <div className="ingredient-row skeleton-row">
       <div className="skeleton-thumb" />
-      <div className="ingredient-row-info">
-        <SkeletonBar width="55%" />
-        <SkeletonBar width="35%" />
+      <div className="ingredient-row-name">
+        <SkeletonBar width="70%" />
+      </div>
+      <div className="ingredient-row-description">
+        <SkeletonBar width="45%" />
       </div>
     </div>
   );

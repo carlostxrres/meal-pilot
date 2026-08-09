@@ -102,7 +102,7 @@ export default function DishCard({
             <IngredientRow
               ingredient={component.ingredient}
               neededQuantity={checkStock ? component.quantity : undefined}
-              trailing={
+              quantity={
                 <span className="data-mono">
                   {component.quantity}
                   {component.ingredient.base_unit}

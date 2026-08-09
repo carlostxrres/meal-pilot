@@ -2,8 +2,7 @@
 
 import { IconExternalLink, IconPencil, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
-import { PLANNING_HORIZON_DAYS, type Ingredient, type IngredientCatalogEntry, type ShoppingReason } from "@meal-pilot/core";
-import { formatEurPer100 } from "@/lib/formatPrice";
+import { PLANNING_HORIZON_DAYS, type IngredientCatalogEntry, type ShoppingReason } from "@meal-pilot/core";
 import { SUPERMARKET_LABELS } from "@/lib/supermarkets";
 import { IngredientCardMenu } from "./IngredientCardMenu";
 import { IngredientRow } from "./IngredientRow";
@@ -11,18 +10,6 @@ import { InventoryEditDialog } from "./InventoryEditDialog";
 import { SwipeableRow } from "./SwipeableRow";
 
 export type InventoryPatch = { office_inventory: number; home_inventory: number };
-
-const STORAGE_LABELS: Record<Ingredient["storage_type"], string> = {
-  pantry: "Despensa",
-  fridge: "Nevera",
-  freezer: "Congelador",
-};
-
-const ANIMAL_ORIGIN_LABELS: Record<Ingredient["animal_origin"], string> = {
-  animal: "Animal",
-  animal_derived: "Derivado animal",
-  plant: "Vegetal",
-};
 
 const REASON_LABELS: Record<ShoppingReason, string> = {
   upcoming_need: `para los próximos ${PLANNING_HORIZON_DAYS} días`,
@@ -61,44 +48,30 @@ export function IngredientCatalogRow({
     >
       <IngredientRow
         ingredient={ingredient}
-        inactive={!ingredient.enabled}
-        meta={
-          <>
-            {purchaseLinks.length > 0 && (
-              <div className="dish-meal-chips">
-                {purchaseLinks.map((link) => (
-                  <a key={link.id} href={link.url} target="_blank" rel="noreferrer" className="chip">
-                    <IconExternalLink size={14} stroke={1.75} /> {SUPERMARKET_LABELS[link.supermarket]}
-                  </a>
-                ))}
-              </div>
-            )}
-            {shoppingReasons && shoppingReasons.length > 0 && (
-              <p className="shopping-reason">{shoppingReasonText(shoppingReasons)}</p>
-            )}
-          </>
+        disabledWarning
+        menu={<IngredientCardMenu entry={entry} onEditInventory={() => setEditOpen(true)} />}
+        shoppingReason={
+          shoppingReasons && shoppingReasons.length > 0 ? (
+            <p className="shopping-reason">{shoppingReasonText(shoppingReasons)}</p>
+          ) : undefined
         }
-        trailing={
-          <div className="ingredient-row-trailing">
-            <span className="dish-status-badge" data-status={ingredient.enabled ? "active" : "inactive"}>
-              {ingredient.enabled ? "Habilitado" : "Deshabilitado"}
-            </span>
-            <span className="dish-type-label">{STORAGE_LABELS[ingredient.storage_type]}</span>
-            <span className="dish-type-label">{ANIMAL_ORIGIN_LABELS[ingredient.animal_origin]}</span>
-            {ingredient.price_eur_per_100 != null && (
-              <span className="dish-price">
-                {formatEurPer100(ingredient.price_eur_per_100, ingredient.base_unit)}
-              </span>
-            )}
-            <InventoryEditDialog
-              ingredient={ingredient}
-              open={editOpen}
-              onOpenChange={setEditOpen}
-              onSave={(values) => onUpdateInventory(ingredient.id, values)}
-            />
-            <IngredientCardMenu entry={entry} onEditInventory={() => setEditOpen(true)} />
-          </div>
+        purchaseLinks={
+          purchaseLinks.length > 0 ? (
+            <div className="dish-meal-chips">
+              {purchaseLinks.map((link) => (
+                <a key={link.id} href={link.url} target="_blank" rel="noreferrer" className="chip">
+                  <IconExternalLink size={14} stroke={1.75} /> {SUPERMARKET_LABELS[link.supermarket]}
+                </a>
+              ))}
+            </div>
+          ) : undefined
         }
+      />
+      <InventoryEditDialog
+        ingredient={ingredient}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSave={(values) => onUpdateInventory(ingredient.id, values)}
       />
     </SwipeableRow>
   );

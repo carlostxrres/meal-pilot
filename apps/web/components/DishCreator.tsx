@@ -318,21 +318,21 @@ function SuggestionDialog({
                   <IngredientRow
                     ingredient={suggestion.ingredient}
                     onClick={() => onApply(suggestion)}
-                    meta={
-                      <p className="suggestion-detail">
-                        {suggestion.kind === "add" ? "Añadir" : "Reducir"}
-                      </p>
-                    }
-                    trailing={
-                      <span className="suggestion-qty data-mono">
-                        {suggestion.kind === "add" ? (
-                          <IconPlus size={18} stroke={2} />
-                        ) : (
-                          <IconMinus size={18} stroke={2} />
-                        )}
-                        {formatQuantity(suggestion.quantity)}
-                        {suggestion.ingredient.base_unit}
-                      </span>
+                    editControls={
+                      <div className="suggestion-edit-row">
+                        <p className="suggestion-detail">
+                          {suggestion.kind === "add" ? "Añadir" : "Reducir"}
+                        </p>
+                        <span className="suggestion-qty data-mono">
+                          {suggestion.kind === "add" ? (
+                            <IconPlus size={18} stroke={2} />
+                          ) : (
+                            <IconMinus size={18} stroke={2} />
+                          )}
+                          {formatQuantity(suggestion.quantity)}
+                          {suggestion.ingredient.base_unit}
+                        </span>
+                      </div>
                     }
                   />
                 </li>
@@ -514,45 +514,45 @@ function DraftComponentList({
             >
               <IngredientRow
                 ingredient={component.ingredient}
-                meta={
-                  overMax ? (
-                    <p className="creator-max-warning">
-                      Se ha superado el máximo recomendado de este ingrediente
-                    </p>
-                  ) : undefined
-                }
-                trailing={
+                editControls={
                   <>
-                    <button
-                      type="button"
-                      className="drag-handle"
-                      aria-label={`Reordenar ${component.ingredient.name}`}
-                      onPointerDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        onDragStart(index);
-                      }}
-                    >
-                      <IconGripVertical size={16} stroke={1.75} />
-                    </button>
-                    <InputNumber
-                      value={component.quantity}
-                      step={stepFor(component.ingredient)}
-                      min={0}
-                      ariaLabel={component.ingredient.name}
-                      onChange={(quantity) =>
-                        dispatch({ type: "set-quantity", ingredientId: component.ingredient.id, quantity })
-                      }
-                    />
-                    <span className="creator-component-unit">{component.ingredient.base_unit}</span>
-                    <button
-                      type="button"
-                      className="creator-component-remove"
-                      aria-label={`Quitar ${component.ingredient.name}`}
-                      onClick={() => dispatch({ type: "remove-ingredient", ingredientId: component.ingredient.id })}
-                    >
-                      <IconX size={16} stroke={1.75} />
-                    </button>
+                    {overMax && (
+                      <p className="creator-max-warning">
+                        Se ha superado el máximo recomendado de este ingrediente
+                      </p>
+                    )}
+                    <div className="creator-edit-controls-row">
+                      <button
+                        type="button"
+                        className="drag-handle"
+                        aria-label={`Reordenar ${component.ingredient.name}`}
+                        onPointerDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onDragStart(index);
+                        }}
+                      >
+                        <IconGripVertical size={16} stroke={1.75} />
+                      </button>
+                      <InputNumber
+                        value={component.quantity}
+                        step={stepFor(component.ingredient)}
+                        min={0}
+                        ariaLabel={component.ingredient.name}
+                        onChange={(quantity) =>
+                          dispatch({ type: "set-quantity", ingredientId: component.ingredient.id, quantity })
+                        }
+                      />
+                      <span className="creator-component-unit">{component.ingredient.base_unit}</span>
+                      <button
+                        type="button"
+                        className="creator-component-remove"
+                        aria-label={`Quitar ${component.ingredient.name}`}
+                        onClick={() => dispatch({ type: "remove-ingredient", ingredientId: component.ingredient.id })}
+                      >
+                        <IconX size={16} stroke={1.75} />
+                      </button>
+                    </div>
                   </>
                 }
               />
