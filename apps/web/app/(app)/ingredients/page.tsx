@@ -5,7 +5,7 @@ import {
   PLANNING_HORIZON_DAYS,
   RequestCache,
   upcomingDates,
-  type ShoppingReason,
+  type ShoppingListItem,
 } from "@meal-pilot/core";
 import { createClient } from "@/lib/supabase/server";
 import { IngredientCatalogList } from "@/components/IngredientCatalogList";
@@ -33,14 +33,14 @@ export default async function IngredientsPage() {
     requirements ?? [],
     proposals,
   );
-  const shoppingReasonsById: Record<string, ShoppingReason[]> = Object.fromEntries(
-    shoppingItems.map((item) => [item.ingredient.id, item.reasons]),
+  const shoppingItemsById: Record<string, ShoppingListItem> = Object.fromEntries(
+    shoppingItems.map((item) => [item.ingredient.id, item]),
   );
 
   return (
     <div>
       <IngredientCreator />
-      <IngredientCatalogList ingredients={ingredients} shoppingReasonsById={shoppingReasonsById} />
+      <IngredientCatalogList ingredients={ingredients} shoppingItemsById={shoppingItemsById} />
     </div>
   );
 }

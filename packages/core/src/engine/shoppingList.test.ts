@@ -60,6 +60,7 @@ describe("computeShoppingList", () => {
 
     expect(list).toHaveLength(1);
     expect(list[0]!.reasons).toEqual(["requirement"]);
+    expect(list[0]!.restockQuantity).toBe(190);
   });
 
   it("combina ambos motivos sin duplicar la fila", () => {
@@ -76,6 +77,8 @@ describe("computeShoppingList", () => {
 
     expect(list).toHaveLength(1);
     expect(list[0]!.reasons.sort()).toEqual(["requirement", "upcoming_need"]);
+    // upcoming_need pide 50, el requisito pide 100 -- se queda con el mayor.
+    expect(list[0]!.restockQuantity).toBe(100);
   });
 
   it("no incluye un requisito advisory ni de tipo nutriente", () => {

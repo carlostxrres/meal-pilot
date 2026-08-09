@@ -6,20 +6,15 @@ export interface ShoppingListItem {
   ingredient: Ingredient;
   reasons: ShoppingReason[];
   /**
-   * Cantidad de reposición: si el motivo es "upcoming_need", es el déficit
-   * real (necesidad de las próximas propuestas menos stock actual). Si solo
-   * aplica "requirement" (sin necesidad detectada en el horizonte de días
-   * dado), se usa un valor fijo por tipo de unidad como estimación —
-   * editable después a mano en Inventario.
+   * Cantidad de reposición: el déficit real hasta cubrir lo necesario.
+   * Para "upcoming_need", necesidad de las próximas propuestas menos stock
+   * actual. Para "requirement", el mínimo del requisito menos stock actual.
+   * Si aplican ambos motivos, se usa el mayor de los dos déficits — cubrir
+   * el más exigente cubre también el otro, porque los dos parten del mismo
+   * stock total.
    */
   restockQuantity: number;
 }
-
-const DEFAULT_RESTOCK: Record<Ingredient["base_unit"], number> = {
-  g: 200,
-  ml: 200,
-  unit: 2,
-};
 
 function totalStock(i: Ingredient): number {
   return i.office_inventory + i.home_inventory;
@@ -84,16 +79,20 @@ export function computeShoppingList(
       continue;
     }
     const ingredient = ingredients.find((i) => i.id === requirement.scope_ingredient_id);
-    if (!ingredient || totalStock(ingredient) >= requirement.minimum) continue;
+    if (!ingredient) continue;
+    const deficit = requirement.minimum - totalStock(ingredient);
+    if (deficit <= 0) continue;
+    const restockQuantity = Math.ceil(deficit);
 
     const existing = items.get(ingredient.id);
     if (existing) {
       if (!existing.reasons.includes("requirement")) existing.reasons.push("requirement");
+      existing.restockQuantity = Math.max(existing.restockQuantity, restockQuantity);
     } else {
       items.set(ingredient.id, {
         ingredient,
         reasons: ["requirement"],
-        restockQuantity: DEFAULT_RESTOCK[ingredient.base_unit],
+        restockQuantity,
       });
     }
   }

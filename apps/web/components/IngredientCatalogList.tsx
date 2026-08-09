@@ -8,7 +8,7 @@ import {
   sortColumnsByDisplayOrder,
   type IngredientCatalogEntry,
   type NutrientColumn,
-  type ShoppingReason,
+  type ShoppingListItem,
 } from "@meal-pilot/core";
 import { updateInventoryAction } from "@/app/(app)/actions";
 import { CatalogSection } from "./CatalogSection";
@@ -105,10 +105,10 @@ function totalStock(entry: IngredientCatalogEntry): number {
 
 export function IngredientCatalogList({
   ingredients,
-  shoppingReasonsById,
+  shoppingItemsById,
 }: {
   ingredients: IngredientCatalogEntry[];
-  shoppingReasonsById: Record<string, ShoppingReason[]>;
+  shoppingItemsById: Record<string, ShoppingListItem>;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -157,10 +157,10 @@ export function IngredientCatalogList({
         })
         .filter(
           (entry) =>
-            purchaseFilter === "all" || (shoppingReasonsById[entry.ingredient.id]?.length ?? 0) > 0,
+            purchaseFilter === "all" || (shoppingItemsById[entry.ingredient.id]?.reasons.length ?? 0) > 0,
         )
         .sort(SORTERS[sort]),
-    [optimisticIngredients, query, sort, stockFilter, purchaseFilter, shoppingReasonsById],
+    [optimisticIngredients, query, sort, stockFilter, purchaseFilter, shoppingItemsById],
   );
 
   return (
@@ -189,7 +189,7 @@ export function IngredientCatalogList({
         renderItem={(entry) => (
           <IngredientCatalogRow
             entry={entry}
-            shoppingReasons={shoppingReasonsById[entry.ingredient.id]}
+            shoppingItem={shoppingItemsById[entry.ingredient.id]}
             onUpdateInventory={updateInventory}
           />
         )}

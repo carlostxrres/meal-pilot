@@ -2,7 +2,7 @@
 
 import { IconExternalLink, IconPencil, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
-import { PLANNING_HORIZON_DAYS, type IngredientCatalogEntry, type ShoppingReason } from "@meal-pilot/core";
+import { PLANNING_HORIZON_DAYS, type IngredientCatalogEntry, type ShoppingListItem, type ShoppingReason } from "@meal-pilot/core";
 import { SUPERMARKET_LABELS } from "@/lib/supermarkets";
 import { IngredientCardMenu } from "./IngredientCardMenu";
 import { IngredientRow } from "./IngredientRow";
@@ -16,18 +16,19 @@ const REASON_LABELS: Record<ShoppingReason, string> = {
   requirement: "para un requisito pendiente",
 };
 
-function shoppingReasonText(reasons: ShoppingReason[]): string {
-  return `Comprar ${reasons.map((r) => REASON_LABELS[r]).join(" · ")}`;
+function shoppingReasonText(item: ShoppingListItem): string {
+  const reasonText = item.reasons.map((r) => REASON_LABELS[r]).join(" · ");
+  return `Comprar ${item.restockQuantity}${item.ingredient.base_unit} ${reasonText}`;
 }
 
-/** Fila de un ingrediente del catálogo: mismas acciones de swipe y edición de inventario que Inventario, más el menú "..." del catálogo (editar ficha, editar inventario, habilitar/deshabilitar) y, si toca comprarlo, el motivo. */
+/** Fila de un ingrediente del catálogo: mismas acciones de swipe y edición de inventario que Inventario, más el menú "..." del catálogo (editar ficha, editar inventario, habilitar/deshabilitar) y, si toca comprarlo, el motivo y cuánto comprar. */
 export function IngredientCatalogRow({
   entry,
-  shoppingReasons,
+  shoppingItem,
   onUpdateInventory,
 }: {
   entry: IngredientCatalogEntry;
-  shoppingReasons?: ShoppingReason[];
+  shoppingItem?: ShoppingListItem;
   onUpdateInventory: (ingredientId: string, values: InventoryPatch) => void;
 }) {
   const { ingredient, purchaseLinks } = entry;
@@ -51,8 +52,8 @@ export function IngredientCatalogRow({
         disabledWarning
         menu={<IngredientCardMenu entry={entry} onEditInventory={() => setEditOpen(true)} />}
         shoppingReason={
-          shoppingReasons && shoppingReasons.length > 0 ? (
-            <p className="shopping-reason">{shoppingReasonText(shoppingReasons)}</p>
+          shoppingItem && shoppingItem.reasons.length > 0 ? (
+            <p className="shopping-reason">{shoppingReasonText(shoppingItem)}</p>
           ) : undefined
         }
         purchaseLinks={
