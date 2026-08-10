@@ -1,0 +1,13 @@
+/* --- Repaso guiado (ADR-0022) --- */
+
+.guided-review {
+  border: var(--border-width) solid var(--hairline);
+}
+
+.guided-review-skip {
+  margin-top: var(--space-8);
+  border: none;
+  background: none;
+  color: var(--off);
+  text-decoration: underline;
+}

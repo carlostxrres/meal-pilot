@@ -1,6 +1,7 @@
 "use client";
 
 import { IconMinus, IconPlus } from "@tabler/icons-react";
+import styles from "./InputNumber.module.css";
 
 /*
 Stepper numérico compartido (sustituye a la pareja suelta de botones +/- e
@@ -42,10 +43,10 @@ export function InputNumber({
   const incrementLabel = ariaLabel ? `Sumar ${step} a ${ariaLabel}` : `Sumar ${step}`;
 
   return (
-    <div className="input-number" data-disabled={disabled || undefined}>
+    <div className={styles['input-number']} data-disabled={disabled || undefined}>
       <button
         type="button"
-        className="input-number-btn"
+        className={styles['input-number-btn']}
         aria-label={decrementLabel}
         onClick={() => onChange(clamp(value - step))}
         disabled={disabled || (min != null && value <= min)}
@@ -55,7 +56,7 @@ export function InputNumber({
       <input
         id={id}
         type="number"
-        className="input-number-field"
+        className={styles['input-number-field']}
         step="any"
         min={min}
         max={max}
@@ -71,7 +72,7 @@ export function InputNumber({
       />
       <button
         type="button"
-        className="input-number-btn"
+        className={styles['input-number-btn']}
         aria-label={incrementLabel}
         onClick={() => onChange(clamp(value + step))}
         disabled={disabled || (max != null && value >= max)}

@@ -11,6 +11,7 @@ import {
 } from "@meal-pilot/core";
 import { ChipButton } from "./Chip";
 import { ContributionDialog } from "./ContributionDialog";
+import styles from "./DishComplianceChip.module.css";
 import { NutritionalThresholds } from "./NutritionalThresholds";
 
 /*
@@ -78,7 +79,7 @@ export function DishComplianceChip({
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content
-          className="select-content dish-compliance-popover"
+          className={`select-content ${styles['dish-compliance-popover']}`}
           align="start"
           sideOffset={4}
           collisionPadding={16}

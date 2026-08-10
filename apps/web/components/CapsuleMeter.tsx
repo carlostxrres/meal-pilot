@@ -1,6 +1,7 @@
 import * as Progress from "@radix-ui/react-progress";
 import type { ReactNode } from "react";
 import type { DietaryRequirement, RequirementStatus } from "@meal-pilot/core";
+import styles from "./CapsuleMeter.module.css";
 
 /*
 Intent: vistazo rápido y de baja atención al estado de un requisito
@@ -48,17 +49,17 @@ function MeterTrack({ status }: { status: RequirementStatus }) {
   };
 
   return (
-    <Progress.Root className="capsule-meter-track" value={accumulated} max={scaleMax}>
-      <div className="capsule-meter-band" style={bandStyle} />
+    <Progress.Root className={styles['capsule-meter-track']} value={accumulated} max={scaleMax}>
+      <div className={styles['capsule-meter-band']} style={bandStyle} />
       <Progress.Indicator
-        className="capsule-meter-fill"
+        className={styles['capsule-meter-fill']}
         data-off={!withinRange}
         style={{ transform: `translateX(-${100 - fillPct}%)` }}
       />
       {/* Límites de la banda por encima del relleno: sin esto, .capsule-meter-fill
           los tapa en cuanto el valor acumulado entra o supera la banda de
           tolerancia, y deja de verse dónde empieza/termina. */}
-      <div className="capsule-meter-band-limits" style={bandStyle} />
+      <div className={styles['capsule-meter-band-limits']} style={bandStyle} />
     </Progress.Root>
   );
 }
@@ -79,32 +80,33 @@ export function CapsuleMeter({
 
   if (compact) {
     return (
-      <div className="capsule-meter-compact" data-sub={isSub || undefined}>
-        <span className="capsule-meter-name">{requirement.name}</span>
+      <div className={styles['capsule-meter-compact']} data-sub={isSub || undefined}>
+        <span className={styles['capsule-meter-name']}>{requirement.name}</span>
         <MeterTrack status={status} />
-        <span className="capsule-meter-value">
+        <span className={styles['capsule-meter-value']}>
           {accumulated.toFixed(1)}
           {target && ` / ${target}`} {requirement.unit}
         </span>
         {/* Celda del grid siempre presente (aunque vacía): sin ella, una fila
             sin `actions` aporta solo 3 hijos y desalinea el resto de filas
-            del grid compartido (ver .capsule-meter-grid). */}
+            del grid compartido (ver .capsule-meter-grid). Sin regla CSS
+            propia — solo un hook de layout para el grid del padre. */}
         <span className="capsule-meter-actions-cell">{actions}</span>
       </div>
     );
   }
 
   return (
-    <div className="capsule-meter" data-sub={isSub || undefined}>
-      <div className="capsule-meter-label">
-        <span className="capsule-meter-name">{requirement.name}</span>
-        <span className="capsule-meter-value">
+    <div className={styles['capsule-meter']} data-sub={isSub || undefined}>
+      <div className={styles['capsule-meter-label']}>
+        <span className={styles['capsule-meter-name']}>{requirement.name}</span>
+        <span className={styles['capsule-meter-value']}>
           {accumulated.toFixed(1)} {requirement.unit}
           {target && ` / ${target} ${requirement.unit}`}
         </span>
       </div>
       <MeterTrack status={status} />
-      {requirement.description && <p className="capsule-meter-detail">{requirement.description}</p>}
+      {requirement.description && <p className={styles['capsule-meter-detail']}>{requirement.description}</p>}
     </div>
   );
 }

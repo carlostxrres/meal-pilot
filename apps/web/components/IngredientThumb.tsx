@@ -4,13 +4,22 @@ import { IconPhoto } from "@tabler/icons-react";
 import Image from "next/image";
 import { useState } from "react";
 import { ingredientImageUrl } from "@/lib/ingredientImage";
+import styles from "./IngredientThumb.module.css";
 
-export function IngredientThumb({ ingredientId }: { ingredientId: string }) {
+export function IngredientThumb({
+  ingredientId,
+  small,
+}: {
+  ingredientId: string;
+  /** Miniatura de 24px en vez de 40px — ver ContributionDialog. */
+  small?: boolean;
+}) {
   const [failed, setFailed] = useState(false);
+  const size = small ? "small" : undefined;
 
   if (failed) {
     return (
-      <div className="ingredient-thumb ingredient-thumb-placeholder">
+      <div className={`${styles['ingredient-thumb']} ${styles['ingredient-thumb-placeholder']}`} data-size={size}>
         <IconPhoto size={18} stroke={1.5} />
       </div>
     );
@@ -22,7 +31,8 @@ export function IngredientThumb({ ingredientId }: { ingredientId: string }) {
       alt=""
       width={40}
       height={40}
-      className="ingredient-thumb"
+      className={styles['ingredient-thumb']}
+      data-size={size}
       onError={() => setFailed(true)}
     />
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { IconSearch, IconX } from "@tabler/icons-react";
+import styles from "./SearchField.module.css";
 
 export function SearchField({
   value,
@@ -14,7 +15,7 @@ export function SearchField({
   id?: string;
 }) {
   return (
-    <div className="search-field">
+    <div className={styles['search-field']}>
       <IconSearch size={16} stroke={1.75} />
       <input
         id={id}
@@ -26,7 +27,7 @@ export function SearchField({
       {value !== "" && (
         <button
           type="button"
-          className="search-field-clear"
+          className={styles['search-field-clear']}
           aria-label="Borrar búsqueda"
           onClick={() => onChange("")}
         >

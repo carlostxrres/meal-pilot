@@ -1,0 +1,60 @@
+/* Stepper numérico (InputNumber): un único borde compartido, sin bordes
+   internos entre botones y campo — ver InputNumber.tsx. */
+.input-number {
+  display: inline-flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  border: var(--border-width) solid var(--hairline);
+  background: var(--paper);
+}
+
+.input-number[data-disabled] {
+  opacity: 0.5;
+}
+
+.input-number-btn {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  flex-shrink: 0;
+  color: var(--ink);
+  cursor: pointer;
+  flex-grow: 1;
+}
+
+.input-number-btn:hover,
+.input-number-btn:focus-visible {
+  background: var(--canvas);
+}
+
+.input-number-btn:disabled {
+  color: var(--mute);
+  cursor: not-allowed;
+}
+
+.input-number-field,
+:global(.field) .input-number-field {
+  width: 48px;
+  border: none;
+  border-left: var(--border-width) solid var(--hairline);
+  border-right: var(--border-width) solid var(--hairline);
+  background: transparent;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  padding: var(--space-4) 0;
+  color: var(--ink);
+  border-radius: 0;
+  /* Los botones +/- propios sustituyen a las flechas nativas del navegador. */
+  appearance: none;
+  -moz-appearance: textfield;
+}
+
+.input-number-field::-webkit-outer-spin-button,
+.input-number-field::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}

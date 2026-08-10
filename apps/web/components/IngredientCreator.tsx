@@ -14,6 +14,7 @@ import {
 import { createIngredientAction, updateIngredientAction } from "@/app/(app)/actions";
 import { SUPERMARKET_LABELS } from "@/lib/supermarkets";
 import { FilterSelect } from "./FilterSelect";
+import styles from "./IngredientCreator.module.css";
 
 /*
 Intent: dar de alta (o editar) un ingrediente con todas sus propiedades:
@@ -234,7 +235,7 @@ function IngredientIdentityFields({ state, dispatch }: { state: CreatorState; di
         <label htmlFor="ingredient-description">Descripción (opcional)</label>
         <textarea
           id="ingredient-description"
-          className="creator-description"
+          className={styles['creator-description']}
           value={state.description}
           onChange={(e) => dispatch({ type: "set-field", field: "description", value: e.target.value })}
           placeholder="Notas libres: marca, formato..."
@@ -242,7 +243,7 @@ function IngredientIdentityFields({ state, dispatch }: { state: CreatorState; di
         />
       </div>
 
-      <div className="creator-grid2">
+      <div className={styles['creator-grid2']}>
         <div className="field">
           <label htmlFor="ingredient-base-unit">Unidad</label>
           <FilterSelect
@@ -284,7 +285,7 @@ function IngredientIdentityFields({ state, dispatch }: { state: CreatorState; di
       </div>
 
       <h3 className="section-title">Conservación una vez abierto (opcional, en días)</h3>
-      <div className="creator-grid2">
+      <div className={styles['creator-grid2']}>
         <div className="field">
           <label htmlFor="ingredient-pantry-shelf-life">Despensa</label>
           <input
@@ -320,7 +321,7 @@ function IngredientIdentityFields({ state, dispatch }: { state: CreatorState; di
         />
       </div>
 
-      <div className="creator-grid2">
+      <div className={styles['creator-grid2']}>
         <div className="field">
           <label htmlFor="ingredient-price">Precio aprox. (€ por 100{state.baseUnit === "unit" ? " uds" : state.baseUnit})</label>
           <input
@@ -355,7 +356,7 @@ function NutrientFields({ state, dispatch }: { state: CreatorState; dispatch: Di
   return (
     <>
       <h3 className="section-title">Valores nutricionales (por 100{state.baseUnit === "unit" ? " unidades" : state.baseUnit}, opcional)</h3>
-      <div className="creator-grid2">
+      <div className={styles['creator-grid2']}>
         {NUTRIENT_COLUMNS.map((column) => (
           <div className="field" key={column}>
             <label htmlFor={`ingredient-nutrient-${column}`}>
@@ -390,10 +391,10 @@ function PurchaseLinksFields({
     <div className="field">
       <label>Links de compra online (opcional)</label>
       {purchaseLinks.length > 0 && (
-        <ul className="creator-component-list">
+        <ul className={styles['creator-component-list']}>
           {purchaseLinks.map((link) => (
             <li key={link.id}>
-              <div className="creator-grid2">
+              <div className={styles['creator-grid2']}>
                 <FilterSelect
                   value={link.supermarket}
                   onChange={(value) => dispatch({ type: "set-purchase-link", id: link.id, field: "supermarket", value })}
@@ -412,7 +413,7 @@ function PurchaseLinksFields({
               </div>
               <button
                 type="button"
-                className="creator-component-remove"
+                className={styles['creator-component-remove']}
                 aria-label="Quitar link de compra"
                 onClick={() => dispatch({ type: "remove-purchase-link", id: link.id })}
               >
@@ -516,13 +517,13 @@ export function IngredientCreator({
           {isEditing ? (
             <button
               type="button"
-              className="dish-edit-btn"
+              className={styles['dish-edit-btn']}
               aria-label={`Editar ${existingEntry.ingredient.name}`}
             >
               <IconPencil size={16} stroke={1.75} />
             </button>
           ) : (
-            <button type="button" className="btn-primary dish-creator-trigger">
+            <button type="button" className={`btn-primary ${styles['dish-creator-trigger']}`}>
               <IconPlus size={16} stroke={2} /> Nuevo ingrediente
             </button>
           )}
@@ -530,7 +531,7 @@ export function IngredientCreator({
       ) : null}
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
-        <Dialog.Content className="dialog-content dish-creator-content">
+        <Dialog.Content className={`dialog-content ${styles['dish-creator-content']}`}>
           <Dialog.Title className="dialog-title">
             {isEditing ? "Editar ingrediente" : "Nuevo ingrediente"}
           </Dialog.Title>

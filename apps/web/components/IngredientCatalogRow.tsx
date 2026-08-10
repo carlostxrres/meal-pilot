@@ -5,6 +5,7 @@ import { useState } from "react";
 import { PLANNING_HORIZON_DAYS, type IngredientCatalogEntry, type ShoppingListItem, type ShoppingReason } from "@meal-pilot/core";
 import { SUPERMARKET_LABELS } from "@/lib/supermarkets";
 import { IngredientCardMenu } from "./IngredientCardMenu";
+import styles from "./IngredientCatalogRow.module.css";
 import { IngredientRow } from "./IngredientRow";
 import { InventoryEditDialog } from "./InventoryEditDialog";
 import { SwipeableRow } from "./SwipeableRow";
@@ -53,7 +54,7 @@ export function IngredientCatalogRow({
         menu={<IngredientCardMenu entry={entry} onEditInventory={() => setEditOpen(true)} />}
         shoppingReason={
           shoppingItem && shoppingItem.reasons.length > 0 ? (
-            <p className="shopping-reason">{shoppingReasonText(shoppingItem)}</p>
+            <p className={styles['shopping-reason']}>{shoppingReasonText(shoppingItem)}</p>
           ) : undefined
         }
         purchaseLinks={

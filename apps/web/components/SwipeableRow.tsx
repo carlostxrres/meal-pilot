@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import styles from "./SwipeableRow.module.css";
 
 const THRESHOLD = 88;
 const MAX_DRAG = 132;
@@ -66,10 +67,10 @@ export function SwipeableRow({
   const progress = Math.max(-1, Math.min(1, dragX / THRESHOLD));
 
   return (
-    <div className="swipe-row">
+    <div className={styles['swipe-row']}>
       {leftAction && (
         <div
-          className="swipe-row-action swipe-row-action-left"
+          className={`${styles['swipe-row-action']} ${styles['swipe-row-action-left']}`}
           style={{ opacity: Math.max(0, progress) }}
           data-armed={progress >= 1}
           data-tone={leftAction.tone ?? "destructive"}
@@ -80,7 +81,7 @@ export function SwipeableRow({
       )}
       {rightAction && (
         <div
-          className="swipe-row-action swipe-row-action-right"
+          className={`${styles['swipe-row-action']} ${styles['swipe-row-action-right']}`}
           style={{ opacity: Math.max(0, -progress) }}
           data-armed={progress <= -1}
         >
@@ -89,7 +90,7 @@ export function SwipeableRow({
         </div>
       )}
       <div
-        className="swipe-row-content"
+        className={styles['swipe-row-content']}
         style={{
           transform: dragX ? `translateX(${dragX}px)` : undefined,
           transition: dragging ? "none" : "transform 0.2s ease-out",

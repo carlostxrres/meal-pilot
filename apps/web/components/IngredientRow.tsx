@@ -5,6 +5,7 @@ import type { KeyboardEvent, ReactNode } from "react";
 import { NUTRIENT_COLUMNS, type Ingredient, type NutritionTotals } from "@meal-pilot/core";
 import { formatEurPer100 } from "@/lib/formatPrice";
 import { IngredientThumb } from "./IngredientThumb";
+import styles from "./IngredientRow.module.css";
 import { NutritionPopover } from "./NutritionPopover";
 
 /*
@@ -91,7 +92,7 @@ export function IngredientRow({
 
   return (
     <div
-      className="ingredient-row"
+      className={styles['ingredient-row']}
       data-clickable={onClick ? "true" : undefined}
       data-inactive={inactive || undefined}
       role={onClick ? "button" : undefined}
@@ -100,19 +101,19 @@ export function IngredientRow({
       onKeyDown={handleKeyDown}
     >
       {inactive && (
-        <p className="ingredient-row-warning">
+        <p className={styles['ingredient-row-warning']}>
           <IconAlertTriangle size={16} stroke={1.75} />
           Deshabilitado para nuevos platos
         </p>
       )}
       <IngredientThumb ingredientId={ingredient.id} />
-      <p className="ingredient-row-name">{ingredient.name}</p>
-      {quantity != null && <div className="ingredient-row-quantity">{quantity}</div>}
-      {menu != null && <div className="ingredient-row-menu">{menu}</div>}
+      <p className={styles['ingredient-row-name']}>{ingredient.name}</p>
+      {quantity != null && <div className={styles['ingredient-row-quantity']}>{quantity}</div>}
+      {menu != null && <div className={styles['ingredient-row-menu']}>{menu}</div>}
       {ingredient.description && (
-        <p className="dish-description ingredient-row-description">{ingredient.description}</p>
+        <p className={styles['ingredient-row-description']}>{ingredient.description}</p>
       )}
-      <div className="ingredient-row-attrs">
+      <div className={styles['ingredient-row-attrs']}>
         <span className="chip">{STORAGE_LABELS[ingredient.storage_type]}</span>
         <span className="chip">{ANIMAL_ORIGIN_LABELS[ingredient.animal_origin]}</span>
         {ingredient.price_eur_per_100 != null && (
@@ -125,7 +126,7 @@ export function IngredientRow({
           <NutritionPopover totals={per100Totals(ingredient)} title={per100Label(ingredient.base_unit)} />
         </span>
       </div>
-      <p className="ingredient-row-stock" data-short={short || undefined}>
+      <p className={styles['ingredient-row-stock']} data-short={short || undefined}>
         <span>
           {ingredient.office_inventory} {ingredient.base_unit} en la oficina
         </span>
@@ -133,9 +134,9 @@ export function IngredientRow({
           {ingredient.home_inventory} {ingredient.base_unit} en casa
         </span>
       </p>
-      {shoppingReason != null && <div className="ingredient-row-shopping-reason">{shoppingReason}</div>}
-      {editControls != null && <div className="ingredient-row-edit-controls">{editControls}</div>}
-      {purchaseLinks != null && <div className="ingredient-row-purchase-links">{purchaseLinks}</div>}
+      {shoppingReason != null && <div className={styles['ingredient-row-shopping-reason']}>{shoppingReason}</div>}
+      {editControls != null && <div className={styles['ingredient-row-edit-controls']}>{editControls}</div>}
+      {purchaseLinks != null && <div className={styles['ingredient-row-purchase-links']}>{purchaseLinks}</div>}
     </div>
   );
 }

@@ -14,6 +14,7 @@ import {
 } from "@meal-pilot/core";
 import { IconAlertTriangle, IconBike, IconBulb, IconFlask, IconMoon, IconToolsKitchen2 } from "@tabler/icons-react";
 import { CapsuleMeter } from "./CapsuleMeter";
+import styles from "./DayProposalView.module.css";
 import DishCard from "./DishCard";
 import { MealConfirmCheckbox } from "./MealConfirmCheckbox";
 
@@ -78,7 +79,7 @@ function CommuteSection({
         {icon} {title}
       </h3>
       <p className="section-note">Antes de salir, prepara lo siguiente:</p>
-      <ul className="commute-list">
+      <ul className={styles['commute-list']}>
         {bullets.map((bullet) => (
           <li key={bullet}>{bullet}</li>
         ))}
@@ -155,7 +156,7 @@ export function DayProposalView({
                 * (ver supplement.relative_timing). Los que se toman después, irían
                 * después del plato.
                 */
-              <p key={supplement.id} className="supplement-note">
+              <p key={supplement.id} className={styles['supplement-note']}>
                 <IconFlask size={16} stroke={1.75} /> {supplement.name} ({supplement.relative_timing})
               </p>
             ))}
@@ -187,7 +188,7 @@ export function DayProposalView({
             )}
 
             {tip && (
-              <p className="meal-tip">
+              <p className={styles['meal-tip']}>
                 <IconBulb size={16} stroke={1.75} /> {tip.text}
               </p>
             )}
@@ -202,7 +203,7 @@ export function DayProposalView({
       <p className="section-note">
         Lo que queda de los objetivos diarios tras los 4 meals — la cena se cocina fuera de esta app.
       </p>
-      <ul className="dinner-target-list">
+      <ul className={styles['dinner-target-list']}>
         {dinnerTargets.map((target) => {
           const text = formatDinnerTarget(target);
           const exceeded = target.remainingMaximum != null && target.remainingMaximum < 0;

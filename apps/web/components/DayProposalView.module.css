@@ -1,0 +1,73 @@
+.supplement-note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+  font-size: var(--text-base);
+  color: var(--turmeric);
+}
+
+.meal-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+  font-size: var(--text-base);
+  font-style: italic;
+  color: var(--mute);
+}
+
+.meal-tip svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.dinner-target-list {
+  list-style: none;
+  margin: 0 0 var(--space-8);
+  padding: 0;
+  font-size: var(--text-base);
+  color: var(--charcoal);
+}
+
+.dinner-target-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-12);
+  padding: var(--space-4) 0;
+  border-bottom: var(--border-width) solid var(--hairline-soft);
+}
+
+.dinner-target-list li:last-child {
+  border-bottom: none;
+}
+
+.dinner-target-list li[data-covered="true"] {
+  color: var(--mute);
+}
+
+.dinner-target-list li[data-covered="true"] :global(.data-mono) {
+  color: var(--success);
+}
+
+.dinner-target-list li[data-exceeded="true"] :global(.data-mono) {
+  color: var(--off);
+}
+
+/* --- Commute (qué llevar antes de salir, ver commute.ts) --- */
+.commute-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--text-base);
+  color: var(--charcoal);
+}
+
+.commute-list li {
+  padding: var(--space-4) 0;
+  border-bottom: var(--border-width) solid var(--hairline-soft);
+}
+
+.commute-list li:last-child {
+  border-bottom: none;
+}

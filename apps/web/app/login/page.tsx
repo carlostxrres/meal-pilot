@@ -1,3 +1,4 @@
+import styles from "./page.module.css";
 import { signIn } from "./actions";
 
 export default async function LoginPage({
@@ -8,9 +9,9 @@ export default async function LoginPage({
   const { error } = await searchParams;
 
   return (
-    <main className="login-page">
+    <main className={styles['login-page']}>
       <h1 className="app-title">Meal Pilot</h1>
-      <form action={signIn} className="login-form">
+      <form action={signIn} className={styles['login-form']}>
         <label>
           Email
           <input type="email" name="email" required autoComplete="email" />
@@ -20,7 +21,7 @@ export default async function LoginPage({
           <input type="password" name="password" required autoComplete="current-password" />
         </label>
         <button type="submit">Entrar</button>
-        {error && <p className="error">{error}</p>}
+        {error && <p className={styles['error']}>{error}</p>}
       </form>
     </main>
   );

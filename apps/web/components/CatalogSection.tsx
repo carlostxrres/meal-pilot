@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode } from "react";
+import styles from "./CatalogSection.module.css";
 
 /*
 Sección con encabezado (icono + título + contador), estado vacío y listado,
@@ -26,7 +27,7 @@ export function CatalogSection<T>({
         {icon} {title} ({items.length})
       </h2>
       {items.length === 0 ? (
-        <p className="inventory-empty">{emptyMessage}</p>
+        <p className={styles['inventory-empty']}>{emptyMessage}</p>
       ) : (
         items.map((item) => <Fragment key={getKey(item)}>{renderItem(item)}</Fragment>)
       )}

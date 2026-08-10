@@ -1,0 +1,40 @@
+.nutrition-trigger {
+  all: unset;
+  display: flex;
+  color: var(--mute);
+  cursor: pointer;
+}
+
+.nutrition-popover {
+  background: var(--canvas);
+  border: var(--border-width) solid var(--hairline);
+  padding: var(--space-12) var(--space-16);
+  min-width: 160px;
+}
+
+.nutrition-arrow {
+  fill: var(--canvas);
+}
+
+.nutrition-popover-title {
+  margin: 0 0 var(--space-8);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--mute);
+}
+
+.nutrition-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--text-base);
+}
+
+.nutrition-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-12);
+  padding: var(--space-4) 0;
+}

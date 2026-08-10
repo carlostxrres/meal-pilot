@@ -34,6 +34,7 @@ import { createDishAction, updateDishAction } from "@/app/(app)/actions";
 import { formatEur } from "@/lib/formatPrice";
 import { ContributionDialog } from "./ContributionDialog";
 import DishCard from "./DishCard";
+import styles from "./DishCreator.module.css";
 import { IngredientRow } from "./IngredientRow";
 import { InputNumber } from "./InputNumber";
 import { NutritionalThresholds } from "./NutritionalThresholds";
@@ -312,18 +313,18 @@ function SuggestionDialog({
             </p>
           )}
           {result && result.suggestions.length > 0 && (
-            <ul className="suggestion-list">
+            <ul className={styles['suggestion-list']}>
               {result.suggestions.map((suggestion) => (
                 <li key={`${suggestion.kind}-${suggestion.ingredient.id}`}>
                   <IngredientRow
                     ingredient={suggestion.ingredient}
                     onClick={() => onApply(suggestion)}
                     editControls={
-                      <div className="suggestion-edit-row">
-                        <p className="suggestion-detail">
+                      <div className={styles['suggestion-edit-row']}>
+                        <p className={styles['suggestion-detail']}>
                           {suggestion.kind === "add" ? "Añadir" : "Reducir"}
                         </p>
-                        <span className="suggestion-qty data-mono">
+                        <span className={`${styles['suggestion-qty']} data-mono`}>
                           {suggestion.kind === "add" ? (
                             <IconPlus size={18} stroke={2} />
                           ) : (
@@ -415,7 +416,7 @@ function DishDetailsFields({
           value={state.mealId}
           onValueChange={(value) => dispatch({ type: "set-field", field: "mealId", value })}
         >
-          <Select.Trigger id="dish-meal-trigger" className="select-trigger dish-meal-trigger">
+          <Select.Trigger id="dish-meal-trigger" className={`select-trigger ${styles['dish-meal-trigger']}`}>
             <Select.Value />
             <Select.Icon>
               <IconChevronDown size={16} stroke={1.75} />
@@ -438,7 +439,7 @@ function DishDetailsFields({
         </Select.Root>
       </div>
 
-      <div className="creator-grid2">
+      <div className={styles['creator-grid2']}>
         <div className="field">
           <label htmlFor="dish-name">Nombre</label>
           <input
@@ -466,7 +467,7 @@ function DishDetailsFields({
         <label htmlFor="dish-description">Descripción (opcional)</label>
         <textarea
           id="dish-description"
-          className="creator-description"
+          className={styles['creator-description']}
           value={state.description}
           onChange={(e) => dispatch({ type: "set-field", field: "description", value: e.target.value })}
           placeholder="Notas de preparación, momento ideal para tomarlo..."
@@ -494,7 +495,7 @@ function DraftComponentList({
   dispatch: Dispatch<CreatorAction>;
 }) {
   return (
-    <ul className="creator-component-list" ref={listRef}>
+    <ul className={styles['creator-component-list']} ref={listRef}>
       {components.map((component, index) => {
         const overMax =
           component.ingredient.max_quantity_per_dish != null &&
@@ -517,14 +518,14 @@ function DraftComponentList({
                 editControls={
                   <>
                     {overMax && (
-                      <p className="creator-max-warning">
+                      <p className={styles['creator-max-warning']}>
                         Se ha superado el máximo recomendado de este ingrediente
                       </p>
                     )}
-                    <div className="creator-edit-controls-row">
+                    <div className={styles['creator-edit-controls-row']}>
                       <button
                         type="button"
-                        className="drag-handle"
+                        className={styles['drag-handle']}
                         aria-label={`Reordenar ${component.ingredient.name}`}
                         onPointerDown={(e) => {
                           e.preventDefault();
@@ -543,10 +544,10 @@ function DraftComponentList({
                           dispatch({ type: "set-quantity", ingredientId: component.ingredient.id, quantity })
                         }
                       />
-                      <span className="creator-component-unit">{component.ingredient.base_unit}</span>
+                      <span className={styles['creator-component-unit']}>{component.ingredient.base_unit}</span>
                       <button
                         type="button"
-                        className="creator-component-remove"
+                        className={styles['creator-component-remove']}
                         aria-label={`Quitar ${component.ingredient.name}`}
                         onClick={() => dispatch({ type: "remove-ingredient", ingredientId: component.ingredient.id })}
                       >
@@ -590,9 +591,9 @@ function CreatorMeters({
   const [minimized, setMinimized] = useState(false);
 
   return (
-    <div className="creator-meters">
-      <div className="creator-history-row">
-        <p className="creator-price">
+    <div className={styles['creator-meters']}>
+      <div className={styles['creator-history-row']}>
+        <p className={styles['creator-price']}>
           Precio aproximado: <strong className="data-mono">{formatEur(livePrice)}</strong>
         </p>
         <span className="meter-actions">
@@ -916,11 +917,11 @@ export function DishCreator({
       ) : !isControlled ? (
         <Dialog.Trigger asChild>
           {isEditing ? (
-            <button type="button" className="dish-edit-btn" aria-label={`Editar ${existingDish.dish.name}`}>
+            <button type="button" className={styles['dish-edit-btn']} aria-label={`Editar ${existingDish.dish.name}`}>
               <IconPencil size={16} stroke={1.75} />
             </button>
           ) : (
-            <button type="button" className="btn-primary dish-creator-trigger">
+            <button type="button" className={`btn-primary ${styles['dish-creator-trigger']}`}>
               <IconPlus size={16} stroke={2} /> Nuevo plato
             </button>
           )}
@@ -928,7 +929,7 @@ export function DishCreator({
       ) : null}
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
-        <Dialog.Content className="dialog-content dish-creator-content">
+        <Dialog.Content className={`dialog-content ${styles['dish-creator-content']}`}>
           <Dialog.Title className="dialog-title">{isEditing ? "Editar plato" : "Nuevo plato"}</Dialog.Title>
           <form onSubmit={handleSubmit}>
             <DishDetailsFields state={state} meals={meals} dispatch={dispatch} />
@@ -955,7 +956,7 @@ export function DishCreator({
                 placeholder="Buscar ingrediente para añadir..."
               />
               {pickerResults.length > 0 && (
-                <ul className="creator-picker-list">
+                <ul className={styles['creator-picker-list']}>
                   {pickerResults.map((ingredient) => (
                     <li key={ingredient.id}>
                       <IngredientRow

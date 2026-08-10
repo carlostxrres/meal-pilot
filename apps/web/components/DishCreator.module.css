@@ -1,0 +1,187 @@
+.dish-creator-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  width: 100%;
+  margin-bottom: var(--space-16);
+  cursor: pointer;
+}
+
+.dish-meal-trigger {
+  justify-content: space-between;
+  padding: var(--space-12);
+}
+
+.dish-edit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--border-width) solid var(--hairline);
+  background: transparent;
+  color: var(--ink);
+  padding: var(--space-8);
+  border-radius: var(--radius-pill);
+}
+
+.creator-grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-8);
+}
+
+.creator-grid2 :global(.field),
+.dish-creator-content :global(.field) {
+  margin-bottom: var(--grid);
+}
+
+.creator-description {
+  font: inherit;
+  padding: var(--space-12);
+  border: var(--border-width) solid var(--hairline);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 0;
+  resize: vertical;
+}
+
+.creator-component-list {
+  list-style: none;
+  margin: 0 0 var(--space-8);
+  padding: 0;
+}
+
+.creator-component-list li[data-dragging="true"] {
+  opacity: 0.4;
+}
+
+.creator-component-list li[data-drag-over="true"] {
+  outline: var(--border-width-thick) solid var(--ink);
+  outline-offset: -1px;
+}
+
+.creator-max-warning {
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--off);
+}
+
+.creator-edit-controls-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.drag-handle {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  color: var(--mute);
+  cursor: grab;
+  touch-action: none;
+}
+
+.drag-handle:hover,
+.drag-handle:focus-visible {
+  color: var(--ink);
+}
+
+.creator-component-unit {
+  color: var(--mute);
+  font-size: var(--text-base);
+  min-width: 2.5ch;
+}
+
+.creator-component-remove {
+  all: unset;
+  display: flex;
+  color: var(--mute);
+  cursor: pointer;
+}
+
+.creator-component-remove:hover {
+  color: var(--off);
+}
+
+.creator-picker-list {
+  list-style: none;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Medidores en vivo: bloque pegado al fondo del diálogo, siempre visible
+   mientras se editan ingredientes arriba (mínimo scroll, ver DishCreator). */
+.creator-meters {
+  position: sticky;
+  bottom: calc(-1 * (var(--space-24) + env(safe-area-inset-bottom, 0px)));
+  margin: var(--space-16) calc(-1 * var(--space-24))
+    calc(-1 * (var(--space-24) + env(safe-area-inset-bottom, 0px)));
+  padding: var(--space-8) var(--space-24)
+    calc(var(--space-16) + env(safe-area-inset-bottom, 0px));
+  background: var(--canvas);
+  border-top: var(--border-width) solid var(--hairline);
+}
+
+.creator-meters :global(.section-title) {
+  margin-top: 0;
+  margin-bottom: var(--space-4);
+}
+
+.creator-meters :global(.dialog-actions) {
+  margin-top: var(--space-8);
+}
+
+.creator-history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  margin-bottom: var(--space-8);
+}
+
+.creator-history-row .creator-price {
+  margin-bottom: 0;
+}
+
+.creator-price {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: 0 0 var(--space-8);
+  font-size: var(--text-base);
+  color: var(--charcoal);
+}
+
+.suggestion-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.suggestion-edit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+}
+
+.suggestion-detail {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--mute);
+}
+
+.suggestion-qty {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+  color: var(--ink);
+}

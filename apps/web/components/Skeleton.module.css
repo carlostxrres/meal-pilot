@@ -1,0 +1,49 @@
+/* --- Skeletons (Next loading.tsx, ver components/Skeleton.tsx) --- */
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.skeleton-row {
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.skeleton-bar {
+  height: 12px;
+  margin: var(--space-4) 0;
+  background: var(--hairline-soft);
+}
+
+.skeleton-thumb {
+  grid-area: thumb;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  background: var(--hairline-soft);
+}
+
+.ingredient-row {
+  composes: ingredient-row from "./IngredientRow.module.css";
+}
+
+.ingredient-row-name {
+  composes: ingredient-row-name from "./IngredientRow.module.css";
+}
+
+.ingredient-row-description {
+  composes: ingredient-row-description from "./IngredientRow.module.css";
+}
+
+.dish-row {
+  composes: dish-row from "./DishCard.module.css";
+}
+
+.dish-row-head {
+  composes: dish-row-head from "./DishCard.module.css";
+}

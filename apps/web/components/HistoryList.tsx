@@ -3,6 +3,7 @@
 import type { HistoryDay, HistoryMealEntry } from "@meal-pilot/core";
 import { useState } from "react";
 import { MealLogAnswerButtons } from "./MealLogAnswerButtons";
+import styles from "./HistoryList.module.css";
 
 function stateLabel(entry: HistoryMealEntry): string {
   switch (entry.state) {
@@ -21,13 +22,13 @@ function HistoryMealRow({ date, entry }: { date: string; entry: HistoryMealEntry
   const [editing, setEditing] = useState(false);
 
   return (
-    <div className="history-meal-row">
+    <div className={styles['history-meal-row']}>
       <div>
         <strong>{entry.meal.name}</strong>
         {entry.plannedDishName && <span> — planeado: {entry.plannedDishName}</span>}
         {entry.plannedUnresolvedReason && <span> — sin propuesta ese día</span>}
       </div>
-      <p className="history-meal-state">{stateLabel(entry)}</p>
+      <p className={styles['history-meal-state']}>{stateLabel(entry)}</p>
       {editing ? (
         <MealLogAnswerButtons
           date={date}
@@ -50,7 +51,7 @@ export function HistoryList({ days }: { days: HistoryDay[] }) {
   return (
     <div>
       {days.map((day) => (
-        <div className="history-day" key={day.date}>
+        <div className={styles['history-day']} key={day.date}>
           <h3 className="section-title">{day.date}</h3>
           {day.meals.map((entry) => (
             <HistoryMealRow key={entry.meal.id} date={day.date} entry={entry} />

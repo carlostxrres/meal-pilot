@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { DishComplianceCheck, DishDietType, ResolvedComponent } from "@meal-pilot/core";
 import { formatEur } from "@/lib/formatPrice";
 import { Chip } from "./Chip";
+import styles from "./DishCard.module.css";
 import { DishComplianceChip } from "./DishComplianceChip";
 import { IngredientRow } from "./IngredientRow";
 
@@ -69,22 +70,22 @@ export default function DishCard({
   const dietTypeLabel = dietType ? DIET_TYPE_LABELS[dietType] : undefined;
 
   return (
-    <div className="dish-row" data-inactive={status === "inactive" || undefined}>
-      <div className="dish-row-head">
-        <p className="dish-name">{dish.name}</p>
-        <div className="dish-row-head-right">
+    <div className={styles['dish-row']} data-inactive={status === "inactive" || undefined}>
+      <div className={styles['dish-row-head']}>
+        <p className={styles['dish-name']}>{dish.name}</p>
+        <div className={styles['dish-row-head-right']}>
           {status && (
-            <span className="dish-status-badge" data-status={status}>
+            <span className={styles['dish-status-badge']} data-status={status}>
               {status === "active" ? "Activo" : "Desactivado"}
             </span>
           )}
-          <span className="dish-type-label">{dish.dish_type}</span>
-          <span className="dish-price">{formatEur(price)}</span>
+          <span className={styles['dish-type-label']}>{dish.dish_type}</span>
+          <span className={styles['dish-price']}>{formatEur(price)}</span>
           {headerActions}
         </div>
       </div>
 
-      {dish.description && <p className="dish-description">{dish.description}</p>}
+      {dish.description && <p className={styles['dish-description']}>{dish.description}</p>}
 
       {(mealName || (complianceChecks && complianceChecks.length > 0) || dietTypeLabel) && (
         <div className="dish-meal-chips">
@@ -96,7 +97,7 @@ export default function DishCard({
         </div>
       )}
 
-      <ul className="dish-component-list">
+      <ul className={styles['dish-component-list']}>
         {components.map((component) => (
           <li key={component.ingredient.id}>
             <IngredientRow

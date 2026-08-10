@@ -1,0 +1,121 @@
+/* --- Ingredient row (compartida entre el creador de platos, Hoy, el
+   catálogo de platos y el catálogo de Ingredientes: misma estructura en
+   grid en todos — ver components/IngredientRow.tsx). Cada fila/columna es
+   una `grid-area` fija; lo que cambia por contexto es qué áreas reciben
+   contenido (las que no se usan en un contexto simplemente no se
+   renderizan, así que no ocupan espacio). */
+
+.ingredient-row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "warning warning warning warning"
+    "thumb   name    qty     menu"
+    "thumb   attrs   attrs   menu"
+    "none    stock   stock   stock"
+    "none    reason  reason  reason"
+    "none    edit    edit    edit"
+    "none    links   links   links";
+  column-gap: var(--space-12);
+  row-gap: var(--space-4);
+  align-items: start;
+  background: var(--canvas);
+  border: var(--border-width) solid var(--hairline);
+  margin-bottom: -1px;
+  padding: var(--space-12) var(--space-16);
+}
+
+/* Cuando SÍ existe el elemento .ingredient-row-description, se inserta su fila */
+.ingredient-row:has(> .ingredient-row-description) {
+  grid-template-areas:
+    "warning warning warning warning"
+    "thumb   name    qty     menu"
+    "thumb   desc    desc    menu"
+    "thumb   attrs   attrs   menu"
+    "none    stock   stock   stock"
+    "none    reason  reason  reason"
+    "none    edit    edit    edit"
+    "none    links   links   links";
+}
+
+.ingredient-row[data-clickable="true"] {
+  cursor: pointer;
+}
+
+.ingredient-row[data-clickable="true"]:hover,
+.ingredient-row[data-clickable="true"]:focus-visible {
+  background: var(--paper);
+  outline: none;
+}
+
+.ingredient-row[data-inactive] {
+  opacity: 0.55;
+}
+
+.ingredient-row-warning {
+  grid-area: warning;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: var(--text-sm);
+  color: var(--off);
+  margin: 0;
+}
+
+.ingredient-row-name {
+  grid-area: name;
+  align-self: center;
+  font-size: var(--text-base);
+  font-weight: 500;
+  margin: 0;
+}
+
+.ingredient-row-quantity {
+  grid-area: qty;
+  align-self: center;
+}
+
+.ingredient-row-menu {
+  grid-area: menu;
+  align-self: start;
+}
+
+.ingredient-row-description {
+  composes: dish-description from "./DishCard.module.css";
+  grid-area: desc;
+  margin: 0;
+}
+
+.ingredient-row-attrs {
+  grid-area: attrs;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.ingredient-row-stock {
+  grid-area: stock;
+  display: flex;
+  gap: var(--space-12);
+
+  font-size: var(--text-sm);
+  color: var(--mute);
+  margin: 0;
+}
+
+.ingredient-row-stock[data-short="true"] {
+  color: var(--off);
+}
+
+.ingredient-row-shopping-reason {
+  grid-area: reason;
+}
+
+.ingredient-row-edit-controls {
+  grid-area: edit;
+}
+
+.ingredient-row-purchase-links {
+  grid-area: links;
+}

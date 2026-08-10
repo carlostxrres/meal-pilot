@@ -1,0 +1,17 @@
+.meal-log-answer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+  margin-top: var(--space-8);
+}
+
+.meal-log-answer input[type="text"] {
+  flex: 1;
+  min-width: 10rem;
+  padding: var(--space-8) var(--space-12);
+  border: var(--border-width) solid var(--hairline);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink);
+}

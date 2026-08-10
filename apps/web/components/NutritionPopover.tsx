@@ -8,6 +8,7 @@ import {
   type NutrientColumn,
   type NutritionTotals,
 } from "@meal-pilot/core";
+import styles from "./NutritionPopover.module.css";
 
 /** Mismo orden que .capsule-meter-grid (sortColumnsByDisplayOrder, ver nutrientOrder.ts) — solo cambian las etiquetas, pensadas para un ingrediente suelto en vez de una ventana por meal. */
 const NUTRIENT_LABELS: Record<NutrientColumn, { label: string; unit: string }> = {
@@ -43,16 +44,16 @@ export function NutritionPopover({
       <Popover.Trigger asChild>
         <button
           type="button"
-          className="nutrition-trigger chip"
+          className={`${styles['nutrition-trigger']} chip`}
           aria-label={title ? `Ver valores nutricionales (${title})` : "Ver valores nutricionales"}
         >
           <IconChartBar size={18} stroke={1.75} />
         </button>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content className="nutrition-popover" sideOffset={6} align="end">
-          {title && <p className="nutrition-popover-title">{title}</p>}
-          <ul className="nutrition-list">
+        <Popover.Content className={styles['nutrition-popover']} sideOffset={6} align="end">
+          {title && <p className={styles['nutrition-popover-title']}>{title}</p>}
+          <ul className={styles['nutrition-list']}>
             {ROWS.map(({ key, label, unit }) => (
               <li key={key}>
                 <span>{label}</span>
@@ -63,7 +64,7 @@ export function NutritionPopover({
               </li>
             ))}
           </ul>
-          <Popover.Arrow className="nutrition-arrow" />
+          <Popover.Arrow className={styles['nutrition-arrow']} />
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>

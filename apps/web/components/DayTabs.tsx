@@ -3,6 +3,7 @@
 import * as Tabs from "@radix-ui/react-tabs";
 import type { DayProposal, DietaryRequirement, MealTip } from "@meal-pilot/core";
 import { DayProposalView } from "./DayProposalView";
+import styles from "./DayTabs.module.css";
 
 export interface DayTabData {
   date: string;
@@ -36,9 +37,9 @@ export function DayTabs({
 
   return (
     <Tabs.Root defaultValue={days[0]!.date} className="day-tabs">
-      <Tabs.List className="day-tabs-list">
+      <Tabs.List className={styles['day-tabs-list']}>
         {days.map((day) => (
-          <Tabs.Trigger key={day.date} value={day.date} className="day-tabs-trigger">
+          <Tabs.Trigger key={day.date} value={day.date} className={styles['day-tabs-trigger']}>
             {day.label}
           </Tabs.Trigger>
         ))}

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { RequirementStatus } from "@meal-pilot/core";
 import { CapsuleMeter } from "./CapsuleMeter";
+import styles from "./NutritionalThresholds.module.css";
 
 /*
 Grid de CapsuleMeter en variante compact, compartido entre el creador de
@@ -22,7 +23,7 @@ export function NutritionalThresholds({
   }
 
   return (
-    <div className="capsule-meter-grid">
+    <div className={styles['capsule-meter-grid']}>
       {statuses.map((status) => (
         <CapsuleMeter
           key={status.requirement.id}

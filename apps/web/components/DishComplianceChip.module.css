@@ -1,0 +1,11 @@
+.dish-compliance-popover {
+  background: var(--canvas);
+  border: var(--border-width) solid var(--hairline);
+  padding: var(--space-12) var(--space-16);
+  /* Ancho fijo (no solo máximo): .capsule-meter-grid reparte su columna
+     de la barra (1fr) con lo que sobre tras nombre/valor — si el popover
+     se encoge a su contenido, esa columna se queda sin espacio real y la
+     barra deja de verse. Mismo ancho que tiene de sobra en el creador
+     (--shell-width), acotado al viewport. */
+  width: min(var(--shell-width), calc(100vw - var(--space-32)));
+}

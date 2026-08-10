@@ -1,0 +1,48 @@
+/* Modal de contribuciones: barras de magnitud, serie única en tinta. */
+.contrib-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.contrib-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-4) 0;
+  font-size: var(--text-base);
+}
+
+.contrib-name {
+  flex: 0 0 45%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-width: 0;
+}
+
+.contrib-name > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.contrib-track {
+  flex: 1;
+  height: var(--space-8);
+  background: var(--hairline-soft);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.contrib-fill {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  border-radius: var(--radius-pill);
+}
+
+.contrib-value {
+  white-space: nowrap;
+  color: var(--mute);
+  font-size: var(--text-sm);
+}

@@ -4,6 +4,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useMemo } from "react";
 import type { Ingredient, RequirementStatus, ResolvedComponent } from "@meal-pilot/core";
 import { IngredientThumb } from "./IngredientThumb";
+import styles from "./ContributionDialog.module.css";
 
 /*
 Diálogo de "quién contribuye" a un nutriente: barras de magnitud en un solo
@@ -45,17 +46,17 @@ export function ContributionDialog({
           {rows.length === 0 ? (
             <p className="section-note">Ningún ingrediente del plato aporta este nutriente todavía.</p>
           ) : (
-            <ul className="contrib-list">
+            <ul className={styles['contrib-list']}>
               {rows.map(({ component, value }) => (
-                <li key={component.ingredient.id} className="contrib-row">
-                  <span className="contrib-name">
-                    <IngredientThumb ingredientId={component.ingredient.id} />
+                <li key={component.ingredient.id} className={styles['contrib-row']}>
+                  <span className={styles['contrib-name']}>
+                    <IngredientThumb ingredientId={component.ingredient.id} small />
                     <span>{component.ingredient.name}</span>
                   </span>
-                  <span className="contrib-track">
-                    <span className="contrib-fill" style={{ width: `${(value / maxValue) * 100}%` }} />
+                  <span className={styles['contrib-track']}>
+                    <span className={styles['contrib-fill']} style={{ width: `${(value / maxValue) * 100}%` }} />
                   </span>
-                  <span className="contrib-value data-mono">
+                  <span className={`${styles['contrib-value']} data-mono`}>
                     {value.toFixed(1)} {requirement?.unit}
                   </span>
                 </li>

@@ -1,0 +1,28 @@
+/* --- Day tabs (Hoy / Mañana) --- */
+
+.day-tabs-list {
+  display: inline-flex;
+  border: var(--border-width) solid var(--hairline);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  margin-bottom: var(--space-16);
+}
+
+.day-tabs-trigger {
+  all: unset;
+  padding: var(--space-4) var(--space-12);
+  border-right: var(--border-width) solid var(--hairline);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--mute);
+  cursor: pointer;
+}
+
+.day-tabs-trigger:last-child {
+  border-right: none;
+}
+
+.day-tabs-trigger[data-state="active"] {
+  background: var(--ink);
+  color: var(--canvas);
+}

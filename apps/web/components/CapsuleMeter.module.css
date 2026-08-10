@@ -1,0 +1,115 @@
+/* --- Capsule meter (signature) --- */
+
+.capsule-meter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: var(--space-24);
+}
+
+.capsule-meter-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-base);
+}
+
+.capsule-meter-name {
+  color: var(--charcoal);
+  font-weight: 600;
+}
+
+.capsule-meter-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--mute);
+}
+
+.capsule-meter-detail {
+  font-size: var(--text-sm);
+  color: var(--mute);
+  margin: 0 0 0 var(--space-4);
+}
+
+.capsule-meter-track {
+  position: relative;
+  height: var(--space-12);
+  border-radius: var(--radius-pill);
+  background: var(--hairline-soft);
+  overflow: hidden;
+}
+
+.capsule-meter-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--hairline);
+}
+
+.capsule-meter-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--success);
+  transition: transform 300ms ease;
+}
+
+.capsule-meter-fill[data-off="true"] {
+  background: var(--off);
+}
+
+/* Marca los límites de la banda por encima de .capsule-meter-fill (que la
+   tapa en cuanto el valor entra o supera la banda) — así siguen viéndose
+   aunque la zona en sí quede oculta bajo el relleno. */
+.capsule-meter-band-limits {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+/* CapsuleMeter compacto: una línea por nutriente (ver .capsule-meter-grid
+   en NutritionalThresholds.module.css, el grid real compartido). Cada fila
+   usa `display: contents` para que sus hijos pasen a ser celdas directas
+   de ese grid compartido. */
+.capsule-meter-compact {
+  display: contents;
+}
+
+.capsule-meter-compact .capsule-meter-name {
+  max-width: 6.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.capsule-meter-compact .capsule-meter-track {
+  height: var(--space-8);
+}
+
+.capsule-meter-compact .capsule-meter-value {
+  white-space: nowrap;
+  font-size: var(--text-sm);
+}
+
+/* Sub-nutriente estilo etiqueta europea ("Grasas" > "de las cuales
+   saturadas"): ligera sangría + nombre sin negrita, para leerse como
+   desglose de la línea anterior, no como un nutriente independiente. */
+.capsule-meter[data-sub="true"] {
+  margin-left: var(--space-16);
+  margin-top: calc(-1 * var(--space-16));
+}
+
+.capsule-meter[data-sub="true"] .capsule-meter-name,
+.capsule-meter-compact[data-sub="true"] .capsule-meter-name {
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* .capsule-meter-compact usa display:contents (ver .capsule-meter-grid) —
+   no genera caja propia, así que el indent va en su celda de nombre. */
+.capsule-meter-compact[data-sub="true"] .capsule-meter-name {
+  padding-left: var(--space-16);
+}

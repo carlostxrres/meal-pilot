@@ -4,6 +4,7 @@ import * as Checkbox from "@radix-ui/react-checkbox";
 import { IconCheck } from "@tabler/icons-react";
 import { useId, useState, useTransition } from "react";
 import { confirmMealAction } from "@/app/(app)/actions";
+import styles from "./MealConfirmCheckbox.module.css";
 
 export function MealConfirmCheckbox({
   date,
@@ -22,7 +23,7 @@ export function MealConfirmCheckbox({
   const id = useId();
 
   return (
-    <div className="meal-confirm-row">
+    <div className={styles['meal-confirm-row']}>
       <Checkbox.Root
         id={id}
         className="checkbox-root"
@@ -50,7 +51,7 @@ export function MealConfirmCheckbox({
           <IconCheck size={16} stroke={3} />
         </Checkbox.Indicator>
       </Checkbox.Root>
-      <label htmlFor={id} className="meal-confirm-label">
+      <label htmlFor={id} className={styles['meal-confirm-label']}>
         {checked ? "Comido" : "Marcar como comido"}
       </label>
       {error && <p className="warning">{error}</p>}

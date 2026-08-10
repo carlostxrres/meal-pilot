@@ -27,6 +27,7 @@ Registro de decisiones de arquitectura del proyecto. Cada ADR es un archivo con 
 | [0021](0021-confirmar-comida-descuenta-inventario.md) | Confirmar una comida descuenta inventario automáticamente |
 | [0022](0022-historial-de-comidas-editable-y-repaso-guiado.md) | Historial de comidas editable y repaso guiado de días pendientes |
 | [0023](0023-propiedades-ampliadas-de-ingredient.md) | Propiedades ampliadas de `ingredient`: conservación, habilitado, descripción, links de compra |
+| [0024](0024-css-modules-para-estilos-por-componente.md) | CSS Modules para estilos por componente (sustituye el `globals.css` monolítico) |
 
 ## Cómo añadir un ADR nuevo
 

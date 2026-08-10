@@ -3,6 +3,7 @@
 import type { MealLogState } from "@meal-pilot/core";
 import { useState, useTransition } from "react";
 import { setMealLogStateAction } from "@/app/(app)/actions";
+import styles from "./MealLogAnswerButtons.module.css";
 
 /**
  * Los cuatro estados de un slot (date, meal_id), ADR-0022. "Comí otra cosa"
@@ -45,7 +46,7 @@ export function MealLogAnswerButtons({
 
   if (mode === "ate_out") {
     return (
-      <div className="meal-log-answer">
+      <div className={styles['meal-log-answer']}>
         <input
           type="text"
           value={description}
@@ -70,7 +71,7 @@ export function MealLogAnswerButtons({
   }
 
   return (
-    <div className="meal-log-answer">
+    <div className={styles['meal-log-answer']}>
       {plannedDishId && plannedDishName && (
         <button type="button" className="btn-primary" disabled={isPending} onClick={() => submit("followed_plan")}>
           Sí, comí {plannedDishName}

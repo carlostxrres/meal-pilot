@@ -1,0 +1,13 @@
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-16);
+  color: var(--mute);
+  font-size: var(--text-base);
+}
+
+.back-link:hover,
+.back-link:focus-visible {
+  color: var(--ink);
+}

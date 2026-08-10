@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { fetchDishAuthoringContext, fetchDishCatalog, RequestCache } from "@meal-pilot/core";
 import { createClient } from "@/lib/supabase/server";
 import { DishCatalogCard } from "@/components/DishCatalogCard";
+import styles from "./page.module.css";
 
 /** Vista de un único plato — solo para poder enlazarlo vía URL, ver /dishes para el catálogo completo. */
 export default async function DishPage({ params }: { params: Promise<{ dishId: string }> }) {
@@ -20,7 +21,7 @@ export default async function DishPage({ params }: { params: Promise<{ dishId: s
 
   return (
     <div>
-      <Link href="/dishes" className="back-link">
+      <Link href="/dishes" className={styles['back-link']}>
         <IconArrowLeft size={16} stroke={1.75} /> Volver
       </Link>
       <DishCatalogCard

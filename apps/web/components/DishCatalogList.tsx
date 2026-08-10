@@ -7,6 +7,7 @@ import { CatalogSection } from "./CatalogSection";
 import { DishCatalogCard } from "./DishCatalogCard";
 import { FilterSelect } from "./FilterSelect";
 import { SearchField } from "./SearchField";
+import styles from "./DishCatalogList.module.css";
 
 type SortKey = "name-asc" | "name-desc" | "created-desc" | "created-asc" | "updated-desc" | "updated-asc";
 
@@ -128,7 +129,7 @@ export function DishCatalogList({
           options={COMPLIANCE_OPTIONS}
           ariaLabel="Filtrar por cumplimiento nutricional"
         />
-        <span className="price-range-field">
+        <span className={styles['price-range-field']}>
           <input
             type="number"
             inputMode="decimal"
@@ -149,7 +150,7 @@ export function DishCatalogList({
           <span aria-hidden="true">€</span>
         </span>
         {hasActiveFilters && (
-          <button type="button" className="filters-clear" onClick={clearFilters}>
+          <button type="button" className={styles['filters-clear']} onClick={clearFilters}>
             Limpiar filtros
           </button>
         )}

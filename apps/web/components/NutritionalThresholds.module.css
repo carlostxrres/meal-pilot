@@ -1,0 +1,14 @@
+/* CapsuleMeter compacto: una línea por nutriente. El contenedor
+   (.capsule-meter-grid) es un grid real compartido por todas las filas, así
+   que cada .capsule-meter-track cae en la misma columna con el mismo ancho
+   en todas — no cada fila calculando el suyo por separado. Cada fila usa
+   `display: contents` para que sus 4 hijos (nombre/track/valor/acciones)
+   pasen a ser celdas directas de ese grid compartido. */
+.capsule-meter-grid {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  column-gap: var(--space-8);
+  row-gap: var(--space-4);
+  font-size: var(--text-sm);
+}

@@ -6,18 +6,20 @@ que lleguen los datos), así que la navegación se siente inmediata aunque el
 contenido real tarde lo mismo que antes.
 */
 
+import styles from "./Skeleton.module.css";
+
 export function SkeletonBar({ width = "100%" }: { width?: string }) {
-  return <div className="skeleton-bar" style={{ width }} />;
+  return <div className={styles['skeleton-bar']} style={{ width }} />;
 }
 
 export function IngredientRowSkeleton() {
   return (
-    <div className="ingredient-row skeleton-row">
-      <div className="skeleton-thumb" />
-      <div className="ingredient-row-name">
+    <div className={`${styles['ingredient-row']} ${styles['skeleton-row']}`}>
+      <div className={styles['skeleton-thumb']} />
+      <div className={styles['ingredient-row-name']}>
         <SkeletonBar width="70%" />
       </div>
-      <div className="ingredient-row-description">
+      <div className={styles['ingredient-row-description']}>
         <SkeletonBar width="45%" />
       </div>
     </div>
@@ -26,8 +28,8 @@ export function IngredientRowSkeleton() {
 
 export function MealRowSkeleton() {
   return (
-    <div className="dish-row skeleton-row">
-      <div className="dish-row-head">
+    <div className={`${styles['dish-row']} ${styles['skeleton-row']}`}>
+      <div className={styles['dish-row-head']}>
         <SkeletonBar width="45%" />
         <SkeletonBar width="20%" />
       </div>

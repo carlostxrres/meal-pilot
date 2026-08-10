@@ -1,0 +1,16 @@
+.history-day {
+  margin-bottom: var(--grid);
+}
+
+.history-meal-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-12) 0;
+  border-bottom: var(--border-width) solid var(--hairline-soft);
+}
+
+.history-meal-state {
+  font-size: var(--text-sm);
+  color: var(--off);
+}

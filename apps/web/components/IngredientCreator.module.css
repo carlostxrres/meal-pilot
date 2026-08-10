@@ -1,0 +1,27 @@
+.dish-creator-trigger {
+  composes: dish-creator-trigger from "./DishCreator.module.css";
+}
+
+.dish-edit-btn {
+  composes: dish-edit-btn from "./DishCreator.module.css";
+}
+
+.dish-creator-content {
+  composes: dish-creator-content from "./DishCreator.module.css";
+}
+
+.creator-component-list {
+  composes: creator-component-list from "./DishCreator.module.css";
+}
+
+.creator-component-remove {
+  composes: creator-component-remove from "./DishCreator.module.css";
+}
+
+.creator-description {
+  composes: creator-description from "./DishCreator.module.css";
+}
+
+.creator-grid2 {
+  composes: creator-grid2 from "./DishCreator.module.css";
+}

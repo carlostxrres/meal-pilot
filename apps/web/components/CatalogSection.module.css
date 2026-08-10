@@ -1,0 +1,5 @@
+.inventory-empty {
+  color: var(--mute);
+  font-size: var(--text-base);
+  padding: var(--space-16) 0;
+}
