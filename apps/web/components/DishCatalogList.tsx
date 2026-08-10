@@ -3,11 +3,11 @@
 import { IconToolsKitchen2 } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import type { DietaryRequirement, DishCatalogEntry, Ingredient, Meal } from "@meal-pilot/core";
-import { CatalogSection } from "./CatalogSection";
-import { DishCatalogCard } from "./DishCatalogCard";
-import { FilterSelect } from "./FilterSelect";
-import { SearchField } from "./SearchField";
-import styles from "./DishCatalogList.module.css";
+import { CatalogSection } from "@/components/CatalogSection";
+import { DishCatalogCard } from "@/components/DishCatalogCard";
+import { FilterSelect } from "@/components/FilterSelect";
+import { SearchField } from "@/components/SearchField";
+import styles from "@/components/DishCatalogList.module.css";
 
 type SortKey = "name-asc" | "name-desc" | "created-desc" | "created-asc" | "updated-desc" | "updated-asc";
 

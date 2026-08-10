@@ -2,8 +2,8 @@
 
 import type { PendingReviewItem } from "@meal-pilot/core";
 import { useState } from "react";
-import { MealLogAnswerButtons } from "./MealLogAnswerButtons";
-import styles from "./GuidedReview.module.css";
+import { MealLogAnswerButtons } from "@/components/MealLogAnswerButtons";
+import styles from "@/components/GuidedReview.module.css";
 
 /**
  * Repaso guiado (ADR-0022): pregunta una a una las comidas "sin responder"

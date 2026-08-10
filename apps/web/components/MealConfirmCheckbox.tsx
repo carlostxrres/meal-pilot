@@ -4,7 +4,7 @@ import * as Checkbox from "@radix-ui/react-checkbox";
 import { IconCheck } from "@tabler/icons-react";
 import { useId, useState, useTransition } from "react";
 import { confirmMealAction } from "@/app/(app)/actions";
-import styles from "./MealConfirmCheckbox.module.css";
+import styles from "@/components/MealConfirmCheckbox.module.css";
 
 export function MealConfirmCheckbox({
   date,

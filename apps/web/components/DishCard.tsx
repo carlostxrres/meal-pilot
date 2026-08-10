@@ -3,10 +3,10 @@
 import type { ReactNode } from "react";
 import type { DishComplianceCheck, DishDietType, ResolvedComponent } from "@meal-pilot/core";
 import { formatEur } from "@/lib/formatPrice";
-import { Chip } from "./Chip";
-import styles from "./DishCard.module.css";
-import { DishComplianceChip } from "./DishComplianceChip";
-import { IngredientRow } from "./IngredientRow";
+import { Chip } from "@/components/Chip";
+import styles from "@/components/DishCard.module.css";
+import { DishComplianceChip } from "@/components/DishComplianceChip";
+import { IngredientRow } from "@/components/IngredientRow";
 
 const DIET_TYPE_LABELS: Partial<Record<DishDietType, string>> = {
   vegan: "Vegano",

@@ -1,7 +1,7 @@
 import * as Progress from "@radix-ui/react-progress";
 import type { ReactNode } from "react";
 import type { DietaryRequirement, RequirementStatus } from "@meal-pilot/core";
-import styles from "./CapsuleMeter.module.css";
+import styles from "@/components/CapsuleMeter.module.css";
 
 /*
 Intent: vistazo rápido y de baja atención al estado de un requisito

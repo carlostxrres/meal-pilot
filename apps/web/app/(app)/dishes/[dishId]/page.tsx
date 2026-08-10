@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { fetchDishAuthoringContext, fetchDishCatalog, RequestCache } from "@meal-pilot/core";
 import { createClient } from "@/lib/supabase/server";
 import { DishCatalogCard } from "@/components/DishCatalogCard";
-import styles from "./page.module.css";
+import styles from "@/app/(app)/dishes/[dishId]/page.module.css";
 
 /** Vista de un único plato — solo para poder enlazarlo vía URL, ver /dishes para el catálogo completo. */
 export default async function DishPage({ params }: { params: Promise<{ dishId: string }> }) {

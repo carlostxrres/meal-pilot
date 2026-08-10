@@ -32,14 +32,14 @@ import {
 } from "@meal-pilot/core";
 import { createDishAction, updateDishAction } from "@/app/(app)/actions";
 import { formatEur } from "@/lib/formatPrice";
-import { ContributionDialog } from "./ContributionDialog";
-import DishCard from "./DishCard";
-import styles from "./DishCreator.module.css";
-import { IngredientRow } from "./IngredientRow";
-import { InputNumber } from "./InputNumber";
-import { NutritionalThresholds } from "./NutritionalThresholds";
-import { SearchField } from "./SearchField";
-import { SwipeableRow } from "./SwipeableRow";
+import { ContributionDialog } from "@/components/ContributionDialog";
+import DishCard from "@/components/DishCard";
+import styles from "@/components/DishCreator.module.css";
+import { IngredientRow } from "@/components/IngredientRow";
+import { InputNumber } from "@/components/InputNumber";
+import { NutritionalThresholds } from "@/components/NutritionalThresholds";
+import { SearchField } from "@/components/SearchField";
+import { SwipeableRow } from "@/components/SwipeableRow";
 
 /*
 Intent: dar de alta (o editar) un plato fijo viendo EN VIVO si cae dentro de

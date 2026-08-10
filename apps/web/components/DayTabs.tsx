@@ -2,8 +2,8 @@
 
 import * as Tabs from "@radix-ui/react-tabs";
 import type { DayProposal, DietaryRequirement, MealTip } from "@meal-pilot/core";
-import { DayProposalView } from "./DayProposalView";
-import styles from "./DayTabs.module.css";
+import { DayProposalView } from "@/components/DayProposalView";
+import styles from "@/components/DayTabs.module.css";
 
 export interface DayTabData {
   date: string;

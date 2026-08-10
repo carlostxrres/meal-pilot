@@ -4,11 +4,11 @@ import { IconExternalLink, IconPencil, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { PLANNING_HORIZON_DAYS, type IngredientCatalogEntry, type ShoppingListItem, type ShoppingReason } from "@meal-pilot/core";
 import { SUPERMARKET_LABELS } from "@/lib/supermarkets";
-import { IngredientCardMenu } from "./IngredientCardMenu";
-import styles from "./IngredientCatalogRow.module.css";
-import { IngredientRow } from "./IngredientRow";
-import { InventoryEditDialog } from "./InventoryEditDialog";
-import { SwipeableRow } from "./SwipeableRow";
+import { IngredientCardMenu } from "@/components/IngredientCardMenu";
+import styles from "@/components/IngredientCatalogRow.module.css";
+import { IngredientRow } from "@/components/IngredientRow";
+import { InventoryEditDialog } from "@/components/InventoryEditDialog";
+import { SwipeableRow } from "@/components/SwipeableRow";
 
 export type InventoryPatch = { office_inventory: number; home_inventory: number };
 

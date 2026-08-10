@@ -9,10 +9,10 @@ import {
   type RequirementStatus,
   type ResolvedComponent,
 } from "@meal-pilot/core";
-import { ChipButton } from "./Chip";
-import { ContributionDialog } from "./ContributionDialog";
-import styles from "./DishComplianceChip.module.css";
-import { NutritionalThresholds } from "./NutritionalThresholds";
+import { ChipButton } from "@/components/Chip";
+import { ContributionDialog } from "@/components/ContributionDialog";
+import styles from "@/components/DishComplianceChip.module.css";
+import { NutritionalThresholds } from "@/components/NutritionalThresholds";
 
 /*
 Chip de métricas nutricionales del plato: gris y sin texto si cae dentro de

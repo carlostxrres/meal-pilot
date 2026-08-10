@@ -1,6 +1,6 @@
 import type { DietaryRequirement, DishCatalogEntry, Ingredient, Meal } from "@meal-pilot/core";
-import DishCard from "./DishCard";
-import { DishCardMenu } from "./DishCardMenu";
+import DishCard from "@/components/DishCard";
+import { DishCardMenu } from "@/components/DishCardMenu";
 
 /** Ficha de un plato del catálogo, con su menú "...": la misma tarjeta en /dishes y en /dishes/:dishId. */
 export function DishCatalogCard({

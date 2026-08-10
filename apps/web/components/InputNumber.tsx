@@ -1,7 +1,7 @@
 "use client";
 
 import { IconMinus, IconPlus } from "@tabler/icons-react";
-import styles from "./InputNumber.module.css";
+import styles from "@/components/InputNumber.module.css";
 
 /*
 Stepper numérico compartido (sustituye a la pareja suelta de botones +/- e

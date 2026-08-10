@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from "react";
-import styles from "./CatalogSection.module.css";
+import styles from "@/components/CatalogSection.module.css";
 
 /*
 Sección con encabezado (icono + título + contador), estado vacío y listado,

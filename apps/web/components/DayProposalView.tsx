@@ -13,10 +13,10 @@ import {
   type MealTip,
 } from "@meal-pilot/core";
 import { IconAlertTriangle, IconBike, IconBulb, IconFlask, IconMoon, IconToolsKitchen2 } from "@tabler/icons-react";
-import { CapsuleMeter } from "./CapsuleMeter";
-import styles from "./DayProposalView.module.css";
-import DishCard from "./DishCard";
-import { MealConfirmCheckbox } from "./MealConfirmCheckbox";
+import { CapsuleMeter } from "@/components/CapsuleMeter";
+import styles from "@/components/DayProposalView.module.css";
+import DishCard from "@/components/DishCard";
+import { MealConfirmCheckbox } from "@/components/MealConfirmCheckbox";
 
 function formatTime(time: string): string {
   return time.slice(0, 5);

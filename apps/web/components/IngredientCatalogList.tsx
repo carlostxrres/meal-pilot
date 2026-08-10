@@ -11,10 +11,10 @@ import {
   type ShoppingListItem,
 } from "@meal-pilot/core";
 import { updateInventoryAction } from "@/app/(app)/actions";
-import { CatalogSection } from "./CatalogSection";
-import { FilterSelect } from "./FilterSelect";
-import { IngredientCatalogRow, type InventoryPatch } from "./IngredientCatalogRow";
-import { SearchField } from "./SearchField";
+import { CatalogSection } from "@/components/CatalogSection";
+import { FilterSelect } from "@/components/FilterSelect";
+import { IngredientCatalogRow, type InventoryPatch } from "@/components/IngredientCatalogRow";
+import { SearchField } from "@/components/SearchField";
 
 type BaseSortKey = "name-asc" | "name-desc" | "created-desc" | "created-asc" | "updated-desc" | "updated-asc";
 type NutrientSortKey = `${NutrientColumn}-asc` | `${NutrientColumn}-desc`;

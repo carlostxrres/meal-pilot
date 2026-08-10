@@ -1,7 +1,7 @@
 "use client";
 
 import { IconSearch, IconX } from "@tabler/icons-react";
-import styles from "./SearchField.module.css";
+import styles from "@/components/SearchField.module.css";
 
 export function SearchField({
   value,

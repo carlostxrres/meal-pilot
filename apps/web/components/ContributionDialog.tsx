@@ -3,8 +3,8 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { useMemo } from "react";
 import type { Ingredient, RequirementStatus, ResolvedComponent } from "@meal-pilot/core";
-import { IngredientThumb } from "./IngredientThumb";
-import styles from "./ContributionDialog.module.css";
+import { IngredientThumb } from "@/components/IngredientThumb";
+import styles from "@/components/ContributionDialog.module.css";
 
 /*
 Diálogo de "quién contribuye" a un nutriente: barras de magnitud en un solo

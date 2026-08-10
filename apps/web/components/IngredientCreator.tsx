@@ -13,8 +13,8 @@ import {
 } from "@meal-pilot/core";
 import { createIngredientAction, updateIngredientAction } from "@/app/(app)/actions";
 import { SUPERMARKET_LABELS } from "@/lib/supermarkets";
-import { FilterSelect } from "./FilterSelect";
-import styles from "./IngredientCreator.module.css";
+import { FilterSelect } from "@/components/FilterSelect";
+import styles from "@/components/IngredientCreator.module.css";
 
 /*
 Intent: dar de alta (o editar) un ingrediente con todas sus propiedades:

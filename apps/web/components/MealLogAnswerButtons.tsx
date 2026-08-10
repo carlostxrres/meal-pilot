@@ -3,7 +3,7 @@
 import type { MealLogState } from "@meal-pilot/core";
 import { useState, useTransition } from "react";
 import { setMealLogStateAction } from "@/app/(app)/actions";
-import styles from "./MealLogAnswerButtons.module.css";
+import styles from "@/components/MealLogAnswerButtons.module.css";
 
 /**
  * Los cuatro estados de un slot (date, meal_id), ADR-0022. "Comí otra cosa"

@@ -3,7 +3,7 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { useState } from "react";
 import type { Ingredient } from "@meal-pilot/core";
-import { InputNumber } from "./InputNumber";
+import { InputNumber } from "@/components/InputNumber";
 
 /** Formulario en sí, separado para que su estado se reinicie cada vez que el diálogo se monta (Radix desmonta `Dialog.Content` al cerrar). */
 function InventoryEditForm({

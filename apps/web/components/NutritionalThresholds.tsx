@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { RequirementStatus } from "@meal-pilot/core";
-import { CapsuleMeter } from "./CapsuleMeter";
-import styles from "./NutritionalThresholds.module.css";
+import { CapsuleMeter } from "@/components/CapsuleMeter";
+import styles from "@/components/NutritionalThresholds.module.css";
 
 /*
 Grid de CapsuleMeter en variante compact, compartido entre el creador de

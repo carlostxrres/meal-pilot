@@ -6,7 +6,7 @@ que lleguen los datos), así que la navegación se siente inmediata aunque el
 contenido real tarde lo mismo que antes.
 */
 
-import styles from "./Skeleton.module.css";
+import styles from "@/components/Skeleton.module.css";
 
 export function SkeletonBar({ width = "100%" }: { width?: string }) {
   return <div className={styles['skeleton-bar']} style={{ width }} />;

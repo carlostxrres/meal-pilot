@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { KeyboardInsetWatcher } from "@/components/KeyboardInsetWatcher";
-import "./globals.css";
+import "@/app/globals.css";
 
 export const metadata: Metadata = {
   title: "Meal Pilot",

@@ -5,7 +5,7 @@ import { IconBoxSeam, IconDotsVertical, IconPencil, IconPlayerPlay, IconPlayerPa
 import { useState, useTransition } from "react";
 import type { IngredientCatalogEntry } from "@meal-pilot/core";
 import { setIngredientEnabledAction } from "@/app/(app)/actions";
-import { IngredientCreator } from "./IngredientCreator";
+import { IngredientCreator } from "@/components/IngredientCreator";
 
 /*
 Menú "..." de la ficha de ingrediente, solo en el catálogo de Ingredientes

@@ -1,5 +1,5 @@
-import styles from "./page.module.css";
-import { signIn } from "./actions";
+import styles from "@/app/login/page.module.css";
+import { signIn } from "@/app/login/actions";
 
 export default async function LoginPage({
   searchParams,

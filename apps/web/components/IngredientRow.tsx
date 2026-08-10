@@ -4,9 +4,9 @@ import { IconAlertTriangle } from "@tabler/icons-react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { NUTRIENT_COLUMNS, type Ingredient, type NutritionTotals } from "@meal-pilot/core";
 import { formatEurPer100 } from "@/lib/formatPrice";
-import { IngredientThumb } from "./IngredientThumb";
-import styles from "./IngredientRow.module.css";
-import { NutritionPopover } from "./NutritionPopover";
+import { IngredientThumb } from "@/components/IngredientThumb";
+import styles from "@/components/IngredientRow.module.css";
+import { NutritionPopover } from "@/components/NutritionPopover";
 
 /*
 Base compartida por todos los lugares que listan ingredientes (el creador de

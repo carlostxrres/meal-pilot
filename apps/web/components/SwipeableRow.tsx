@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import styles from "./SwipeableRow.module.css";
+import styles from "@/components/SwipeableRow.module.css";
 
 const THRESHOLD = 88;
 const MAX_DRAG = 132;

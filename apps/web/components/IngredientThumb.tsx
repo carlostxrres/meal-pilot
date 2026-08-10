@@ -4,7 +4,7 @@ import { IconPhoto } from "@tabler/icons-react";
 import Image from "next/image";
 import { useState } from "react";
 import { ingredientImageUrl } from "@/lib/ingredientImage";
-import styles from "./IngredientThumb.module.css";
+import styles from "@/components/IngredientThumb.module.css";
 
 export function IngredientThumb({
   ingredientId,

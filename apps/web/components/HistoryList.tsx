@@ -2,8 +2,8 @@
 
 import type { HistoryDay, HistoryMealEntry } from "@meal-pilot/core";
 import { useState } from "react";
-import { MealLogAnswerButtons } from "./MealLogAnswerButtons";
-import styles from "./HistoryList.module.css";
+import { MealLogAnswerButtons } from "@/components/MealLogAnswerButtons";
+import styles from "@/components/HistoryList.module.css";
 
 function stateLabel(entry: HistoryMealEntry): string {
   switch (entry.state) {

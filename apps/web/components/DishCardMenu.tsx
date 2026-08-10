@@ -13,7 +13,7 @@ import { useState, useTransition } from "react";
 import type { DietaryRequirement, DishCatalogEntry, Ingredient, Meal } from "@meal-pilot/core";
 import { setDishActiveAction } from "@/app/(app)/actions";
 import { formatEur } from "@/lib/formatPrice";
-import { DishCreator } from "./DishCreator";
+import { DishCreator } from "@/components/DishCreator";
 
 function dishToText(entry: DishCatalogEntry): string {
   const lines = [`${entry.dish.name} (${entry.dish.dish_type}) — ${formatEur(entry.price)}`];

@@ -8,7 +8,7 @@ import {
   type NutrientColumn,
   type NutritionTotals,
 } from "@meal-pilot/core";
-import styles from "./NutritionPopover.module.css";
+import styles from "@/components/NutritionPopover.module.css";
 
 /** Mismo orden que .capsule-meter-grid (sortColumnsByDisplayOrder, ver nutrientOrder.ts) — solo cambian las etiquetas, pensadas para un ingrediente suelto en vez de una ventana por meal. */
 const NUTRIENT_LABELS: Record<NutrientColumn, { label: string; unit: string }> = {
