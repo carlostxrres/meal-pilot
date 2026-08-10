@@ -1,0 +1,26 @@
+.info-popover {
+  background: var(--canvas);
+  border: var(--border-width) solid var(--hairline);
+  padding: var(--space-8) var(--space-12);
+  max-width: 220px;
+}
+
+.info-popover-arrow {
+  fill: var(--canvas);
+}
+
+.info-popover-text {
+  display: flex;
+  align-items: start;
+  gap: var(--space-8);
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--ink);
+}
+
+.info-popover-icon {
+  display: flex;
+  flex-shrink: 0;
+  color: var(--mute);
+  margin-top: 3px;
+}

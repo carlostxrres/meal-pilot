@@ -13,3 +13,8 @@ function per100Suffix(unit: Ingredient["base_unit"]): string {
 export function formatEurPer100(value: number, unit: Ingredient["base_unit"]): string {
   return `${formatEur(value)} / ${per100Suffix(unit)}`;
 }
+
+/** "0,55 € cada 100g" — misma info que formatEurPer100 en frase, para el tooltip del chip de precio. */
+export function formatEurPer100Sentence(value: number, unit: Ingredient["base_unit"]): string {
+  return `${formatEur(value)} cada ${per100Suffix(unit)}`;
+}

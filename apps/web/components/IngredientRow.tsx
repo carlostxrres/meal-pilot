@@ -1,10 +1,19 @@
 "use client";
 
-import { IconAlertTriangle } from "@tabler/icons-react";
+import {
+  IconAlertTriangle,
+  IconFridge,
+  IconLeaf,
+  IconMeat,
+  IconMilk,
+  IconPackage,
+  IconSnowflake,
+} from "@tabler/icons-react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { NUTRIENT_COLUMNS, type Ingredient, type NutritionTotals } from "@meal-pilot/core";
-import { formatEurPer100 } from "@/lib/formatPrice";
+import { formatEurPer100, formatEurPer100Sentence } from "@/lib/formatPrice";
 import { IngredientThumb } from "@/components/IngredientThumb";
+import { InfoChip } from "@/components/InfoChip";
 import styles from "@/components/IngredientRow.module.css";
 import { NutritionPopover } from "@/components/NutritionPopover";
 
@@ -37,6 +46,30 @@ const ANIMAL_ORIGIN_LABELS: Record<Ingredient["animal_origin"], string> = {
   animal: "Animal",
   animal_derived: "Derivado animal",
   plant: "Vegetal",
+};
+
+const STORAGE_DESCRIPTIONS: Record<Ingredient["storage_type"], string> = {
+  pantry: "Este ingrediente se debería guardar en la despensa",
+  fridge: "Este ingrediente se debería guardar en la nevera",
+  freezer: "Este ingrediente se debería guardar en el congelador",
+};
+
+const ANIMAL_ORIGIN_DESCRIPTIONS: Record<Ingredient["animal_origin"], string> = {
+  animal: "Este ingrediente es animal",
+  animal_derived: "Este ingrediente es de origen animal",
+  plant: "Este ingrediente es vegetal",
+};
+
+const STORAGE_ICONS: Record<Ingredient["storage_type"], typeof IconPackage> = {
+  pantry: IconPackage,
+  fridge: IconFridge,
+  freezer: IconSnowflake,
+};
+
+const ANIMAL_ORIGIN_ICONS: Record<Ingredient["animal_origin"], typeof IconPackage> = {
+  animal: IconMeat,
+  animal_derived: IconMilk,
+  plant: IconLeaf,
 };
 
 function per100Label(unit: Ingredient["base_unit"]): string {
@@ -87,6 +120,9 @@ export function IngredientRow({
     }
   }
 
+  const StorageIcon = STORAGE_ICONS[ingredient.storage_type];
+  const AnimalOriginIcon = ANIMAL_ORIGIN_ICONS[ingredient.animal_origin];
+
   const inactive = disabledWarning && !ingredient.enabled;
   const short = neededQuantity != null && ingredient.office_inventory + ingredient.home_inventory < neededQuantity;
 
@@ -114,10 +150,21 @@ export function IngredientRow({
         <p className={styles['ingredient-row-description']}>{ingredient.description}</p>
       )}
       <div className={styles['ingredient-row-attrs']}>
-        <span className="chip">{STORAGE_LABELS[ingredient.storage_type]}</span>
-        <span className="chip">{ANIMAL_ORIGIN_LABELS[ingredient.animal_origin]}</span>
+        <InfoChip
+          label={STORAGE_LABELS[ingredient.storage_type]}
+          icon={<StorageIcon size={16} stroke={1.75} />}
+          description={STORAGE_DESCRIPTIONS[ingredient.storage_type]}
+        />
+        <InfoChip
+          label={ANIMAL_ORIGIN_LABELS[ingredient.animal_origin]}
+          icon={<AnimalOriginIcon size={16} stroke={1.75} />}
+          description={ANIMAL_ORIGIN_DESCRIPTIONS[ingredient.animal_origin]}
+        />
         {ingredient.price_eur_per_100 != null && (
-          <span className="chip">{formatEurPer100(ingredient.price_eur_per_100, ingredient.base_unit)}</span>
+          <InfoChip
+            label={formatEurPer100(ingredient.price_eur_per_100, ingredient.base_unit)}
+            description={formatEurPer100Sentence(ingredient.price_eur_per_100, ingredient.base_unit)}
+          />
         )}
         {/* stopPropagation: si la fila entera es clicable (onClick, ej.
             resultado de búsqueda), abrir el popover de nutrición no debe
