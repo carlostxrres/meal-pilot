@@ -1,13 +1,23 @@
 "use client";
 
-import { IconApple, IconReceipt2, IconToolsKitchen2 } from "@tabler/icons-react";
+import { MorphIcon } from "morphicons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  CATEGORY_DETAILED,
+  CATEGORY_SIMPLE,
+  RECEIPT_DETAILED,
+  RECEIPT_SIMPLE,
+  TOOLS_KITCHEN_DETAILED,
+  TOOLS_KITCHEN_SIMPLE,
+} from "./tabbar-morph-paths";
 
+// Each tab morphs between a simple (resting) and detailed (active) Tabler
+// outline glyph on selection, instead of only changing color.
 const TABS = [
-  { href: "/", label: "Hoy", Icon: IconReceipt2 },
-  { href: "/dishes", label: "Platos", Icon: IconToolsKitchen2 },
-  { href: "/ingredients", label: "Ingredientes", Icon: IconApple },
+  { href: "/", label: "Hoy", simple: RECEIPT_SIMPLE, detailed: RECEIPT_DETAILED },
+  { href: "/dishes", label: "Platos", simple: TOOLS_KITCHEN_SIMPLE, detailed: TOOLS_KITCHEN_DETAILED },
+  { href: "/ingredients", label: "Ingredientes", simple: CATEGORY_SIMPLE, detailed: CATEGORY_DETAILED },
 ];
 
 export function TabBar() {
@@ -15,12 +25,23 @@ export function TabBar() {
 
   return (
     <nav className="tabbar">
-      {TABS.map(({ href, label, Icon }) => (
-        <Link key={href} href={href} className="tabbar-item" data-active={pathname === href}>
-          <Icon className="tabbar-icon" size={18} stroke={1.75} aria-hidden="true" />
-          {label}
-        </Link>
-      ))}
+      {TABS.map(({ href, label, simple, detailed }) => {
+        const active = pathname === href;
+        return (
+          <Link key={href} href={href} className="tabbar-item" data-active={active}>
+            <MorphIcon
+              icon={active ? detailed : simple}
+              spring="snappy"
+              reducedMotion="user"
+              className="tabbar-icon"
+              size={18}
+              strokeWidth={1.75}
+              aria-hidden="true"
+            />
+            {label}
+          </Link>
+        );
+      })}
     </nav>
   );
 }
