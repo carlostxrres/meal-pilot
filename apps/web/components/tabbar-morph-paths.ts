@@ -9,7 +9,7 @@
  * doing the same for any other icon pair.
  *
  * "Simple" is the resting glyph, "detailed" is Tabler's richer -2 variant
- * (already used elsewhere in the app) and becomes the active-tab state.
+ * and becomes the active-tab state.
  */
 
 export const RECEIPT_SIMPLE =
@@ -23,3 +23,12 @@ export const TOOLS_KITCHEN_SIMPLE =
 
 export const TOOLS_KITCHEN_DETAILED =
   "M19 3C19 7 19 11 19 15C17.3333 15 15.6667 15 14 15C13.977 11.319 14.184 7.594 19 3M19 15C19 17 19 19 19 21C18.6667 21 18.3333 21 18 21C18 20 18 19 18 18M8 4C8 9.6667 8 15.3333 8 21M5 4C5 5 5 6 5 7C5 8.6569 6.3431 10 8 10C9.6569 10 11 8.6569 11 7C11 6 11 5 11 4";
+
+// category / category-2 are abstract (a 2x2 grid of shapes), not a
+// food glyph — three of the four cells are pixel-identical between the
+// two icons, only the top-left cell flips square -> circle.
+export const CATEGORY_SIMPLE =
+  "M4 4C6 4 8 4 10 4C10 6 10 8 10 10C8 10 6 10 4 10C4 8 4 6 4 4M14 4C16 4 18 4 20 4C20 6 20 8 20 10C18 10 16 10 14 10C14 8 14 6 14 4M4 14C6 14 8 14 10 14C10 16 10 18 10 20C8 20 6 20 4 20C4 18 4 16 4 14M14 17C14 18.6569 15.3431 20 17 20C18.6569 20 20 18.6569 20 17C20 15.3431 18.6569 14 17 14C15.3431 14 14 15.3431 14 17";
+
+export const CATEGORY_DETAILED =
+  "M14 4C16 4 18 4 20 4C20 6 20 8 20 10C18 10 16 10 14 10C14 8 14 6 14 4M4 14C6 14 8 14 10 14C10 16 10 18 10 20C8 20 6 20 4 20C4 18 4 16 4 14M14 17C14 18.6569 15.3431 20 17 20C18.6569 20 20 18.6569 20 17C20 15.3431 18.6569 14 17 14C15.3431 14 14 15.3431 14 17M4 7C4 8.6569 5.3431 10 7 10C8.6569 10 10 8.6569 10 7C10 5.3431 8.6569 4 7 4C5.3431 4 4 5.3431 4 7";
